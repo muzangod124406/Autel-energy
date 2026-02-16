@@ -23,6 +23,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isLoading: boolean;
   login: (phone: string, password: string, country: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
@@ -32,6 +33,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isLoading: true,
   login: async () => {},
   register: async () => {},
   logout: async () => {},
@@ -80,7 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, isLoading: loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

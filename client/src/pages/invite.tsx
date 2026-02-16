@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Copy, Share2, Users, Crown, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import BottomNav from "@/components/bottom-nav";
+
 
 export default function InvitePage() {
   const { user } = useAuth();
@@ -117,7 +117,6 @@ export default function InvitePage() {
           </div>
         </Card>
       </div>
-      <BottomNav />
     </div>
   );
 }

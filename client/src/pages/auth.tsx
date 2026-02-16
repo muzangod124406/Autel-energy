@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { COUNTRIES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,7 @@ export default function AuthPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Check for invite code in URL
-  useState(() => {
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const reg = params.get("reg");
     if (reg) {
@@ -29,7 +28,7 @@ export default function AuthPage() {
       setMode("register");
       setShowRegister(true);
     }
-  });
+  }, []);
 
   const handleLogin = async () => {
     if (!loginData.country || !loginData.phone || !loginData.password) {

@@ -29,18 +29,7 @@ export default function HomePage() {
   const [, navigate] = useLocation();
   const [showBalance, setShowBalance] = useState(true);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    navigate("/auth");
-    return null;
-  }
+  if (!user) return null;
 
   const maskPhone = (phone: string): string => {
     if (phone.length <= 4) return phone;

@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Lock, TrendingUp, Clock, Zap, Calendar } from "lucide-react";
-import BottomNav from "@/components/bottom-nav";
+
 
 type PlanKey = keyof typeof INVESTMENT_PLANS;
 
@@ -178,7 +178,6 @@ export default function InvestPage() {
           </div>
         )}
       </div>
-      <BottomNav />
     </div>
   );
 }

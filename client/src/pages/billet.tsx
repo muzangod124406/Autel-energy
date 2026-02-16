@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Camera, Upload, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import BottomNav from "@/components/bottom-nav";
+
 
 export default function BilletPage() {
   const { user } = useAuth();
@@ -141,7 +141,6 @@ export default function BilletPage() {
           </div>
         )}
       </div>
-      <BottomNav />
     </div>
   );
 }

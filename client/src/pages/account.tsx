@@ -9,7 +9,7 @@ import {
   ShoppingBag, DollarSign, Users, CreditCard, Crown,
   HelpCircle, Info, MessageCircle, Settings, LogOut, ChevronRight, Wallet, Download
 } from "lucide-react";
-import BottomNav from "@/components/bottom-nav";
+
 
 export default function AccountPage() {
   const { user, logout } = useAuth();
@@ -195,7 +195,6 @@ export default function AccountPage() {
           </button>
         </Card>
       </div>
-      <BottomNav />
     </div>
   );
 }
