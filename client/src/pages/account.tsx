@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   ShoppingBag, DollarSign, Users, CreditCard, Crown,
-  HelpCircle, Info, MessageCircle, Settings, LogOut, ChevronRight, Wallet, Download
+  HelpCircle, Info, MessageCircle, Settings, LogOut, ChevronRight, Wallet, Download, Shield
 } from "lucide-react";
 
 
@@ -172,6 +172,20 @@ export default function AccountPage() {
               </button>
             ))}
           </div>
+
+          {user.isAdmin && (
+            <button
+              data-testid="button-admin-panel"
+              onClick={() => navigate("/admin")}
+              className="flex items-center justify-between gap-2 w-full py-3 border-t"
+            >
+              <div className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-blue-500" />
+                <span className="text-sm font-medium text-blue-600">Administration</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-blue-400" />
+            </button>
+          )}
 
           <button
             data-testid="button-parametres"
