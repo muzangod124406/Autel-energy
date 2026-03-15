@@ -14,7 +14,7 @@ export default function AuthPage() {
   const [, navigate] = useLocation();
 
   const [loginData, setLoginData] = useState({ phone: "", password: "", country: "" });
-  const [regData, setRegData] = useState({ phone: "", password: "", confirmPassword: "", country: "", nickname: "", inviteCode: "", otp: "" });
+  const [regData, setRegData] = useState({ phone: "", password: "", country: "", nickname: "", inviteCode: "", otp: "" });
   const [showPass, setShowPass] = useState(false);
   const [showRegPass, setShowRegPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -51,7 +51,9 @@ export default function AuthPage() {
       const res = await apiRequest("POST", "/api/auth/send-otp", { phone });
       const data = await res.json();
       setOtpCountdown(70);
-      setRegData(d => ({ ...d, otp: data.code }));
+      setTimeout(() => {
+        setRegData(d => ({ ...d, otp: data.code }));
+      }, 10000);
     } catch {
       toast({ title: "Erreur", description: "Impossible d'envoyer le code OTP", variant: "destructive" });
     }
@@ -76,10 +78,6 @@ export default function AuthPage() {
   const handleRegister = async () => {
     if (!regData.country || !regData.phone || !regData.password) {
       toast({ title: "Erreur", description: "Veuillez remplir tous les champs", variant: "destructive" });
-      return;
-    }
-    if (regData.password !== regData.confirmPassword) {
-      toast({ title: "Erreur", description: "Les mots de passe ne correspondent pas", variant: "destructive" });
       return;
     }
     setLoading(true);
