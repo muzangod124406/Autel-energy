@@ -25,8 +25,8 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f0f0e4] pb-24">
-      <div className="bg-[#22c55e] px-4 pt-6 pb-8">
+    <div className="min-h-screen bg-[#22c55e] pb-24">
+      <div className="px-4 pt-6 pb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-14 h-14 rounded-full border-2 border-white bg-white flex items-center justify-center overflow-hidden">
@@ -79,9 +79,7 @@ export default function HomePage() {
               onClick={() => navigate(btn.path)}
               className="flex flex-col items-center gap-2"
             >
-              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
-                <img src={btn.icon} alt={btn.label} className="w-7 h-7 object-contain" />
-              </div>
+              <img src={btn.icon} alt={btn.label} className="w-14 h-14 object-contain" />
               <span className="text-white text-xs font-medium">{btn.label}</span>
             </button>
           ))}
@@ -92,7 +90,7 @@ export default function HomePage() {
         <button
           onClick={() => navigate("/game")}
           data-testid="button-game-card"
-          className="w-full rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 p-6 text-white text-center overflow-hidden relative shadow-lg"
+          className="w-full rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 p-6 text-white text-center overflow-hidden relative shadow-xl"
         >
           <div className="relative z-10 space-y-2">
             <div className="flex justify-center mb-2">
