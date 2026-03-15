@@ -14,6 +14,7 @@ import BilletPage from "@/pages/billet";
 import AccountPage from "@/pages/account";
 import GamePage from "@/pages/game";
 import DepositPage from "@/pages/deposit";
+import DepositHistoryPage from "@/pages/deposit-history";
 import WithdrawPage from "@/pages/withdraw";
 import BankCardPage from "@/pages/bank-card";
 import SettingsPage from "@/pages/settings";
@@ -57,6 +58,7 @@ function AppContent() {
         <Route path="/account" component={AccountPage} />
         <Route path="/game" component={GamePage} />
         <Route path="/deposit" component={DepositPage} />
+        <Route path="/deposit-history" component={DepositHistoryPage} />
         <Route path="/withdraw" component={WithdrawPage} />
         <Route path="/bank-card" component={BankCardPage} />
         <Route path="/settings" component={SettingsPage} />
