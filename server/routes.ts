@@ -332,21 +332,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
       if (user.spinTickets <= 0) return res.status(400).json({ message: "Pas de tours disponibles" });
 
-      // 80% chance of losing (0), max win 500
-      const rand = Math.random();
-      let amount = 0;
-      if (rand > 0.80) {
-        const prizes = [50, 100, 200, 300, 500];
-        const weights = [0.40, 0.30, 0.15, 0.10, 0.05];
-        const r2 = Math.random();
-        let cumulative = 0;
-        for (let i = 0; i < prizes.length; i++) {
-          cumulative += weights[i];
-          if (r2 <= cumulative) {
-            amount = prizes[i];
-            break;
-          }
-        }
+      const prizes =   [50,   100,  200,  400,  600,  1000, 5000, 7000,  77000];
+      const weights =  [0.30, 0.22, 0.18, 0.12, 0.08, 0.05, 0.03, 0.015, 0.005];
+      const r = Math.random();
+      let cumulative = 0;
+      let amount = 50;
+      for (let i = 0; i < prizes.length; i++) {
+        cumulative += weights[i];
+        if (r <= cumulative) { amount = prizes[i]; break; }
       }
 
       await storage.updateUser(userId, {
@@ -364,6 +357,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/user/spin-tickets", requireAuth, async (req: Request, res: Response) => {
     const user = await storage.getUser((req.session as any).userId);
     res.json({ tickets: user?.spinTickets || 0 });
+  });
+
+  app.get("/api/spin-history", async (req: Request, res: Response) => {
+    try {
+      const results = await storage.getRecentSpinResults(30);
+      const masked = results.map(r => ({
+        id: r.id,
+        amount: r.amount,
+        createdAt: r.createdAt,
+        phone: r.user?.phone
+          ? r.user.phone.slice(0, 2) + "****" + r.user.phone.slice(-4)
+          : "****"
+      }));
+      res.json(masked);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
   });
 
   // Tickets/Blog

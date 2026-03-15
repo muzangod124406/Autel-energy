@@ -39,6 +39,7 @@ export interface IStorage {
 
   addSpinResult(userId: string, amount: number): Promise<SpinResult>;
   getUserSpinResults(userId: string): Promise<SpinResult[]>;
+  getRecentSpinResults(limit?: number): Promise<(SpinResult & { user?: User })[]>;
 
   createTicket(userId: string, data: any): Promise<Ticket>;
   getAllTickets(status?: string): Promise<(Ticket & { user?: User })[]>;
@@ -210,6 +211,16 @@ export class DatabaseStorage implements IStorage {
 
   async getUserSpinResults(userId: string): Promise<SpinResult[]> {
     return await db.select().from(spinResults).where(eq(spinResults.userId, userId)).orderBy(desc(spinResults.createdAt));
+  }
+
+  async getRecentSpinResults(limit = 20): Promise<(SpinResult & { user?: User })[]> {
+    const rows = await db
+      .select({ spin: spinResults, user: users })
+      .from(spinResults)
+      .leftJoin(users, eq(spinResults.userId, users.id))
+      .orderBy(desc(spinResults.createdAt))
+      .limit(limit);
+    return rows.map(r => ({ ...r.spin, user: r.user ?? undefined }));
   }
 
   async createTicket(userId: string, data: any): Promise<Ticket> {
