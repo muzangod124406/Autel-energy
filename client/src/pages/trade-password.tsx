@@ -30,8 +30,8 @@ export default function TradePasswordPage() {
     try {
       const res = await apiRequest("POST", "/api/auth/send-otp", { phone: user.phone });
       const data = await res.json();
-      setOtpCountdown(120);
-      toast({ title: "Code OTP envoyé", description: `Votre code de vérification est : ${data.code}` });
+      setOtpCountdown(70);
+      setOtp(data.code);
     } catch {
       toast({ title: "Erreur", description: "Impossible d'envoyer le code OTP", variant: "destructive" });
     }

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Phone, KeyRound, User, Shield, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
+import autelLogo from "@assets/autel_green_logo_110x@2x_1773598927579.png";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -49,9 +50,9 @@ export default function AuthPage() {
     try {
       const res = await apiRequest("POST", "/api/auth/send-otp", { phone });
       const data = await res.json();
-      setOtpCountdown(120);
-      toast({ title: "Code OTP envoyé", description: `Votre code de vérification est : ${data.code}`, });
-    } catch (e: any) {
+      setOtpCountdown(70);
+      setRegData(d => ({ ...d, otp: data.code }));
+    } catch {
       toast({ title: "Erreur", description: "Impossible d'envoyer le code OTP", variant: "destructive" });
     }
     setOtpLoading(false);
@@ -97,17 +98,12 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-[#f0f0e4] flex flex-col items-center pt-12 px-4 pb-8">
       <div className="w-full max-w-sm">
-        <div className="flex items-center gap-3 mb-10">
-          <div className="w-20 h-20 rounded-full border-4 border-[#c9a84c] bg-white flex items-center justify-center shadow-md overflow-hidden">
-            <svg viewBox="0 0 100 100" className="w-14 h-14">
-              <circle cx="50" cy="50" r="45" fill="#c9a84c" opacity="0.15"/>
-              <text x="50" y="62" textAnchor="middle" fontSize="48" fill="#8B6914">🦁</text>
-            </svg>
-          </div>
+        <div className="flex items-center gap-4 mb-10">
+          <img src={autelLogo} alt="Autel Energy" className="h-10 object-contain" />
           <div className="bg-[#1a2744] px-4 py-2 rounded-sm">
-            <span className="text-white font-bold text-xl tracking-widest">RED BULL</span>
+            <span className="text-white font-bold text-base tracking-widest">AUTEL</span>
             <br />
-            <span className="text-[#c9a84c] font-bold text-sm tracking-widest">INVEST</span>
+            <span className="text-[#4ade80] font-bold text-xs tracking-widest">ENERGY</span>
           </div>
         </div>
 
