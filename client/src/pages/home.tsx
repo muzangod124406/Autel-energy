@@ -5,8 +5,7 @@ import rechargeIcon from "@assets/recharge_(1)_1773608231085.png";
 import withdrawIcon from "@assets/withdraw_1773608230743.png";
 import blogIcon from "@assets/blog_(1)_1773608231117.png";
 import telegramIcon from "@assets/telegram_(1)_1773608231149.png";
-import lv0Img from "@assets/lv0_1773608793133.png";
-import rechargeCircleImg from "@assets/recharge_1773608793085.png";
+import walletIcon from "@assets/3930266_1773614141608.png";
 import rewardIcon from "@assets/reward_icon_1773608863536.png";
 
 export default function HomePage() {
@@ -47,12 +46,10 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button data-testid="button-recharge-circle" onClick={() => navigate("/deposit")}>
-              <img src={rechargeCircleImg} alt="recharge" className="w-10 h-10 object-contain" />
-            </button>
-            <button data-testid="button-vip" onClick={() => navigate("/invest")}>
-              <img src={lv0Img} alt="vip" className="w-10 h-10 object-contain" />
+          <div className="flex items-center shrink-0">
+            <button data-testid="button-wallet" onClick={() => navigate("/balance")}
+              className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
+              <img src={walletIcon} alt="wallet" className="w-7 h-7 object-contain brightness-0 invert" />
             </button>
           </div>
         </div>
