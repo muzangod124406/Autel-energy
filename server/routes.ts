@@ -93,7 +93,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const { phone, password, confirmPassword, country, inviteCode, nickname, otp } = req.body;
       if (!phone || !password || !country) return res.status(400).json({ message: "Champs requis manquants" });
-      if (password !== confirmPassword) return res.status(400).json({ message: "Les mots de passe ne correspondent pas" });
       if (password.length < 6) return res.status(400).json({ message: "Le mot de passe doit contenir au moins 6 caractères" });
 
       if (otp) {
