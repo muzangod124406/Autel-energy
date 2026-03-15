@@ -5,7 +5,6 @@ import rechargeIcon from "@assets/recharge_(1)_1773608231085.png";
 import withdrawIcon from "@assets/withdraw_1773608230743.png";
 import blogIcon from "@assets/blog_(1)_1773608231117.png";
 import telegramIcon from "@assets/telegram_(1)_1773608231149.png";
-import withdrawRecordIcon from "@assets/withdraw_record_1773608231188.png";
 import lv0Img from "@assets/lv0_1773608793133.png";
 import rechargeCircleImg from "@assets/recharge_1773608793085.png";
 import rewardIcon from "@assets/reward_icon_1773608863536.png";
@@ -19,8 +18,7 @@ export default function HomePage() {
   const ACTION_BUTTONS = [
     { label: "Recharger", icon: rechargeIcon, path: "/deposit", testId: "button-recharge" },
     { label: "Retrait", icon: withdrawIcon, path: "/withdraw", testId: "button-withdraw" },
-    { label: "Équipe", icon: withdrawRecordIcon, path: "/invite", testId: "button-team" },
-    { label: "Blog", icon: blogIcon, path: "/billet", testId: "button-blog" },
+    { label: "Billet", icon: blogIcon, path: "/billet", testId: "button-billet" },
     { label: "Telegram", icon: telegramIcon, path: "/telegram", testId: "button-telegram" },
   ];
 
@@ -59,7 +57,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-5 gap-1">
+        <div className="grid grid-cols-4 gap-2">
           {ACTION_BUTTONS.map(btn => (
             <button
               key={btn.label}
