@@ -96,13 +96,8 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-[#f0f0e4] flex flex-col items-center pt-12 px-4 pb-8">
       <div className="w-full max-w-sm">
-        <div className="flex items-center gap-4 mb-10">
-          <img src={autelLogo} alt="Autel Energy" className="h-10 object-contain" />
-          <div className="bg-[#1a2744] px-4 py-2 rounded-sm">
-            <span className="text-white font-bold text-base tracking-widest">AUTEL</span>
-            <br />
-            <span className="text-[#4ade80] font-bold text-xs tracking-widest">ENERGY</span>
-          </div>
+        <div className="flex items-center justify-center mb-10">
+          <img src={autelLogo} alt="Autel Energy" className="h-12 object-contain" />
         </div>
 
         {mode === "login" && (
