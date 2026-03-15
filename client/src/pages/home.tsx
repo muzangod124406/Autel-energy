@@ -7,8 +7,8 @@ import withdrawIcon from "@assets/withdraw_1773608230743.png";
 import blogIcon from "@assets/blog_(1)_1773608231117.png";
 import telegramIcon from "@assets/telegram_(1)_1773608231149.png";
 import withdrawRecordIcon from "@assets/withdraw_record_1773608231188.png";
-import lv0Img from "@assets/lv0_1773607669331.png";
-import noticeImg from "@assets/notice_1773607669301.png";
+import lv0Img from "@assets/lv0_1773608793133.png";
+import rechargeCircleImg from "@assets/recharge_1773608793085.png";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -27,47 +27,35 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#22c55e] pb-24">
       <div className="px-4 pt-6 pb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-full border-2 border-white bg-white flex items-center justify-center overflow-hidden">
-              <span className="text-2xl">🦁</span>
-            </div>
-            <img src={autelLogo} alt="Autel" className="h-7 object-contain brightness-0 invert" />
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-14 h-14 rounded-full border-2 border-white bg-white flex items-center justify-center overflow-hidden shrink-0">
+            <span className="text-2xl">🦁</span>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              data-testid="button-notice"
-              onClick={() => navigate("/account")}
-              className="w-9 h-9 rounded-full border border-white/50 bg-white/10 flex items-center justify-center"
-            >
-              <img src={noticeImg} alt="notice" className="w-5 h-5 object-contain" />
-            </button>
-            <button
-              data-testid="button-vip"
-              onClick={() => navigate("/invest")}
-              className="w-9 h-9 rounded-full border border-white/50 bg-white/10 flex items-center justify-center"
-            >
-              <img src={lv0Img} alt="vip" className="w-7 h-7 object-contain" />
-            </button>
-          </div>
+          <img src={autelLogo} alt="Autel" className="h-7 object-contain brightness-0 invert" />
         </div>
 
-        <div className="flex items-end justify-between mb-6">
-          <div className="space-y-3">
-            <div className="flex gap-8">
-              <div>
-                <p className="text-white/80 text-xs mb-1">Solde de recharge</p>
-                <p className="text-white font-bold text-lg" data-testid="text-deposit-balance">
-                  FCFA{user.depositBalance.toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <p className="text-white/80 text-xs mb-1">Solde de retrait</p>
-                <p className="text-white font-bold text-lg" data-testid="text-withdraw-balance">
-                  FCFA{user.withdrawBalance.toFixed(2)}
-                </p>
-              </div>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex gap-8">
+            <div>
+              <p className="text-white/80 text-xs mb-1">Solde de recharge</p>
+              <p className="text-white font-bold text-lg" data-testid="text-deposit-balance">
+                FCFA{user.depositBalance.toFixed(2)}
+              </p>
             </div>
+            <div>
+              <p className="text-white/80 text-xs mb-1">Solde de retrait</p>
+              <p className="text-white font-bold text-lg" data-testid="text-withdraw-balance">
+                FCFA{user.withdrawBalance.toFixed(2)}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button data-testid="button-recharge-circle" onClick={() => navigate("/deposit")}>
+              <img src={rechargeCircleImg} alt="recharge" className="w-10 h-10 object-contain" />
+            </button>
+            <button data-testid="button-vip" onClick={() => navigate("/invest")}>
+              <img src={lv0Img} alt="vip" className="w-10 h-10 object-contain" />
+            </button>
           </div>
         </div>
 
