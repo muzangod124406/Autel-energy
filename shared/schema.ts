@@ -32,6 +32,8 @@ export const bankCards = pgTable("bank_cards", {
   country: text("country").notNull(),
   paymentMethod: text("payment_method").notNull(),
   phoneNumber: text("phone_number").notNull(),
+  accountName: text("account_name"),
+  usdtWallet: text("usdt_wallet"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -125,6 +127,8 @@ export const insertBankCardSchema = createInsertSchema(bankCards).pick({
   country: true,
   paymentMethod: true,
   phoneNumber: true,
+  accountName: true,
+  usdtWallet: true,
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions).pick({

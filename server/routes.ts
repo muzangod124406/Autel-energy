@@ -271,9 +271,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const hasActive = activeInvestments.some(i => i.status === "active");
       if (!hasActive) return res.status(400).json({ message: "Vous devez avoir au moins un produit actif" });
 
-      const { amount, country, paymentMethod, phoneNumber, accountName } = req.body;
-      if (!amount || amount < 1000) return res.status(400).json({ message: "Retrait minimum: 1 000 FCFA" });
+      const { amount, country, paymentMethod, phoneNumber, accountName, transactionPassword } = req.body;
+      if (!amount || amount < 2000) return res.status(400).json({ message: "Retrait minimum: 2 000 FCFA" });
+      if (amount > 4500000) return res.status(400).json({ message: "Retrait maximum: 4 500 000 FCFA" });
       if (user.withdrawBalance < amount) return res.status(400).json({ message: "Solde de retrait insuffisant" });
+      if (user.transactionPassword && transactionPassword) {
+        const valid = await bcrypt.compare(transactionPassword, user.transactionPassword);
+        if (!valid) return res.status(400).json({ message: "Mot de passe de transaction incorrect" });
+      }
 
       const now = new Date();
       const hour = now.getHours();
