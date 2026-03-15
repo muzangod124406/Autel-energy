@@ -1,6 +1,5 @@
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
-import { Gamepad2 } from "lucide-react";
 import autelLogo from "@assets/autel_green_logo_110x@2x_1773598927579.png";
 import rechargeIcon from "@assets/recharge_(1)_1773608231085.png";
 import withdrawIcon from "@assets/withdraw_1773608230743.png";
@@ -9,6 +8,7 @@ import telegramIcon from "@assets/telegram_(1)_1773608231149.png";
 import withdrawRecordIcon from "@assets/withdraw_record_1773608231188.png";
 import lv0Img from "@assets/lv0_1773608793133.png";
 import rechargeCircleImg from "@assets/recharge_1773608793085.png";
+import rewardIcon from "@assets/reward_icon_1773608863536.png";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -75,25 +75,34 @@ export default function HomePage() {
       </div>
 
       <div className="px-4 pt-4">
-        <button
-          onClick={() => navigate("/game")}
-          data-testid="button-game-card"
-          className="w-full rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 p-6 text-white text-center overflow-hidden relative shadow-xl"
+        <div
+          data-testid="game-card"
+          className="w-full rounded-2xl overflow-hidden relative shadow-xl"
+          style={{ background: "linear-gradient(135deg, #1a7a3c 0%, #14532d 50%, #0f3d22 100%)" }}
         >
-          <div className="relative z-10 space-y-2">
-            <div className="flex justify-center mb-2">
-              <div className="bg-white/20 p-3 rounded-full">
-                <Gamepad2 className="w-8 h-8" />
-              </div>
+          <div className="absolute inset-0 opacity-20"
+            style={{ background: "radial-gradient(circle at 70% 50%, #4ade80 0%, transparent 60%)" }}
+          />
+          <div className="relative z-10 flex items-center justify-between p-5">
+            <div className="flex-1 space-y-2">
+              <p className="text-green-300 text-xs font-semibold uppercase tracking-wider">Jeu de récompenses</p>
+              <h3 className="text-white text-xl font-bold leading-tight">Roue de la Fortune</h3>
+              <p className="text-green-200 text-xs leading-relaxed">
+                Invitez des amis pour gagner des tours gratuits et remporter des récompenses !
+              </p>
+              <button
+                onClick={() => navigate("/game")}
+                data-testid="button-play-game"
+                className="mt-2 inline-flex items-center gap-1 bg-[#22c55e] hover:bg-[#16a34a] text-white text-sm font-bold px-5 py-2 rounded-full transition-colors"
+              >
+                Allez &gt;
+              </button>
             </div>
-            <h3 className="text-xl font-bold">Roue de la Fortune</h3>
-            <p className="text-sm opacity-90">
-              Invitez des amis pour gagner des tours gratuits et remporter des récompenses !
-            </p>
+            <div className="ml-4 shrink-0">
+              <img src={rewardIcon} alt="cadeau" className="w-28 h-28 object-contain drop-shadow-lg" />
+            </div>
           </div>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
-        </button>
+        </div>
       </div>
     </div>
   );
