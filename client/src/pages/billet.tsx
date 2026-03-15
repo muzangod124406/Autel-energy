@@ -1,146 +1,168 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Camera, Upload, Image as ImageIcon } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import rechargeCircleImg from "@assets/recharge_1773608793085.png";
+import lv0Img from "@assets/lv0_1773608793133.png";
+import rewardIcon from "@assets/reward_icon_1773608863536.png";
 
+function maskPhone(phone: string) {
+  if (!phone) return "****";
+  if (phone.length <= 4) return phone;
+  const start = phone.slice(0, 3);
+  const end = phone.slice(-3);
+  return `${start}****${end}`;
+}
 
 export default function BilletPage() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [description, setDescription] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [, navigate] = useLocation();
+  const [showRules, setShowRules] = useState(false);
 
-  const { data: tickets = [], isLoading } = useQuery({ queryKey: ["/api/tickets"] });
-
-  const submitMutation = useMutation({
-    mutationFn: async () => {
-      const formData = new FormData();
-      if (selectedFile) formData.append("image", selectedFile);
-      if (description) formData.append("description", description);
-      const res = await fetch("/api/user/tickets", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Erreur lors de l'envoi");
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Envoyé", description: "Votre billet sera validé par un administrateur" });
-      setDescription("");
-      setSelectedFile(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/tickets"] });
-    },
-    onError: () => {
-      toast({ title: "Erreur", description: "Erreur lors de l'envoi", variant: "destructive" });
-    }
-  });
+  const { data: tickets = [] } = useQuery({ queryKey: ["/api/tickets"] });
+  const posts = tickets as any[];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 p-4 pt-6">
-        <h1 className="text-white text-xl font-bold text-center">Billet</h1>
-        <p className="text-white/70 text-sm text-center mt-1">Partagez vos captures d'écran</p>
+    <div className="min-h-screen bg-[#f0f0e4] pb-24 relative">
+      <div className="bg-[#22c55e] px-4 pt-6 pb-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full border-2 border-white bg-white flex items-center justify-center overflow-hidden shrink-0">
+              <span className="text-xl">🦁</span>
+            </div>
+            <div>
+              <p className="text-white font-bold text-base">{user?.nickname || "Utilisateur"}</p>
+              <p className="text-white/80 text-sm font-semibold">{maskPhone(user?.phone || "")}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <img src={rechargeCircleImg} alt="recharge" className="w-9 h-9 object-contain" />
+            <img src={lv0Img} alt="vip" className="w-9 h-9 object-contain" />
+          </div>
+        </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 mt-4">
-        <Card className="p-4 mb-4">
-          <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-            <Camera className="w-4 h-4 text-blue-500" />
-            Publier un billet
-          </h3>
-          <input
-            type="file"
-            ref={fileRef}
-            accept="image/*"
-            className="hidden"
-            onChange={e => setSelectedFile(e.target.files?.[0] || null)}
-          />
-          <button
-            data-testid="button-upload-image"
-            onClick={() => fileRef.current?.click()}
-            className="w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center gap-2 mb-3 hover:border-blue-400 transition-colors"
-          >
-            {selectedFile ? (
-              <div className="flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-green-500" />
-                <span className="text-sm text-green-600">{selectedFile.name}</span>
-              </div>
-            ) : (
-              <>
-                <Upload className="w-8 h-8 text-gray-400" />
-                <span className="text-xs text-muted-foreground">Cliquez pour télécharger une image</span>
-              </>
-            )}
-          </button>
-          <Textarea
-            data-testid="input-description"
-            placeholder="Description (optionnel)..."
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            className="mb-3 text-sm"
-          />
-          <Button
-            data-testid="button-submit-ticket"
-            onClick={() => submitMutation.mutate()}
-            disabled={submitMutation.isPending || (!selectedFile && !description)}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white"
-          >
-            {submitMutation.isPending ? "Envoi..." : "Publier"}
-          </Button>
-        </Card>
-
-        <h3 className="font-semibold mb-3">Publications approuvées</h3>
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <Card key={i} className="p-4 animate-pulse">
-                <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-lg mb-2" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
-              </Card>
-            ))}
+      <div className="px-4 mt-3 space-y-3">
+        {posts.length === 0 ? (
+          <div className="bg-white rounded-2xl p-8 text-center mt-4">
+            <p className="text-gray-400 text-sm">Aucune publication pour le moment</p>
           </div>
-        ) : tickets.length === 0 ? (
-          <Card className="p-8 text-center">
-            <ImageIcon className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-            <p className="text-sm text-muted-foreground">Aucune publication pour le moment</p>
-          </Card>
         ) : (
-          <div className="space-y-3">
-            {(tickets as any[]).map((ticket: any) => (
-              <Card key={ticket.id} className="overflow-hidden">
-                {ticket.imageUrl && (
-                  <img src={ticket.imageUrl} alt="Ticket" className="w-full h-48 object-cover" />
-                )}
-                <div className="p-3">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-xs text-muted-foreground">
-                      {ticket.user?.phone ? `****${ticket.user.phone.slice(-4)}` : "Utilisateur"}
-                    </p>
-                    {ticket.bonus > 0 && (
-                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                        +{ticket.bonus} FCFA
-                      </Badge>
-                    )}
+          posts.map((post: any) => (
+            <div key={post.id} className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-full border border-gray-200 bg-gray-50 flex items-center justify-center">
+                    <span className="text-lg">🦁</span>
                   </div>
-                  {ticket.description && <p className="text-sm">{ticket.description}</p>}
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    {new Date(ticket.createdAt).toLocaleDateString("fr-FR")}
-                  </p>
+                  <div>
+                    <p className="text-sm font-bold text-gray-800">
+                      {post.user?.nickname || "Utilisateur"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {post.user?.phone ? maskPhone(post.user.phone) : "****"}
+                    </p>
+                  </div>
                 </div>
-              </Card>
-            ))}
-          </div>
+                {post.bonus > 0 && (
+                  <div className="flex items-center gap-1 bg-yellow-400 rounded-full px-3 py-1">
+                    <span className="text-white font-bold text-sm">{post.bonus}.00</span>
+                    <span className="text-white text-xs">🪙</span>
+                  </div>
+                )}
+              </div>
+
+              {post.description && (
+                <p className="text-sm text-gray-700 mb-3 leading-relaxed">{post.description}</p>
+              )}
+
+              {post.imageUrl && (
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <img
+                    src={post.imageUrl}
+                    alt="post"
+                    className="w-full h-32 object-cover rounded-xl"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-between mt-2">
+                {post.bonus > 0 ? (
+                  <span className="text-orange-500 font-bold text-sm">
+                    FCFA {post.bonus}.00
+                  </span>
+                ) : (
+                  <span />
+                )}
+                <span className="text-gray-400 text-xs">
+                  {new Date(post.createdAt).toLocaleString("fr-FR", {
+                    year: "numeric", month: "2-digit", day: "2-digit",
+                    hour: "2-digit", minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            </div>
+          ))
         )}
       </div>
+
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 flex flex-col gap-0 z-40">
+        <button
+          data-testid="button-soumettre"
+          onClick={() => navigate("/post-blog")}
+          className="flex flex-col items-center gap-1 bg-[#22c55e] text-white text-xs font-bold px-3 py-3 rounded-l-xl shadow-lg mb-1"
+        >
+          <span className="text-base">🎁</span>
+          <span>Soumettre</span>
+        </button>
+        <button
+          data-testid="button-regles"
+          onClick={() => setShowRules(true)}
+          className="flex flex-col items-center gap-1 bg-[#22c55e] text-white text-xs font-bold px-3 py-3 rounded-l-xl shadow-lg"
+        >
+          <span className="text-base">🎁</span>
+          <span>Règles</span>
+        </button>
+      </div>
+
+      {showRules && (
+        <div
+          className="fixed inset-0 z-50 flex items-end"
+          onClick={() => setShowRules(false)}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="relative w-full bg-white rounded-t-3xl px-6 pt-6 pb-10 shadow-2xl animate-slide-up"
+            onClick={e => e.stopPropagation()}
+            style={{ animation: "slideUp 0.3s ease-out" }}
+          >
+            <div className="flex justify-center mb-4">
+              <img src={rewardIcon} alt="récompense" className="w-24 h-24 object-contain" />
+            </div>
+            <h2 className="text-gray-900 font-bold text-lg text-center leading-snug mb-3">
+              Partagez des captures d'écran de retrait pour recevoir des récompenses en espèces
+            </h2>
+            <p className="text-gray-600 text-sm text-center leading-relaxed mb-6">
+              Envoyez une capture d'écran du dernier retrait réussi dans la section des commentaires,
+              et une fois approuvé, vous recevrez immédiatement une récompense de 10-400
+            </p>
+            <button
+              data-testid="button-compris"
+              onClick={() => setShowRules(false)}
+              className="w-full h-12 rounded-full bg-[#22c55e] text-white font-bold text-base"
+            >
+              J'ai compris
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

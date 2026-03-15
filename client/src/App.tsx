@@ -11,6 +11,7 @@ import HomePage from "@/pages/home";
 import InvestPage from "@/pages/invest";
 import InvitePage from "@/pages/invite";
 import BilletPage from "@/pages/billet";
+import PostBlogPage from "@/pages/post-blog";
 import AccountPage from "@/pages/account";
 import GamePage from "@/pages/game";
 import DepositPage from "@/pages/deposit";
@@ -55,6 +56,7 @@ function AppContent() {
         <Route path="/invest" component={InvestPage} />
         <Route path="/invite" component={InvitePage} />
         <Route path="/billet" component={BilletPage} />
+        <Route path="/post-blog" component={PostBlogPage} />
         <Route path="/account" component={AccountPage} />
         <Route path="/game" component={GamePage} />
         <Route path="/deposit" component={DepositPage} />
