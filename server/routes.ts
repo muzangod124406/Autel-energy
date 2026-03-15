@@ -28,6 +28,12 @@ function generateReferralCode(): string {
   return code;
 }
 
+const otpStore = new Map<string, { code: string; expires: number }>();
+
+function generateOTP(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
 function requireAuth(req: Request, res: Response, next: any) {
   if (!(req.session as any).userId) {
     return res.status(401).json({ message: "Non autorisé" });
@@ -53,12 +59,50 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   );
 
   // Auth routes
+  app.post("/api/auth/send-otp", async (req: Request, res: Response) => {
+    try {
+      const { phone } = req.body;
+      if (!phone) return res.status(400).json({ message: "Numéro requis" });
+      const code = generateOTP();
+      otpStore.set(phone, { code, expires: Date.now() + 10 * 60 * 1000 });
+      res.json({ code });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.post("/api/auth/set-transaction-password", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { phone, otp, transactionPassword } = req.body;
+      if (!otp || !transactionPassword) return res.status(400).json({ message: "Champs requis manquants" });
+      const stored = otpStore.get(phone);
+      if (!stored || stored.code !== otp || stored.expires < Date.now()) {
+        return res.status(400).json({ message: "Code OTP invalide ou expiré" });
+      }
+      otpStore.delete(phone);
+      const hashed = await bcrypt.hash(transactionPassword, 10);
+      const user = await storage.updateUser(userId, { transactionPassword: hashed });
+      res.json({ user: { ...user, password: undefined, transactionPassword: undefined } });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const { phone, password, confirmPassword, country, inviteCode } = req.body;
+      const { phone, password, confirmPassword, country, inviteCode, nickname, otp } = req.body;
       if (!phone || !password || !country) return res.status(400).json({ message: "Champs requis manquants" });
       if (password !== confirmPassword) return res.status(400).json({ message: "Les mots de passe ne correspondent pas" });
       if (password.length < 6) return res.status(400).json({ message: "Le mot de passe doit contenir au moins 6 caractères" });
+
+      if (otp) {
+        const stored = otpStore.get(phone);
+        if (!stored || stored.code !== otp || stored.expires < Date.now()) {
+          return res.status(400).json({ message: "Code OTP invalide ou expiré" });
+        }
+        otpStore.delete(phone);
+      }
 
       const existing = await storage.getUserByPhone(phone);
       if (existing) return res.status(400).json({ message: "Ce numéro est déjà utilisé" });
@@ -71,7 +115,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
 
       const referralCode = generateReferralCode();
-      const user = await storage.createUser({ phone, password, country, referralCode, referredBy: referredBy || null });
+      const user = await storage.createUser({ phone, password, country, nickname: nickname || null, referralCode, referredBy: referredBy || null });
 
       if (referredBy) {
         await storage.createReferral({ referrerId: referredBy, referredId: user.id, level: 1 });

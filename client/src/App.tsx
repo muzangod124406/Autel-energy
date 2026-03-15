@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import BottomNav from "@/components/bottom-nav";
 import AuthPage from "@/pages/auth";
+import TradePasswordPage from "@/pages/trade-password";
 import HomePage from "@/pages/home";
 import InvestPage from "@/pages/invest";
 import InvitePage from "@/pages/invite";
@@ -40,6 +41,10 @@ function AppContent() {
 
   if (!user) {
     return <AuthPage />;
+  }
+
+  if (!user.transactionPassword) {
+    return <TradePasswordPage />;
   }
 
   return (

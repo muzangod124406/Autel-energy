@@ -8,6 +8,8 @@ export const users = pgTable("users", {
   phone: text("phone").notNull().unique(),
   password: text("password").notNull(),
   country: text("country").notNull(),
+  nickname: text("nickname"),
+  transactionPassword: text("transaction_password"),
   referralCode: text("referral_code").notNull().unique(),
   referredBy: text("referred_by"),
   balance: integer("balance").notNull().default(0),
@@ -100,6 +102,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   phone: true,
   password: true,
   country: true,
+  nickname: true,
   referralCode: true,
   referredBy: true,
 });

@@ -1,24 +1,26 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { COUNTRIES } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, UserPlus, LogIn } from "lucide-react";
+import { Eye, EyeOff, Phone, KeyRound, User, Shield, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [showRegister, setShowRegister] = useState(false);
   const { login, register } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
   const [loginData, setLoginData] = useState({ phone: "", password: "", country: "" });
-  const [regData, setRegData] = useState({ phone: "", password: "", confirmPassword: "", country: "", inviteCode: "" });
+  const [regData, setRegData] = useState({ phone: "", password: "", confirmPassword: "", country: "", nickname: "", inviteCode: "", otp: "" });
   const [showPass, setShowPass] = useState(false);
+  const [showRegPass, setShowRegPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpCountdown, setOtpCountdown] = useState(0);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [showRegCountryDropdown, setShowRegCountryDropdown] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -26,9 +28,34 @@ export default function AuthPage() {
     if (reg) {
       setRegData(d => ({ ...d, inviteCode: reg }));
       setMode("register");
-      setShowRegister(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (otpCountdown > 0) {
+      const t = setTimeout(() => setOtpCountdown(c => c - 1), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [otpCountdown]);
+
+  const getCountryObj = (id: string) => COUNTRIES.find(c => c.id === id);
+
+  const handleSendOtp = async (phone: string) => {
+    if (!phone) {
+      toast({ title: "Erreur", description: "Veuillez entrer votre numéro de téléphone", variant: "destructive" });
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/auth/send-otp", { phone });
+      const data = await res.json();
+      setOtpCountdown(120);
+      toast({ title: "Code OTP envoyé", description: `Votre code de vérification est : ${data.code}`, });
+    } catch (e: any) {
+      toast({ title: "Erreur", description: "Impossible d'envoyer le code OTP", variant: "destructive" });
+    }
+    setOtpLoading(false);
+  };
 
   const handleLogin = async () => {
     if (!loginData.country || !loginData.phone || !loginData.password) {
@@ -57,171 +84,263 @@ export default function AuthPage() {
     setLoading(true);
     try {
       await register(regData);
-      navigate("/");
+      navigate("/trade-password");
     } catch (e: any) {
       toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur d'inscription", variant: "destructive" });
     }
     setLoading(false);
   };
 
+  const loginCountry = getCountryObj(loginData.country);
+  const regCountry = getCountryObj(regData.country);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a1145] via-[#2d1b69] to-[#0f0a2e] flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-yellow-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">RB</span>
-            </div>
-            <h1 className="text-2xl font-bold text-white">Red Bull Invest</h1>
+    <div className="min-h-screen bg-[#f0f0e4] flex flex-col items-center pt-12 px-4 pb-8">
+      <div className="w-full max-w-sm">
+        <div className="flex items-center gap-3 mb-10">
+          <div className="w-20 h-20 rounded-full border-4 border-[#c9a84c] bg-white flex items-center justify-center shadow-md overflow-hidden">
+            <svg viewBox="0 0 100 100" className="w-14 h-14">
+              <circle cx="50" cy="50" r="45" fill="#c9a84c" opacity="0.15"/>
+              <text x="50" y="62" textAnchor="middle" fontSize="48" fill="#8B6914">🦁</text>
+            </svg>
           </div>
-          <p className="text-gray-400 text-sm">Plateforme d'investissement</p>
+          <div className="bg-[#1a2744] px-4 py-2 rounded-sm">
+            <span className="text-white font-bold text-xl tracking-widest">RED BULL</span>
+            <br />
+            <span className="text-[#c9a84c] font-bold text-sm tracking-widest">INVEST</span>
+          </div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-          <div className="flex gap-2 mb-6">
-            <Button
-              data-testid="tab-login"
-              variant={mode === "login" ? "default" : "ghost"}
-              className={`flex-1 ${mode === "login" ? "bg-gradient-to-r from-red-500 to-orange-500 text-white" : "text-gray-300"}`}
-              onClick={() => setMode("login")}
-            >
-              <LogIn className="w-4 h-4 mr-2" /> Connexion
-            </Button>
-            <Button
-              data-testid="tab-register"
-              variant={mode === "register" ? "default" : "ghost"}
-              className={`flex-1 ${mode === "register" ? "bg-gradient-to-r from-red-500 to-orange-500 text-white" : "text-gray-300"}`}
-              onClick={() => { setMode("register"); setShowRegister(true); }}
-            >
-              <UserPlus className="w-4 h-4 mr-2" /> Inscription
-            </Button>
-          </div>
-
-          {mode === "login" && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-gray-300 text-sm mb-1 block">Pays</label>
-                <Select value={loginData.country} onValueChange={v => setLoginData({ ...loginData, country: v })}>
-                  <SelectTrigger data-testid="select-country-login" className="bg-white/10 border-white/20 text-white">
-                    <SelectValue placeholder="Sélectionnez le pays..." />
-                  </SelectTrigger>
-                  <SelectContent>
+        {mode === "login" && (
+          <div className="space-y-5">
+            <div>
+              <p className="text-gray-800 font-medium mb-2">Pays</p>
+              <div className="relative">
+                <button
+                  data-testid="select-country-login"
+                  type="button"
+                  className="w-full bg-[#e8e8d8] rounded-xl px-4 py-3 text-left text-gray-700 flex items-center justify-between"
+                  onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                >
+                  <span>{loginCountry ? `${loginCountry.flag} ${loginCountry.code}` : "Veuillez sélectionner votre pays"}</span>
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                </button>
+                {showCountryDropdown && (
+                  <div className="absolute z-50 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
                     {COUNTRIES.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.flag} {c.name}</SelectItem>
+                      <button
+                        key={c.id}
+                        type="button"
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-800"
+                        onClick={() => { setLoginData({ ...loginData, country: c.id }); setShowCountryDropdown(false); }}
+                      >
+                        <span>{c.flag}</span>
+                        <span>{c.name}({c.code})</span>
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                )}
               </div>
-              <div>
-                <label className="text-gray-300 text-sm mb-1 block">Numéro de téléphone</label>
-                <Input
+            </div>
+
+            <div>
+              <p className="text-gray-800 font-medium mb-2">Numéro de téléphone</p>
+              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
+                <Phone className="w-5 h-5 text-gray-500 shrink-0" />
+                <input
                   data-testid="input-phone-login"
-                  placeholder="Numéro de téléphone"
+                  type="tel"
+                  placeholder="Veuillez entrer votre numéro de téléphone"
                   value={loginData.phone}
                   onChange={e => setLoginData({ ...loginData, phone: e.target.value })}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
+                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
                 />
               </div>
-              <div className="relative">
-                <label className="text-gray-300 text-sm mb-1 block">Mot de passe</label>
-                <Input
+            </div>
+
+            <div>
+              <p className="text-gray-800 font-medium mb-2">Mot de passe de connexion</p>
+              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
+                <KeyRound className="w-5 h-5 text-gray-500 shrink-0" />
+                <input
                   data-testid="input-password-login"
                   type={showPass ? "text" : "password"}
-                  placeholder="Mot de passe"
+                  placeholder="Mot de passe de connexion"
                   value={loginData.password}
                   onChange={e => setLoginData({ ...loginData, password: e.target.value })}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 pr-10"
+                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
+                />
+                <button type="button" onClick={() => setShowPass(!showPass)}>
+                  {showPass ? <Eye className="w-5 h-5 text-gray-400" /> : <EyeOff className="w-5 h-5 text-gray-400" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                data-testid="tab-register"
+                type="button"
+                onClick={() => setMode("register")}
+                className="flex-1 py-3 rounded-full border-2 border-[#22c55e] text-[#22c55e] font-semibold bg-white"
+              >
+                S'inscrire
+              </button>
+              <button
+                data-testid="button-login"
+                type="button"
+                onClick={handleLogin}
+                disabled={loading}
+                className="flex-1 py-3 rounded-full bg-[#22c55e] text-white font-semibold shadow-md"
+              >
+                {loading ? "..." : "Se connecter"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {mode === "register" && (
+          <div className="space-y-5">
+            <div>
+              <p className="text-gray-800 font-medium mb-2">Pays</p>
+              <div className="relative">
+                <button
+                  data-testid="select-country-register"
+                  type="button"
+                  className="w-full bg-[#e8e8d8] rounded-xl px-4 py-3 text-left text-gray-700 flex items-center justify-between"
+                  onClick={() => setShowRegCountryDropdown(!showRegCountryDropdown)}
+                >
+                  <span>{regCountry ? `${regCountry.flag} ${regCountry.name}` : "Veuillez sélectionner votre pays"}</span>
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                </button>
+                {showRegCountryDropdown && (
+                  <div className="absolute z-50 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
+                    {COUNTRIES.map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-800"
+                        onClick={() => { setRegData({ ...regData, country: c.id }); setShowRegCountryDropdown(false); }}
+                      >
+                        <span>{c.flag}</span>
+                        <span>{c.name}({c.code})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-gray-800 font-medium mb-2">Numéro de téléphone</p>
+              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
+                <Phone className="w-5 h-5 text-gray-500 shrink-0" />
+                <input
+                  data-testid="input-phone-register"
+                  type="tel"
+                  placeholder="Veuillez entrer votre numéro de téléphone"
+                  value={regData.phone}
+                  onChange={e => setRegData({ ...regData, phone: e.target.value })}
+                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-gray-800 font-medium mb-2">Mot de passe de connexion</p>
+              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
+                <KeyRound className="w-5 h-5 text-gray-500 shrink-0" />
+                <input
+                  data-testid="input-password-register"
+                  type={showRegPass ? "text" : "password"}
+                  placeholder="Mot de passe de connexion"
+                  value={regData.password}
+                  onChange={e => setRegData({ ...regData, password: e.target.value })}
+                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
+                />
+                <button type="button" onClick={() => setShowRegPass(!showRegPass)}>
+                  {showRegPass ? <Eye className="w-5 h-5 text-gray-400" /> : <EyeOff className="w-5 h-5 text-gray-400" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-gray-800 font-medium mb-2">Surnom</p>
+              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
+                <User className="w-5 h-5 text-gray-500 shrink-0" />
+                <input
+                  data-testid="input-nickname"
+                  type="text"
+                  placeholder="Entrez votre surnom"
+                  value={regData.nickname}
+                  onChange={e => setRegData({ ...regData, nickname: e.target.value })}
+                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-gray-800 font-medium mb-2">Code d'invitation</p>
+              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
+                <input
+                  data-testid="input-invite-code"
+                  type="text"
+                  placeholder="Code d'invitation (optionnel)"
+                  value={regData.inviteCode}
+                  onChange={e => setRegData({ ...regData, inviteCode: e.target.value })}
+                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
+                />
+                {regData.inviteCode && (
+                  <button type="button" onClick={() => setRegData({ ...regData, inviteCode: "" })}>
+                    <span className="w-5 h-5 rounded-full bg-gray-400 text-white text-xs flex items-center justify-center">✕</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-gray-800 font-medium mb-2">Code de vérification (OTP)</p>
+              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
+                <Shield className="w-5 h-5 text-gray-500 shrink-0" />
+                <input
+                  data-testid="input-otp-register"
+                  type="text"
+                  placeholder="Code de vérification"
+                  value={regData.otp}
+                  onChange={e => setRegData({ ...regData, otp: e.target.value })}
+                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-8 text-gray-400"
+                  disabled={otpLoading || otpCountdown > 0}
+                  onClick={() => handleSendOtp(regData.phone)}
+                  className="text-blue-500 font-semibold text-sm whitespace-nowrap disabled:text-gray-400"
                 >
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {otpCountdown > 0 ? `${otpCountdown}s` : otpLoading ? "..." : "Envoyer"}
                 </button>
               </div>
-              <Button
-                data-testid="button-login"
-                onClick={handleLogin}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold"
-              >
-                {loading ? "Connexion..." : "Se connecter"}
-              </Button>
             </div>
-          )}
 
-          {mode === "register" && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-gray-300 text-sm mb-1 block">Pays</label>
-                <Select value={regData.country} onValueChange={v => setRegData({ ...regData, country: v })}>
-                  <SelectTrigger data-testid="select-country-register" className="bg-white/10 border-white/20 text-white">
-                    <SelectValue placeholder="Sélectionnez le pays..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRIES.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.flag} {c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-gray-300 text-sm mb-1 block">Numéro de téléphone</label>
-                <Input
-                  data-testid="input-phone-register"
-                  placeholder="Numéro de téléphone"
-                  value={regData.phone}
-                  onChange={e => setRegData({ ...regData, phone: e.target.value })}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
-                />
-              </div>
-              <div className="relative">
-                <label className="text-gray-300 text-sm mb-1 block">Mot de passe</label>
-                <Input
-                  data-testid="input-password-register"
-                  type={showPass ? "text" : "password"}
-                  placeholder="Mot de passe"
-                  value={regData.password}
-                  onChange={e => setRegData({ ...regData, password: e.target.value })}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 pr-10"
-                />
-                <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-8 text-gray-400">
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <div>
-                <label className="text-gray-300 text-sm mb-1 block">Confirmer le mot de passe</label>
-                <Input
-                  data-testid="input-confirm-password"
-                  type={showPass ? "text" : "password"}
-                  placeholder="Confirmer le mot de passe"
-                  value={regData.confirmPassword}
-                  onChange={e => setRegData({ ...regData, confirmPassword: e.target.value })}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
-                />
-              </div>
-              <div>
-                <label className="text-gray-300 text-sm mb-1 block">Code d'invitation (optionnel)</label>
-                <Input
-                  data-testid="input-invite-code"
-                  placeholder="Code d'invitation"
-                  value={regData.inviteCode}
-                  onChange={e => setRegData({ ...regData, inviteCode: e.target.value })}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
-                />
-              </div>
-              <Button
+            <div className="flex gap-3 pt-2">
+              <button
+                data-testid="tab-login"
+                type="button"
+                onClick={() => setMode("login")}
+                className="flex-1 py-3 rounded-full border-2 border-[#22c55e] text-[#22c55e] font-semibold bg-white"
+              >
+                Se connecter
+              </button>
+              <button
                 data-testid="button-register"
+                type="button"
                 onClick={handleRegister}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold"
+                className="flex-1 py-3 rounded-full bg-[#22c55e] text-white font-semibold shadow-md"
               >
-                {loading ? "Inscription..." : "S'inscrire"}
-              </Button>
+                {loading ? "..." : "S'inscrire"}
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

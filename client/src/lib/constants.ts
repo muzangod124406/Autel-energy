@@ -1,8 +1,9 @@
 export const COUNTRIES = [
+  { id: "senegal", name: "Sénégal", flag: "\u{1F1F8}\u{1F1F3}", code: "+221", payments: ["Orange Money", "Wave"] },
+  { id: "cote_divoire", name: "Côte d'Ivoire", flag: "\u{1F1E8}\u{1F1EE}", code: "+225", payments: ["Wave", "MTN", "Orange Money", "Moov Money"] },
+  { id: "burkina_faso", name: "Burkina Faso", flag: "\u{1F1E7}\u{1F1EB}", code: "+226", payments: ["Orange Money", "Moov Money"] },
   { id: "togo", name: "Togo", flag: "\u{1F1F9}\u{1F1EC}", code: "+228", payments: ["Moov Money", "Mixx by Yas"] },
   { id: "benin", name: "Bénin", flag: "\u{1F1E7}\u{1F1EF}", code: "+229", payments: ["Celtis", "Moov Money", "MTN", "Momo"] },
-  { id: "cote_divoire", name: "Côte d'Ivoire", flag: "\u{1F1E8}\u{1F1EE}", code: "+225", payments: ["Wave", "MTN", "Orange Money", "Moov Money"] },
-  { id: "senegal", name: "Sénégal", flag: "\u{1F1F8}\u{1F1F3}", code: "+221", payments: ["Orange Money", "Wave"] },
   { id: "cameroun", name: "Cameroun", flag: "\u{1F1E8}\u{1F1F2}", code: "+237", payments: ["Orange Money", "MTN Mobile Money"] },
 ];
 

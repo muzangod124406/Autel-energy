@@ -5,6 +5,8 @@ interface User {
   id: string;
   phone: string;
   country: string;
+  nickname: string | null;
+  transactionPassword: string | null;
   referralCode: string;
   referredBy: string | null;
   balance: number;
