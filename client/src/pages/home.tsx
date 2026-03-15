@@ -1,147 +1,113 @@
-import { useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { formatCFA } from "@/lib/constants";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Wallet, Download, Users, Send, MessageCircle, Eye, EyeOff, Gamepad2 } from "lucide-react";
-
-interface ActionButton {
-  id: string;
-  label: string;
-  icon: typeof Wallet;
-  color: string;
-  path: string;
-  testId: string;
-}
-
-const actionButtons: ActionButton[] = [
-  { id: "recharge", label: "Recharger", icon: Wallet, color: "bg-emerald-500", path: "/deposit", testId: "button-recharge" },
-  { id: "withdraw", label: "Retirer", icon: Download, color: "bg-orange-500", path: "/withdraw", testId: "button-withdraw" },
-  { id: "team", label: "Équipe", icon: Users, color: "bg-blue-500", path: "/invite", testId: "button-team" },
-  { id: "invest", label: "Ordonné", icon: Send, color: "bg-purple-500", path: "/invest", testId: "button-invest" },
-  { id: "telegram", label: "Telegram", icon: MessageCircle, color: "bg-cyan-500", path: "/telegram", testId: "button-telegram" },
-];
+import { Gamepad2 } from "lucide-react";
+import autelLogo from "@assets/autel_green_logo_110x@2x_1773598927579.png";
+import rechargeIcon from "@assets/recharge_(1)_1773608231085.png";
+import withdrawIcon from "@assets/withdraw_1773608230743.png";
+import blogIcon from "@assets/blog_(1)_1773608231117.png";
+import telegramIcon from "@assets/telegram_(1)_1773608231149.png";
+import withdrawRecordIcon from "@assets/withdraw_record_1773608231188.png";
+import lv0Img from "@assets/lv0_1773607669331.png";
+import noticeImg from "@assets/notice_1773607669301.png";
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [, navigate] = useLocation();
-  const [showBalance, setShowBalance] = useState(true);
 
   if (!user) return null;
 
-  const maskPhone = (phone: string): string => {
-    if (phone.length <= 4) return phone;
-    return phone.slice(0, 3) + "*".repeat(Math.max(0, phone.length - 7)) + phone.slice(-4);
-  };
-
-  const initials = "RB";
+  const ACTION_BUTTONS = [
+    { label: "Recharger", icon: rechargeIcon, path: "/deposit", testId: "button-recharge" },
+    { label: "Retrait", icon: withdrawIcon, path: "/withdraw", testId: "button-withdraw" },
+    { label: "Équipe", icon: withdrawRecordIcon, path: "/invite", testId: "button-team" },
+    { label: "Blog", icon: blogIcon, path: "/billet", testId: "button-blog" },
+    { label: "Telegram", icon: telegramIcon, path: "/telegram", testId: "button-telegram" },
+  ];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="p-4 space-y-4">
-        <div
-          className="rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 p-6 text-white overflow-hidden relative"
-          data-testid="card-balance-gradient"
-        >
-          <div className="relative z-10">
-            <div className="flex justify-between items-start mb-8">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12 bg-white/20 border border-white/30">
-                  <AvatarFallback className="text-white font-bold text-sm" data-testid="avatar-initials">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="space-y-1">
-                  <div className="text-sm font-medium opacity-90" data-testid="text-masked-phone">
-                    {maskPhone(user.phone)}
-                  </div>
-                  <div className="text-xs opacity-75" data-testid="text-referral-code">
-                    ID: {user.referralCode}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                data-testid="button-toggle-balance"
-              >
-                {showBalance ? (
-                  <Eye className="w-5 h-5" />
-                ) : (
-                  <EyeOff className="w-5 h-5" />
-                )}
-              </button>
+    <div className="min-h-screen bg-[#f0f0e4] pb-24">
+      <div className="bg-[#22c55e] px-4 pt-6 pb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-full border-2 border-white bg-white flex items-center justify-center overflow-hidden">
+              <span className="text-2xl">🦁</span>
             </div>
+            <img src={autelLogo} alt="Autel" className="h-7 object-contain brightness-0 invert" />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              data-testid="button-notice"
+              onClick={() => navigate("/account")}
+              className="w-9 h-9 rounded-full border border-white/50 bg-white/10 flex items-center justify-center"
+            >
+              <img src={noticeImg} alt="notice" className="w-5 h-5 object-contain" />
+            </button>
+            <button
+              data-testid="button-vip"
+              onClick={() => navigate("/invest")}
+              className="w-9 h-9 rounded-full border border-white/50 bg-white/10 flex items-center justify-center"
+            >
+              <img src={lv0Img} alt="vip" className="w-7 h-7 object-contain" />
+            </button>
+          </div>
+        </div>
 
-            <div className="space-y-3">
-              <div className="text-sm font-medium opacity-90">Votre Solde</div>
-              <div className="text-4xl font-bold" data-testid="text-balance-amount">
-                {showBalance ? formatCFA(user.balance) : "FCFA ••••"}
+        <div className="flex items-end justify-between mb-6">
+          <div className="space-y-3">
+            <div className="flex gap-8">
+              <div>
+                <p className="text-white/80 text-xs mb-1">Solde de recharge</p>
+                <p className="text-white font-bold text-lg" data-testid="text-deposit-balance">
+                  FCFA{user.depositBalance.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-white/80 text-xs mb-1">Solde de retrait</p>
+                <p className="text-white font-bold text-lg" data-testid="text-withdraw-balance">
+                  FCFA{user.withdrawBalance.toFixed(2)}
+                </p>
               </div>
             </div>
           </div>
-
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16" />
         </div>
 
-        <div
-          className="grid grid-cols-5 gap-3 bg-card rounded-2xl p-4"
-          data-testid="grid-action-buttons"
-        >
-          {actionButtons.map((btn) => {
-            const IconComponent = btn.icon;
-            return (
-              <button
-                key={btn.id}
-                onClick={() => navigate(btn.path)}
-                className="flex flex-col items-center gap-2 group"
-                data-testid={btn.testId}
-              >
-                <div
-                  className={`${btn.color} w-12 h-12 rounded-full flex items-center justify-center text-white shadow-md group-hover:shadow-lg transition-shadow`}
-                >
-                  <IconComponent className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-medium text-foreground text-center" data-testid={`label-${btn.id}`}>
-                  {btn.label}
-                </span>
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-5 gap-1">
+          {ACTION_BUTTONS.map(btn => (
+            <button
+              key={btn.label}
+              data-testid={btn.testId}
+              onClick={() => navigate(btn.path)}
+              className="flex flex-col items-center gap-2"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                <img src={btn.icon} alt={btn.label} className="w-7 h-7 object-contain" />
+              </div>
+              <span className="text-white text-xs font-medium">{btn.label}</span>
+            </button>
+          ))}
         </div>
+      </div>
 
+      <div className="px-4 pt-4">
         <button
           onClick={() => navigate("/game")}
-          className="w-full rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 p-6 text-white text-center overflow-hidden relative group hover:shadow-lg transition-shadow"
-          data-testid="button-fortune-wheel"
+          data-testid="button-game-card"
+          className="w-full rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 p-6 text-white text-center overflow-hidden relative shadow-lg"
         >
           <div className="relative z-10 space-y-2">
-            <div className="flex justify-center mb-3">
+            <div className="flex justify-center mb-2">
               <div className="bg-white/20 p-3 rounded-full">
-                <Gamepad2 className="w-6 h-6" />
+                <Gamepad2 className="w-8 h-8" />
               </div>
             </div>
             <h3 className="text-xl font-bold">Roue de la Fortune</h3>
             <p className="text-sm opacity-90">
-              Invitez des amis ou achetez des produits pour gagner des tours gratuits !
+              Invitez des amis pour gagner des tours gratuits et remporter des récompenses !
             </p>
           </div>
-
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12" />
         </button>
-
-        <div className="space-y-2" data-testid="section-announcements">
-          <h3 className="text-sm font-semibold text-foreground px-2">Annonces</h3>
-          <div className="bg-card rounded-2xl p-4 border border-card-border space-y-3">
-            <div className="text-sm text-muted-foreground text-center py-4">
-              Aucune annonce pour le moment
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
