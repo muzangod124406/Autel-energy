@@ -216,7 +216,7 @@ export default function DepositPage() {
           <div className="absolute inset-0 bg-black/50" />
           <div
             className="relative w-full bg-white rounded-t-3xl flex flex-col modal-zoom-in"
-            style={{ minHeight: "52vh", maxHeight: "75vh", paddingBottom: "80px" }}
+            style={{ minHeight: "52vh", maxHeight: "75vh" }}
             onClick={e => e.stopPropagation()}
           >
             {/* Drag handle */}
@@ -224,10 +224,18 @@ export default function DepositPage() {
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
 
-            {/* Title */}
-            <p className="flex-shrink-0 font-bold text-gray-900 text-base px-5 pt-3 pb-4 border-b border-gray-100">
-              Méthode de recharge
-            </p>
+            {/* Title + Confirmer */}
+            <div className="flex-shrink-0 flex items-center justify-between px-5 pt-3 pb-4 border-b border-gray-100">
+              <p className="font-bold text-gray-900 text-base">Méthode de recharge</p>
+              <button
+                onClick={() => { setSelectedChannelId(tempChannelId); setShowMethodSheet(false); }}
+                disabled={!tempChannelId}
+                className="text-[#22c55e] font-bold text-base disabled:text-gray-300"
+                data-testid="button-confirm-method"
+              >
+                Confirmer
+              </button>
+            </div>
 
             {/* Scrollable channel list */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
@@ -256,24 +264,6 @@ export default function DepositPage() {
                   </div>
                 ))
               )}
-            </div>
-
-            {/* Footer — fixé en bas, au-dessus de la nav */}
-            <div
-              className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-white absolute bottom-0 left-0 right-0"
-              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
-            >
-              <button onClick={() => setShowMethodSheet(false)} className="text-gray-600 font-medium text-base" data-testid="button-cancel-method">
-                Annuler
-              </button>
-              <button
-                onClick={() => { setSelectedChannelId(tempChannelId); setShowMethodSheet(false); }}
-                disabled={!tempChannelId}
-                className="text-[#22c55e] font-bold text-base disabled:text-gray-300"
-                data-testid="button-confirm-method"
-              >
-                Confirmer
-              </button>
             </div>
           </div>
         </div>
