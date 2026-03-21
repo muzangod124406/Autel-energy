@@ -4,7 +4,8 @@ import { INVESTMENT_PLANS, formatCFA } from "@/lib/constants";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, PackageX, Calendar, ShieldAlert, ChevronRight } from "lucide-react";
+import { Lock, Calendar, ShieldAlert, ChevronRight } from "lucide-react";
+import EmptyState from "@/components/empty-state";
 import autelImg from "@assets/Autel-MaxiCharger-DC-Fast-60-240KW-EV-Charger-All-Security-Equ_1774131863511.jpg";
 
 const fixedPlan = INVESTMENT_PLANS.fix;
@@ -210,14 +211,11 @@ export default function InvestPage() {
 
           {/* Empty state */}
           {!loadingProducts && availableProducts.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-              <PackageX className="w-14 h-14 text-gray-200 mb-3" />
-              <p className="text-gray-600 font-semibold text-base mb-1">
-                Aucun produit disponible
-              </p>
-              <p className="text-gray-400 text-sm">
-                Les produits d'activité ne sont pas disponibles aujourd'hui, revenez plus tard.
-              </p>
+            <div className="px-4">
+              <EmptyState
+                text="Aucun produit disponible"
+                subtext="Les produits d'activité ne sont pas disponibles aujourd'hui, revenez plus tard."
+              />
             </div>
           )}
 

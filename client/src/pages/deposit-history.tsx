@@ -2,6 +2,7 @@ import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import EmptyState from "@/components/empty-state";
 import type { Transaction } from "@shared/schema";
 
 export default function DepositHistoryPage() {
@@ -43,9 +44,7 @@ export default function DepositHistoryPage() {
         </div>
 
         {deposits.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 shadow-sm text-center">
-            <p className="text-gray-400 text-sm">Aucun historique de recharge</p>
-          </div>
+          <EmptyState text="Aucun historique" subtext="Vous n'avez pas encore effectué de recharge." />
         ) : (
           deposits.map(tx => {
             const s = statusLabel(tx.status);

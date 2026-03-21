@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ShoppingBag, Clock, Calendar } from "lucide-react";
 import { useLocation } from "wouter";
+import EmptyState from "@/components/empty-state";
 
 export default function OrdersPage() {
   const [, navigate] = useLocation();
@@ -31,10 +32,7 @@ export default function OrdersPage() {
             ))}
           </div>
         ) : investments.length === 0 ? (
-          <Card className="p-8 text-center">
-            <ShoppingBag className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-            <p className="text-sm text-muted-foreground">Aucune commande pour le moment</p>
-          </Card>
+          <EmptyState text="Aucune commande" subtext="Vous n'avez pas encore souscrit à un produit." />
         ) : (
           (investments as any[]).map((inv: any) => {
             const daysLeft = Math.max(0, Math.ceil((new Date(inv.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));

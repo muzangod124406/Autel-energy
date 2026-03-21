@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 import redirectIcon from "@assets/17496245_1774133420846.png";
 import { SiWhatsapp } from "react-icons/si";
+import EmptyState from "@/components/empty-state";
 
 export default function TelegramPage() {
   const [, navigate] = useLocation();
@@ -59,9 +60,7 @@ export default function TelegramPage() {
       {/* Service links */}
       <div className="px-4 mt-4 space-y-3">
         {links.length === 0 ? (
-          <div className="bg-white rounded-2xl p-5 text-center text-gray-400 text-sm shadow-sm">
-            Aucun lien de service configuré
-          </div>
+          <EmptyState text="Aucun lien configuré" subtext="L'administrateur n'a pas encore configuré de lien de service." />
         ) : (
           links.map((item, i) => (
             <a

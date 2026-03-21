@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import rechargeCircleImg from "@assets/recharge_1773608793085.png";
+import EmptyState from "@/components/empty-state";
 import lv0Img from "@assets/lv0_1773608793133.png";
 import rewardIcon from "@assets/reward_icon_1773608863536.png";
 
@@ -44,9 +45,7 @@ export default function BilletPage() {
 
       <div className="px-4 mt-3 space-y-3">
         {posts.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 text-center mt-4">
-            <p className="text-gray-400 text-sm">Aucune publication pour le moment</p>
-          </div>
+          <EmptyState text="Aucune publication" subtext="Il n'y a pas encore de publication disponible." />
         ) : (
           posts.map((post: any) => (
             <div key={post.id} className="bg-white rounded-2xl p-4 shadow-sm">

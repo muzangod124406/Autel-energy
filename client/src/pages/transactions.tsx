@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { useLocation } from "wouter";
+import EmptyState from "@/components/empty-state";
 
 export default function TransactionsPage() {
   const [, navigate] = useLocation();
@@ -57,9 +58,7 @@ export default function TransactionsPage() {
             {[1, 2].map(i => <Card key={i} className="h-20 animate-pulse" />)}
           </div>
         ) : filtered.length === 0 ? (
-          <Card className="p-8 text-center">
-            <p className="text-sm text-muted-foreground">Aucune transaction</p>
-          </Card>
+          <EmptyState text="Aucune transaction" subtext="Aucun mouvement enregistré pour le moment." />
         ) : (
           <div className="space-y-3">
             {filtered.map((tx: any) => {
