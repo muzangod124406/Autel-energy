@@ -6,7 +6,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ChevronRight, X, Zap, Link2, CreditCard } from "lucide-react";
 import { useLocation } from "wouter";
-import robotpayIcon from "@assets/20260228_003915_1774132670667.png";
+import robotpayIcon from "@assets/icon_2_1774133145999.png";
 
 export default function DepositPage() {
   const { user, refreshUser } = useAuth();
@@ -69,7 +69,7 @@ export default function DepositPage() {
 
   const channelIcon = (type: string) => {
     if (type === "leekpay") return <Zap className="w-4 h-4 text-yellow-500" />;
-    if (type === "westpay") return <img src={robotpayIcon} alt="RobotPay" className="w-6 h-6 object-contain invert" />;
+    if (type === "westpay") return <img src={robotpayIcon} alt="RobotPay" className="w-6 h-6 object-contain" />;
     return <Link2 className="w-4 h-4 text-green-600" />;
   };
 
