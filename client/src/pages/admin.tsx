@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { formatCFA, COUNTRIES, INVESTMENT_PLANS } from "@/lib/constants";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -155,10 +155,10 @@ export default function AdminPage() {
     }
   });
   const { data: pendingTickets = [] } = useQuery({ queryKey: ["/api/admin/tickets"] });
-  const { data: settingsData, refetch: refetchSettings } = useQuery({
-    queryKey: ["/api/settings"],
-    onSuccess: (data: any) => { if (!settingsForm) setSettingsForm(data); }
-  } as any);
+  const { data: settingsData, refetch: refetchSettings } = useQuery({ queryKey: ["/api/settings"] });
+  useEffect(() => {
+    if (settingsData && !settingsForm) setSettingsForm(settingsData);
+  }, [settingsData]);
   const { data: channels = [], refetch: refetchChannels } = useQuery({ queryKey: ["/api/admin/channels"] });
   const { data: adminProducts = [], refetch: refetchProducts } = useQuery({ queryKey: ["/api/admin/products"] });
 
@@ -244,11 +244,12 @@ export default function AdminPage() {
       const res = await apiRequest("PUT", "/api/admin/settings", data);
       return res.json();
     },
-    onSuccess: () => {
-      toast({ title: "Paramètres mis à jour" });
+    onSuccess: (saved: any) => {
+      toast({ title: "Paramètres enregistrés ✓" });
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
-      refetchSettings();
-    }
+      if (saved && saved.id) setSettingsForm(saved);
+    },
+    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" })
   });
 
   const assignProductMutation = useMutation({
@@ -1227,125 +1228,152 @@ export default function AdminPage() {
         )}
 
         {/* ===================== PARAMÈTRES ===================== */}
-        {activeTab === "settings" && (
-          <div className="space-y-4">
-            {/* Liens sociaux */}
-            <Card className="p-4 space-y-3">
-              <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Link2 className="w-4 h-4" /> Liens sociaux</h3>
-              {[
-                { key: "serviceClient1", label: "Service client 1" },
-                { key: "serviceClient2", label: "Service client 2" },
-                { key: "officialChain", label: "Chaine officielle" },
-                { key: "discussionGroup", label: "Groupe de discussion" },
-              ].map(({ key, label }) => (
-                <div key={key}>
-                  <label className="text-xs font-medium text-gray-700">{label}</label>
-                  <Input className="mt-1" defaultValue={(settingsData as any)?.[key] || ""}
-                    onBlur={e => updateSettingsMutation.mutate({ [key]: e.target.value })}
-                    data-testid={`admin-setting-${key}`} />
-                </div>
-              ))}
-              <div>
-                <label className="text-xs font-medium text-gray-700">Lien MoneyFusion</label>
-                <Input className="mt-1" defaultValue={(settingsData as any)?.moneyFusionLink || ""}
-                  onBlur={e => updateSettingsMutation.mutate({ moneyFusionLink: e.target.value })}
-                  data-testid="admin-setting-moneyFusionLink" />
-                <p className="text-xs text-gray-400 mt-1">Lien MoneyFusion pour Congo Brazzaville et Burkina Faso</p>
-              </div>
-            </Card>
+        {activeTab === "settings" && (() => {
+          const sf = settingsForm || {};
+          const set = (k: string, v: any) => setSettingsForm((p: any) => ({ ...p, [k]: v }));
+          const saving = updateSettingsMutation.isPending;
 
-            {/* Retraits */}
-            <Card className="p-4 space-y-3">
-              <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Clock className="w-4 h-4" /> Retraits</h3>
-              <div>
-                <label className="text-xs font-medium text-gray-700">Dépôt minimum (FCFA)</label>
-                <Input className="mt-1" type="number" defaultValue={(settingsData as any)?.withdrawMinAmount ?? 3500}
-                  onBlur={e => updateSettingsMutation.mutate({ withdrawMinAmount: parseInt(e.target.value) })}
-                  data-testid="admin-setting-withdrawMinAmount" />
-                <p className="text-xs text-gray-400 mt-1">Montant minimum qu'un utilisateur peut déposer.</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-700">Frais de retrait (%)</label>
-                <Input className="mt-1" type="number" defaultValue={(settingsData as any)?.withdrawFeePercent ?? 10}
-                  onBlur={e => updateSettingsMutation.mutate({ withdrawFeePercent: parseInt(e.target.value) })}
-                  data-testid="admin-setting-withdrawFeePercent" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-700">Heure debut</label>
-                  <Input className="mt-1" type="number" min={0} max={23} defaultValue={(settingsData as any)?.withdrawStartHour ?? 10}
-                    onBlur={e => updateSettingsMutation.mutate({ withdrawStartHour: parseInt(e.target.value) })}
-                    data-testid="admin-setting-withdrawStartHour" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700">Heure fin</label>
-                  <Input className="mt-1" type="number" min={0} max={23} defaultValue={(settingsData as any)?.withdrawEndHour ?? 15}
-                    onBlur={e => updateSettingsMutation.mutate({ withdrawEndHour: parseInt(e.target.value) })}
-                    data-testid="admin-setting-withdrawEndHour" />
-                </div>
-              </div>
-            </Card>
+          const SaveBtn = ({ fields }: { fields: string[] }) => (
+            <Button className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white" size="sm" disabled={saving}
+              onClick={() => {
+                const patch: any = {};
+                fields.forEach(k => { patch[k] = sf[k]; });
+                updateSettingsMutation.mutate(patch);
+              }}
+              data-testid="btn-save-settings">
+              <Check className="w-4 h-4 mr-2" /> {saving ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          );
 
-            {/* Commissions de parrainage */}
-            <Card className="p-4 space-y-3">
-              <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Users className="w-4 h-4" /> Commissions de parrainage</h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="text-xs font-medium text-gray-700">Niveau 1 (%)</label>
-                  <Input className="mt-1" type="number" min={0} max={100} defaultValue={(settingsData as any)?.referralCommission1 ?? 30}
-                    onBlur={e => updateSettingsMutation.mutate({ referralCommission1: parseInt(e.target.value) })}
-                    data-testid="admin-setting-commission1" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700">Niveau 2 (%)</label>
-                  <Input className="mt-1" type="number" min={0} max={100} defaultValue={(settingsData as any)?.referralCommission2 ?? 3}
-                    onBlur={e => updateSettingsMutation.mutate({ referralCommission2: parseInt(e.target.value) })}
-                    data-testid="admin-setting-commission2" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700">Niveau 3 (%)</label>
-                  <Input className="mt-1" type="number" min={0} max={100} defaultValue={(settingsData as any)?.referralCommission3 ?? 2}
-                    onBlur={e => updateSettingsMutation.mutate({ referralCommission3: parseInt(e.target.value) })}
-                    data-testid="admin-setting-commission3" />
-                </div>
-              </div>
-            </Card>
+          return (
+            <div className="space-y-4">
+              {!settingsForm && <Card className="p-4 text-center text-gray-400 text-sm">Chargement des paramètres...</Card>}
 
-            {/* Autres */}
-            <Card className="p-4 space-y-3">
-              <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Globe className="w-4 h-4" /> Liens officiels</h3>
-              <div>
-                <label className="text-xs font-medium text-gray-700">Groupe officiel (lien)</label>
-                <Input className="mt-1" data-testid="admin-telegram-group" defaultValue={(settingsData as any)?.telegramGroup || ""}
-                  onBlur={e => updateSettingsMutation.mutate({ telegramGroup: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-700">Chaîne officielle (lien)</label>
-                <Input className="mt-1" data-testid="admin-telegram-channel" defaultValue={(settingsData as any)?.telegramChannel || ""}
-                  onBlur={e => updateSettingsMutation.mutate({ telegramChannel: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-700">Service client</label>
-                <Input className="mt-1" data-testid="admin-telegram-service" defaultValue={(settingsData as any)?.telegramService || ""}
-                  onBlur={e => updateSettingsMutation.mutate({ telegramService: e.target.value })} />
-              </div>
-            </Card>
-
-            <Card className="p-4">
-              <div className="flex items-center justify-between gap-2">
+              {/* Retraits */}
+              <Card className="p-4 space-y-3">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Clock className="w-4 h-4" /> Configuration des retraits</h3>
                 <div>
-                  <h3 className="font-bold text-sm">Activités d'investissement</h3>
-                  <p className="text-xs text-gray-400">Activer/Désactiver les activités</p>
+                  <label className="text-xs font-medium text-gray-700">Retrait minimum (FCFA)</label>
+                  <Input className="mt-1" type="number" value={sf.withdrawMinAmount ?? 3500}
+                    onChange={e => set("withdrawMinAmount", parseInt(e.target.value) || 0)}
+                    data-testid="admin-setting-withdrawMinAmount" />
                 </div>
-                <Button size="sm" variant={(settingsData as any)?.activitiesEnabled ? "destructive" : "default"}
-                  onClick={() => updateSettingsMutation.mutate({ activitiesEnabled: !(settingsData as any)?.activitiesEnabled })}
-                  data-testid="admin-toggle-activities">
-                  {(settingsData as any)?.activitiesEnabled ? "Désactiver" : "Activer"}
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Frais de retrait (%)</label>
+                  <Input className="mt-1" type="number" value={sf.withdrawFeePercent ?? 10}
+                    onChange={e => set("withdrawFeePercent", parseInt(e.target.value) || 0)}
+                    data-testid="admin-setting-withdrawFeePercent" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Heure de début</label>
+                    <Input className="mt-1" type="number" min={0} max={23} value={sf.withdrawStartHour ?? 10}
+                      onChange={e => set("withdrawStartHour", parseInt(e.target.value) || 0)}
+                      data-testid="admin-setting-withdrawStartHour" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Heure de fin</label>
+                    <Input className="mt-1" type="number" min={0} max={23} value={sf.withdrawEndHour ?? 15}
+                      onChange={e => set("withdrawEndHour", parseInt(e.target.value) || 0)}
+                      data-testid="admin-setting-withdrawEndHour" />
+                  </div>
+                </div>
+                <SaveBtn fields={["withdrawMinAmount", "withdrawFeePercent", "withdrawStartHour", "withdrawEndHour"]} />
+              </Card>
+
+              {/* Commissions de parrainage */}
+              <Card className="p-4 space-y-3">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Users className="w-4 h-4" /> Commissions de parrainage</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Niveau 1 (%)</label>
+                    <Input className="mt-1" type="number" min={0} max={100} value={sf.referralCommission1 ?? 30}
+                      onChange={e => set("referralCommission1", parseInt(e.target.value) || 0)}
+                      data-testid="admin-setting-commission1" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Niveau 2 (%)</label>
+                    <Input className="mt-1" type="number" min={0} max={100} value={sf.referralCommission2 ?? 3}
+                      onChange={e => set("referralCommission2", parseInt(e.target.value) || 0)}
+                      data-testid="admin-setting-commission2" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-700">Niveau 3 (%)</label>
+                    <Input className="mt-1" type="number" min={0} max={100} value={sf.referralCommission3 ?? 2}
+                      onChange={e => set("referralCommission3", parseInt(e.target.value) || 0)}
+                      data-testid="admin-setting-commission3" />
+                  </div>
+                </div>
+                <SaveBtn fields={["referralCommission1", "referralCommission2", "referralCommission3"]} />
+              </Card>
+
+              {/* Liens sociaux */}
+              <Card className="p-4 space-y-3">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Link2 className="w-4 h-4" /> Liens sociaux</h3>
+                {[
+                  { key: "serviceClient1", label: "Service client 1" },
+                  { key: "serviceClient2", label: "Service client 2" },
+                  { key: "officialChain", label: "Chaine officielle" },
+                  { key: "discussionGroup", label: "Groupe de discussion" },
+                ].map(({ key, label }) => (
+                  <div key={key}>
+                    <label className="text-xs font-medium text-gray-700">{label}</label>
+                    <Input className="mt-1" value={sf[key] || ""}
+                      onChange={e => set(key, e.target.value)}
+                      data-testid={`admin-setting-${key}`} />
+                  </div>
+                ))}
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Lien MoneyFusion</label>
+                  <Input className="mt-1" value={sf.moneyFusionLink || ""}
+                    onChange={e => set("moneyFusionLink", e.target.value)}
+                    data-testid="admin-setting-moneyFusionLink" />
+                  <p className="text-xs text-gray-400 mt-1">Lien MoneyFusion pour Congo Brazzaville et Burkina Faso</p>
+                </div>
+                <SaveBtn fields={["serviceClient1", "serviceClient2", "officialChain", "discussionGroup", "moneyFusionLink"]} />
+              </Card>
+
+              {/* Liens officiels */}
+              <Card className="p-4 space-y-3">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Globe className="w-4 h-4" /> Liens officiels</h3>
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Groupe officiel (lien)</label>
+                  <Input className="mt-1" value={sf.telegramGroup || ""}
+                    onChange={e => set("telegramGroup", e.target.value)}
+                    data-testid="admin-telegram-group" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Chaîne officielle (lien)</label>
+                  <Input className="mt-1" value={sf.telegramChannel || ""}
+                    onChange={e => set("telegramChannel", e.target.value)}
+                    data-testid="admin-telegram-channel" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Service client (Telegram)</label>
+                  <Input className="mt-1" value={sf.telegramService || ""}
+                    onChange={e => set("telegramService", e.target.value)}
+                    data-testid="admin-telegram-service" />
+                </div>
+                <SaveBtn fields={["telegramGroup", "telegramChannel", "telegramService"]} />
+              </Card>
+
+              {/* Activités */}
+              <Card className="p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <h3 className="font-bold text-sm">Activités d'investissement</h3>
+                    <p className="text-xs text-gray-400">Activer/Désactiver les activités</p>
+                  </div>
+                  <Button size="sm" variant={sf.activitiesEnabled ? "destructive" : "default"}
+                    onClick={() => updateSettingsMutation.mutate({ activitiesEnabled: !sf.activitiesEnabled })}
+                    data-testid="admin-toggle-activities">
+                    {sf.activitiesEnabled ? "Désactiver" : "Activer"}
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          );
+        })()}
 
       </div>
     </div>
