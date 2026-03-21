@@ -57,7 +57,6 @@ export default function DepositPage() {
       toast({ title: "Erreur", description: "Veuillez choisir une méthode de recharge", variant: "destructive" });
       return;
     }
-
     if (!selectedChannel || selectedChannel.type === "leekpay") {
       if (user?.country === "cameroun") {
         const callbackUrl = encodeURIComponent(`${window.location.origin}/api/payment/callback`);
@@ -66,16 +65,11 @@ export default function DepositPage() {
         return;
       }
       depositMutation.mutate({
-        amount: amt,
-        country: user?.country || "",
-        paymentMethod: "LeekPay",
-        phoneNumber: user?.phone,
-        channelId: selectedChannelId || null,
-        channelName: selectedChannel?.name || "LeekPay",
+        amount: amt, country: user?.country || "", paymentMethod: "LeekPay",
+        phoneNumber: user?.phone, channelId: selectedChannelId || null, channelName: selectedChannel?.name || "LeekPay",
       });
       return;
     }
-
     setShowLinkForm(true);
   };
 
@@ -86,46 +80,35 @@ export default function DepositPage() {
       return;
     }
     depositMutation.mutate({
-      amount: amt,
-      country: linkFormData.country,
-      paymentMethod: linkFormData.paymentMethod,
-      phoneNumber: linkFormData.phoneNumber,
-      accountName: linkFormData.accountName,
-      channelId: selectedChannel?.id,
-      channelName: selectedChannel?.name,
+      amount: amt, country: linkFormData.country, paymentMethod: linkFormData.paymentMethod,
+      phoneNumber: linkFormData.phoneNumber, accountName: linkFormData.accountName,
+      channelId: selectedChannel?.id, channelName: selectedChannel?.name,
     });
     if (selectedChannel?.redirectUrl) {
       setTimeout(() => window.open(selectedChannel.redirectUrl, "_blank"), 500);
     }
   };
 
-  const handleConfirmMethod = () => {
-    setSelectedChannelId(tempChannelId);
-    setShowMethodSheet(false);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-[#22c55e] px-4 pt-5 pb-10 relative">
-        <div className="flex items-center justify-between mb-2">
-          <button onClick={() => navigate("/")} data-testid="button-back-deposit" className="p-1">
-            <ArrowLeft className="w-6 h-6 text-white" />
+    <div className="bg-white">
+      {/* Green header */}
+      <div className="bg-[#22c55e] px-4 pt-6 pb-6">
+        <div className="flex items-center justify-between mb-1">
+          <button onClick={() => navigate("/")} data-testid="button-back-deposit" className="text-white">
+            <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-white font-bold text-lg">Recharger</h1>
-          <button
-            onClick={() => navigate("/deposit-history")}
-            className="text-white text-sm"
-            data-testid="button-deposit-history"
-          >
+          <button onClick={() => navigate("/deposit-history")} className="text-white text-sm" data-testid="button-deposit-history">
             Historique &gt;
           </button>
         </div>
       </div>
 
-      <div className="px-4 -mt-6 space-y-3 pb-10">
-        {/* Amount card */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
+      {/* Body */}
+      <div className="px-4 py-5 space-y-0">
+
+        {/* Amount section */}
+        <div className="border-b border-gray-100 pb-5 mb-5">
           <p className="font-bold text-gray-900 text-base mb-4">Montant de la recharge</p>
           <input
             data-testid="input-deposit-amount"
@@ -133,42 +116,42 @@ export default function DepositPage() {
             placeholder="Entrez le montant"
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            className="w-full text-gray-400 text-lg outline-none border-b border-gray-200 pb-2 mb-3 bg-transparent"
+            className="w-full text-gray-500 text-base outline-none pb-2 border-b border-gray-200 bg-transparent placeholder-gray-300"
           />
-          <p className="text-gray-500 text-sm">Montant minimum de recharge: <span className="font-medium">{depositMinAmount.toFixed(2)}</span></p>
+          <p className="text-gray-500 text-sm mt-3">
+            Montant minimum de recharge : <span className="font-semibold">{depositMinAmount.toFixed(2)}</span>
+          </p>
         </div>
 
         {/* Method selection row */}
         <div
-          className="bg-white rounded-2xl shadow-sm cursor-pointer"
+          className="flex items-center justify-between py-4 border-b border-gray-100 cursor-pointer"
           onClick={() => { setTempChannelId(selectedChannelId); setShowMethodSheet(true); }}
           data-testid="button-choose-method"
         >
-          <div className="flex items-center justify-between px-5 py-4">
-            <p className="text-gray-700 font-medium text-sm">Méthode de recharge</p>
-            <div className="flex items-center gap-1 text-gray-400 text-sm">
-              {selectedChannel ? (
-                <span className="text-gray-800 font-medium">{selectedChannel.name}</span>
-              ) : (
-                <span>Veuillez choisir une méthode de recharge</span>
-              )}
-              <ChevronRight className="w-4 h-4" />
-            </div>
+          <p className="text-gray-700 font-medium text-sm">Méthode de recharge</p>
+          <div className="flex items-center gap-1">
+            <span className="text-gray-400 text-sm">
+              {selectedChannel ? selectedChannel.name : "Veuillez choisir une méthode de recharge"}
+            </span>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
           </div>
         </div>
 
         {/* Recharger button */}
-        <button
-          data-testid="button-deposit-now"
-          onClick={handleRecharge}
-          disabled={depositMutation.isPending}
-          className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-2xl text-base shadow-md disabled:opacity-60"
-        >
-          {depositMutation.isPending ? "En cours..." : "Recharger"}
-        </button>
+        <div className="pt-6">
+          <button
+            data-testid="button-deposit-now"
+            onClick={handleRecharge}
+            disabled={depositMutation.isPending}
+            className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
+          >
+            {depositMutation.isPending ? "En cours..." : "Recharger"}
+          </button>
+        </div>
 
         {/* Instructions */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <div className="pt-6">
           <p className="font-bold text-gray-900 text-base mb-3">Instructions de recharge</p>
           <div className="space-y-2 text-gray-500 text-sm leading-relaxed">
             <p>1. Entrez le montant et choisissez votre méthode de recharge</p>
@@ -179,73 +162,54 @@ export default function DepositPage() {
         </div>
       </div>
 
-      {/* Method selection bottom sheet */}
+      {/* Method bottom sheet */}
       {showMethodSheet && (
         <div className="fixed inset-0 z-50" onClick={() => setShowMethodSheet(false)}>
           <div className="absolute inset-0 bg-black/40" />
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[70vh] overflow-y-auto"
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl"
+            style={{ maxHeight: "70vh", overflowY: "auto" }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Sheet header */}
-            <div className="px-5 pt-4 pb-2 border-b border-gray-100">
-              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-3" />
-              <p className="font-bold text-gray-900 text-base">Méthode de recharge</p>
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
+            <p className="font-bold text-gray-900 text-base px-5 pb-3 border-b border-gray-100">Méthode de recharge</p>
 
-            {/* Channel list */}
-            <div className="divide-y divide-gray-100 px-2">
+            <div className="divide-y divide-gray-100">
               {(channels as any[]).length === 0 ? (
                 <p className="text-center text-gray-400 text-sm py-8">Aucune méthode disponible</p>
               ) : (
                 (channels as any[]).map((ch: any) => (
-                  <label
+                  <div
                     key={ch.id}
-                    className="flex items-center justify-between py-4 px-3 cursor-pointer"
+                    className="flex items-center justify-between py-4 px-5 cursor-pointer"
+                    onClick={() => setTempChannelId(ch.id)}
                     data-testid={`sheet-channel-${ch.id}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-green-50 rounded-full flex items-center justify-center">
-                        {ch.type === "leekpay" ? (
-                          <Zap className="w-4 h-4 text-yellow-500" />
-                        ) : (
-                          <Link2 className="w-4 h-4 text-green-600" />
-                        )}
+                        {ch.type === "leekpay" ? <Zap className="w-4 h-4 text-yellow-500" /> : <Link2 className="w-4 h-4 text-green-600" />}
                       </div>
                       <div>
                         <p className="text-gray-800 font-medium text-sm">{ch.name}</p>
                         <p className="text-xs text-gray-400">{ch.type === "leekpay" ? "Paiement automatique" : "Paiement par lien"}</p>
                       </div>
                     </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      tempChannelId === ch.id ? "border-[#22c55e]" : "border-gray-300"
-                    }`}>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === ch.id ? "border-[#22c55e]" : "border-gray-300"}`}>
                       {tempChannelId === ch.id && <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />}
                     </div>
-                    <input
-                      type="radio"
-                      name="temp-channel"
-                      value={ch.id}
-                      checked={tempChannelId === ch.id}
-                      onChange={() => setTempChannelId(ch.id)}
-                      className="hidden"
-                    />
-                  </label>
+                  </div>
                 ))
               )}
             </div>
 
-            {/* Annuler / Confirmer */}
             <div className="flex items-center justify-between px-6 py-5 border-t border-gray-100">
-              <button
-                onClick={() => setShowMethodSheet(false)}
-                className="text-gray-600 font-medium text-base"
-                data-testid="button-cancel-method"
-              >
+              <button onClick={() => setShowMethodSheet(false)} className="text-gray-600 font-medium text-base" data-testid="button-cancel-method">
                 Annuler
               </button>
               <button
-                onClick={handleConfirmMethod}
+                onClick={() => { setSelectedChannelId(tempChannelId); setShowMethodSheet(false); }}
                 disabled={!tempChannelId}
                 className="text-[#22c55e] font-bold text-base disabled:text-gray-300"
                 data-testid="button-confirm-method"
@@ -259,70 +223,50 @@ export default function DepositPage() {
 
       {/* Link Payment Form bottom sheet */}
       {showLinkForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end justify-center">
-          <div className="bg-white w-full max-w-lg rounded-t-2xl p-5 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
+          <div className="bg-white w-full rounded-t-3xl p-5" style={{ maxHeight: "90vh", overflowY: "auto" }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-base">Informations de paiement</h3>
-              <button onClick={() => setShowLinkForm(false)} data-testid="btn-close-link-form">
-                <X className="w-5 h-5" />
-              </button>
+              <button onClick={() => setShowLinkForm(false)} data-testid="btn-close-link-form"><X className="w-5 h-5" /></button>
             </div>
             <p className="text-sm text-gray-500 mb-4">
               Canal: <strong>{selectedChannel?.name}</strong> | Montant: <strong>{parseInt(amount).toLocaleString()} FCFA</strong>
             </p>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-gray-600">Nom du compte de paiement</label>
-                <input
-                  data-testid="input-link-account-name"
-                  type="text"
-                  placeholder="Votre nom"
-                  value={linkFormData.accountName}
-                  onChange={e => setLinkFormData({ ...linkFormData, accountName: e.target.value })}
-                  className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#22c55e]"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600">Numéro de téléphone de paiement</label>
-                <input
-                  data-testid="input-link-phone"
-                  type="tel"
-                  placeholder="Ex: 0701234567"
-                  value={linkFormData.phoneNumber}
-                  onChange={e => setLinkFormData({ ...linkFormData, phoneNumber: e.target.value })}
-                  className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#22c55e]"
-                />
-              </div>
+            <div className="space-y-4">
+              {[
+                { key: "accountName", label: "Nom du compte de paiement", placeholder: "Votre nom", type: "text", testId: "input-link-account-name" },
+                { key: "phoneNumber", label: "Numéro de téléphone de paiement", placeholder: "Ex: 0701234567", type: "tel", testId: "input-link-phone" },
+                { key: "paymentMethod", label: "Moyen de paiement", placeholder: "Ex: Wave, Orange Money, MTN...", type: "text", testId: "input-link-payment-method" },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className="text-xs font-medium text-gray-600">{f.label}</label>
+                  <input
+                    data-testid={f.testId}
+                    type={f.type}
+                    placeholder={f.placeholder}
+                    value={(linkFormData as any)[f.key]}
+                    onChange={e => setLinkFormData({ ...linkFormData, [f.key]: e.target.value })}
+                    className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-transparent"
+                  />
+                </div>
+              ))}
               <div>
                 <label className="text-xs font-medium text-gray-600">Pays</label>
                 <select
                   data-testid="select-link-country"
                   value={linkFormData.country}
                   onChange={e => setLinkFormData({ ...linkFormData, country: e.target.value })}
-                  className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#22c55e] bg-white"
+                  className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-white"
                 >
                   <option value="">Sélectionner un pays</option>
-                  {(COUNTRIES as any[]).map((c: any) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
+                  {(COUNTRIES as any[]).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600">Moyen de paiement</label>
-                <input
-                  data-testid="input-link-payment-method"
-                  type="text"
-                  placeholder="Ex: Wave, Orange Money, MTN..."
-                  value={linkFormData.paymentMethod}
-                  onChange={e => setLinkFormData({ ...linkFormData, paymentMethod: e.target.value })}
-                  className="w-full mt-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#22c55e]"
-                />
               </div>
               <button
                 data-testid="button-link-proceed"
                 onClick={handleLinkDeposit}
                 disabled={depositMutation.isPending}
-                className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-full text-base shadow-md mt-2 disabled:opacity-60"
+                className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base mt-2 disabled:opacity-60"
               >
                 {depositMutation.isPending ? "En cours..." : "Procéder au paiement →"}
               </button>

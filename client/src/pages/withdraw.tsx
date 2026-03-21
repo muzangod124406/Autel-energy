@@ -3,9 +3,9 @@ import { useAuth } from "@/lib/auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import { ArrowLeft, Eye, EyeOff, CreditCard } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useLocation } from "wouter";
+import { formatCFA } from "@/lib/constants";
 
 export default function WithdrawPage() {
   const { user, refreshUser } = useAuth();
@@ -13,13 +13,16 @@ export default function WithdrawPage() {
   const [, navigate] = useLocation();
 
   const { data: bankCard } = useQuery({ queryKey: ["/api/user/bank-card"] });
+  const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
   const card = bankCard as any;
 
   const [amount, setAmount] = useState("");
   const [txPassword, setTxPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [payType, setPayType] = useState<"fcfa" | "usdt">("fcfa");
   const [showNoCardDialog, setShowNoCardDialog] = useState(false);
+
+  const withdrawMinAmount = settings?.withdrawMinAmount || 3500;
+  const withdrawFeePercent = settings?.withdrawFeePercent || 10;
 
   const withdrawMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -39,13 +42,10 @@ export default function WithdrawPage() {
   });
 
   const handleWithdraw = () => {
-    if (!card) {
-      setShowNoCardDialog(true);
-      return;
-    }
+    if (!card) { setShowNoCardDialog(true); return; }
     const amt = parseInt(amount);
-    if (!amt || amt < 2000) {
-      toast({ title: "Erreur", description: "Montant minimum : 2 000 FCFA", variant: "destructive" });
+    if (!amt || amt < withdrawMinAmount) {
+      toast({ title: "Erreur", description: `Montant minimum : ${formatCFA(withdrawMinAmount)}`, variant: "destructive" });
       return;
     }
     if (amt > 4500000) {
@@ -57,189 +57,136 @@ export default function WithdrawPage() {
       return;
     }
     withdrawMutation.mutate({
-      amount: amt,
-      country: user?.country,
-      paymentMethod: card.paymentMethod,
-      phoneNumber: card.phoneNumber,
-      accountName: card.accountName,
-      transactionPassword: txPassword,
+      amount: amt, country: user?.country, paymentMethod: card.paymentMethod,
+      phoneNumber: card.phoneNumber, accountName: card.accountName, transactionPassword: txPassword,
     });
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f0e4] pb-24">
+    <div className="bg-white">
+      {/* No card dialog */}
       {showNoCardDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
-            <h3 className="text-gray-500 text-base font-semibold mb-3">Notification système</h3>
-            <p className="text-gray-700 text-sm mb-6">
-              Vous n'avez pas encore lié votre carte bancaire. Veuillez d'abord lier votre carte bancaire
-            </p>
+            <h3 className="text-gray-700 text-base font-semibold mb-3">Notification système</h3>
+            <p className="text-gray-600 text-sm mb-6">Vous n'avez pas encore lié votre carte bancaire. Veuillez d'abord lier votre carte.</p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowNoCardDialog(false)}
-                className="flex-1 h-11 rounded-full bg-gray-200 text-gray-700 font-semibold text-sm"
-                data-testid="button-cancel-dialog"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={() => { setShowNoCardDialog(false); navigate("/bank-card"); }}
-                className="flex-1 h-11 rounded-full bg-[#22c55e] text-white font-bold text-sm"
-                data-testid="button-link-card"
-              >
-                Lier une carte
-              </button>
+              <button onClick={() => setShowNoCardDialog(false)} className="flex-1 h-11 rounded-full bg-gray-100 text-gray-700 font-semibold text-sm" data-testid="button-cancel-dialog">Annuler</button>
+              <button onClick={() => { setShowNoCardDialog(false); navigate("/bank-card"); }} className="flex-1 h-11 rounded-full bg-[#22c55e] text-white font-bold text-sm" data-testid="button-link-card">Lier une carte</button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-[#22c55e] px-4 pt-6 pb-10 relative">
+      {/* Header */}
+      <div className="bg-[#22c55e] px-4 pt-6 pb-6">
         <div className="flex items-center justify-between">
           <button onClick={() => navigate("/")} className="text-white" data-testid="button-back-withdraw">
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-white text-xl font-bold">retrait</h1>
-          <button
-            onClick={() => navigate("/transactions")}
-            className="bg-white/10 border border-white/30 text-white text-xs px-3 py-1 rounded-lg"
-            data-testid="button-history"
-          >
+          <h1 className="text-white font-bold text-lg">Retrait</h1>
+          <button onClick={() => navigate("/transactions")} className="text-white text-sm" data-testid="button-history">
             Historique &gt;
           </button>
         </div>
       </div>
 
-      <div className="px-4 -mt-6 space-y-4">
-        <div
-          className="rounded-2xl p-4 relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)", minHeight: 130 }}
-        >
-          <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -mr-10 -mt-10" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/10 -ml-12 -mb-12" />
-          <div className="relative z-10">
-            <div className="flex items-start justify-between">
-              <div className="grid grid-cols-2 gap-1 w-10 h-8">
-                {[0,1,2,3].map(i => (
-                  <div key={i} className="bg-white/60 rounded-sm" />
-                ))}
+      {/* Body */}
+      <div className="px-4 py-5">
+
+        {/* Balance row */}
+        <div className="flex items-center justify-between py-4 border-b border-gray-100">
+          <div>
+            <p className="text-gray-500 text-xs">Solde du compte</p>
+            <p className="font-bold text-gray-900 text-xl mt-0.5">{(user?.withdrawBalance || 0).toFixed(2)}</p>
+            <p className="text-gray-400 text-xs mt-0.5">Solde retirable : {(user?.withdrawBalance || 0).toFixed(2)}</p>
+          </div>
+        </div>
+
+        {/* Linked card info */}
+        <div className="py-4 border-b border-gray-100">
+          <p className="text-gray-700 font-medium text-sm mb-2">Carte liée</p>
+          {card ? (
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-green-50 rounded-full flex items-center justify-center">
+                <span className="text-green-600 font-bold text-xs">💳</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-5 rounded-full bg-green-300/40 relative">
-                  <div className="absolute right-0.5 top-0.5 w-4 h-4 rounded-full bg-green-200" />
-                </div>
+              <div>
+                <p className="text-gray-800 font-medium text-sm">{card.phoneNumber}</p>
+                <p className="text-gray-400 text-xs">{card.accountName} · {card.paymentMethod}</p>
               </div>
             </div>
-            {card ? (
-              <>
-                <p className="text-white font-bold text-lg mt-3">{card.phoneNumber}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <div>
-                    <p className="text-white/70 text-xs">Nom du titulaire</p>
-                    <p className="text-white font-semibold text-sm">{card.accountName || card.paymentMethod}</p>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="mt-4">
-                <p className="text-white/70 text-xs">Nom du titulaire</p>
-                <p className="text-white/60 text-sm mt-1">Aucune carte liée</p>
-              </div>
+          ) : (
+            <button onClick={() => navigate("/bank-card")} className="text-[#22c55e] text-sm font-medium" data-testid="link-add-card">
+              + Lier une carte bancaire
+            </button>
+          )}
+        </div>
+
+        {/* Amount */}
+        <div className="py-4 border-b border-gray-100">
+          <p className="font-bold text-gray-900 text-base mb-4">Montant de retrait</p>
+          <input
+            data-testid="input-withdraw-amount"
+            type="number"
+            placeholder="Entrez le montant"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            className="w-full text-gray-500 text-base outline-none pb-2 border-b border-gray-200 bg-transparent placeholder-gray-300"
+          />
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-gray-500 text-sm">Montant minimum : <span className="font-semibold">{withdrawMinAmount.toFixed(2)}</span></p>
+            {amount && parseInt(amount) > 0 && (
+              <p className="text-gray-400 text-xs">Frais {withdrawFeePercent}% : -{formatCFA(Math.round(parseInt(amount) * withdrawFeePercent / 100))}</p>
             )}
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 space-y-5">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-semibold text-gray-800">Montant</label>
-              <span className="text-xs text-gray-500">
-                Solde du compte :{" "}
-                <span className="font-bold text-gray-800">
-                  FCFA{(user?.withdrawBalance || 0).toFixed(2)}
-                </span>
-              </span>
-            </div>
-            <Input
-              data-testid="input-withdraw-amount"
-              type="number"
-              placeholder="Montant du retrait  2000-4500000"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className="bg-[#f5f5f5] border-none rounded-xl h-12 text-sm"
+        {/* Transaction password */}
+        <div className="py-4 border-b border-gray-100">
+          <p className="font-bold text-gray-900 text-base mb-4">Mot de passe de transaction</p>
+          <div className="relative">
+            <input
+              data-testid="input-tx-password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Entrez votre mot de passe"
+              value={txPassword}
+              onChange={e => setTxPassword(e.target.value)}
+              className="w-full text-gray-500 text-base outline-none pb-2 border-b border-gray-200 bg-transparent placeholder-gray-300 pr-8"
             />
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-gray-800 block mb-2">
-              Mot de passe de transaction
-            </label>
-            <div className="relative">
-              <Input
-                data-testid="input-tx-password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Mot de passe de transaction"
-                value={txPassword}
-                onChange={e => setTxPassword(e.target.value)}
-                className="bg-[#f5f5f5] border-none rounded-xl h-12 text-sm pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(p => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                data-testid="button-toggle-password"
-              >
-                {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-gray-800 block mb-3">Pay Type</label>
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2 cursor-pointer" data-testid="radio-fcfa">
-                <div
-                  onClick={() => setPayType("fcfa")}
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${payType === "fcfa" ? "border-[#22c55e]" : "border-gray-300"}`}
-                >
-                  {payType === "fcfa" && <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />}
-                </div>
-                <span className="text-sm font-medium">FCFA</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer" data-testid="radio-usdt">
-                <div
-                  onClick={() => setPayType("usdt")}
-                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${payType === "usdt" ? "border-[#22c55e]" : "border-gray-300"}`}
-                >
-                  {payType === "usdt" && <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />}
-                </div>
-                <span className="text-sm font-medium">USDT</span>
-              </label>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowPassword(p => !p)}
+              className="absolute right-0 bottom-2 text-gray-400"
+              data-testid="button-toggle-password"
+            >
+              {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+            </button>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <h3 className="text-[#22c55e] font-bold text-base">Explication</h3>
-          <div className="text-sm text-gray-700 space-y-1.5">
-            <p>1. Horaires de retrait quotidiens de 09:00:00 à 17:00:00</p>
-            <p>2. Montant de retrait unique entre 2000 et 4500000</p>
-            <p>3. Pour faciliter le règlement financier, vous ne pouvez demander un retrait que 1 fois par jour</p>
-            <p>4. En cas de problème avec votre retrait, veuillez contacter le service client</p>
+        {/* Submit button */}
+        <div className="pt-6">
+          <button
+            data-testid="button-submit-withdraw"
+            onClick={handleWithdraw}
+            disabled={withdrawMutation.isPending}
+            className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
+          >
+            {withdrawMutation.isPending ? "En cours..." : "Demander un retrait"}
+          </button>
+        </div>
+
+        {/* Instructions */}
+        <div className="pt-6 pb-4">
+          <p className="font-bold text-gray-900 text-base mb-3">Instructions</p>
+          <div className="space-y-2 text-gray-500 text-sm leading-relaxed">
+            <p>1. Horaires de retrait : {settings?.withdrawStartHour || 10}h00 – {settings?.withdrawEndHour || 15}h00</p>
+            <p>2. Montant minimum : {formatCFA(withdrawMinAmount)}, maximum : 4 500 000 FCFA</p>
+            <p>3. Un seul retrait autorisé par jour</p>
+            <p>4. En cas de problème, contactez le service client</p>
           </div>
         </div>
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 px-4 pb-6 bg-[#f0f0e4] pt-2">
-        <button
-          data-testid="button-submit-withdraw"
-          onClick={handleWithdraw}
-          disabled={withdrawMutation.isPending}
-          className="w-full h-13 py-3.5 rounded-full bg-[#22c55e] text-white font-bold text-base disabled:opacity-60 shadow-lg"
-        >
-          {withdrawMutation.isPending ? "En cours..." : "Demander un retrait"}
-        </button>
       </div>
     </div>
   );
