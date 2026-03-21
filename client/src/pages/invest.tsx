@@ -218,83 +218,67 @@ export default function InvestPage() {
               const isLaunched = !product.launchDate || new Date(product.launchDate) <= new Date();
 
               return (
-                <Card key={product.id} className="overflow-hidden bg-white dark:bg-gray-900" data-testid={`product-card-${product.id}`}>
-                  {product.imageUrl && (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-36 object-cover"
-                    />
-                  )}
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div>
-                        <h3 className="font-bold text-base">{product.name}</h3>
-                        {product.launchDate && (
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                            <Calendar className="w-3 h-3" />
-                            <span>Lancement: {new Date(product.launchDate).toLocaleString("fr-FR")}</span>
-                          </div>
-                        )}
-                      </div>
-                      {remaining !== null && (
-                        <Badge variant={remaining <= 5 ? "destructive" : "secondary"} className="text-[10px] flex-shrink-0">
-                          {remaining} restant{remaining > 1 ? "s" : ""}
-                        </Badge>
+                <Card key={product.id} className="p-4 bg-white dark:bg-gray-900" data-testid={`product-card-${product.id}`}>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <Zap className="w-5 h-5 text-white" />
+                        </div>
                       )}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 mb-3">
-                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                        <p className="text-[10px] text-muted-foreground">Prix</p>
-                        <p className="text-sm font-bold text-blue-600">{formatCFA(product.price)}</p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                        <p className="text-[10px] text-muted-foreground">Gain/jour</p>
-                        <p className="text-sm font-bold text-green-600">{formatCFA(product.dailyGain)}</p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                        <p className="text-[10px] text-muted-foreground">Gain total</p>
-                        <p className="text-sm font-bold text-purple-600">{formatCFA(product.totalGain)}</p>
+                      <div>
+                        <h3 className="font-bold text-sm">{product.name}</h3>
+                        <p className="text-xs text-muted-foreground">{product.cycleDays} jours</p>
                       </div>
                     </div>
-
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="w-3 h-3" />
-                        <span>Cycle: {product.cycleDays} jours</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <ShoppingBag className="w-3 h-3" />
-                        <span>{product.purchaseCount} acheté{product.purchaseCount > 1 ? "s" : ""}</span>
-                      </div>
-                    </div>
-
-                    {!isLaunched ? (
-                      <div className="w-full py-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-center text-xs text-gray-500 font-medium">
-                        <Calendar className="w-3 h-3 inline mr-1" />
-                        Disponible le {new Date(product.launchDate).toLocaleString("fr-FR")}
-                      </div>
-                    ) : !hasActiveFixed ? (
-                      <div className="w-full py-2.5 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-center text-xs text-orange-600 dark:text-orange-400 font-medium flex items-center justify-center gap-1">
-                        <Lock className="w-3 h-3" />
-                        Plan Fixé 120J requis
-                      </div>
-                    ) : (
-                      <Button
-                        data-testid={`buy-product-${product.id}`}
-                        size="sm"
-                        onClick={() => handleBuyProduct(product)}
-                        disabled={investMutation.isPending && buyingProductId === product.id}
-                        className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white"
-                      >
-                        <ShoppingBag className="w-3 h-3 mr-1" />
-                        {investMutation.isPending && buyingProductId === product.id
-                          ? "Achat en cours..."
-                          : `Acheter — ${formatCFA(product.price)}`}
-                      </Button>
+                    {remaining !== null && (
+                      <Badge variant={remaining <= 5 ? "destructive" : "secondary"} className="text-[10px] flex-shrink-0">
+                        {remaining} restant{remaining > 1 ? "s" : ""}
+                      </Badge>
                     )}
                   </div>
+
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                      <p className="text-[10px] text-muted-foreground">Investissement</p>
+                      <p className="text-sm font-bold text-blue-600">{formatCFA(product.price)}</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                      <p className="text-[10px] text-muted-foreground">Gain/jour</p>
+                      <p className="text-sm font-bold text-green-600">{formatCFA(product.dailyGain)}</p>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                      <p className="text-[10px] text-muted-foreground">Gain total</p>
+                      <p className="text-sm font-bold text-purple-600">{formatCFA(product.totalGain)}</p>
+                    </div>
+                  </div>
+
+                  {!isLaunched ? (
+                    <div className="w-full py-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-center text-xs text-gray-500 font-medium">
+                      <Calendar className="w-3 h-3 inline mr-1" />
+                      Disponible le {new Date(product.launchDate).toLocaleString("fr-FR")}
+                    </div>
+                  ) : !hasActiveFixed ? (
+                    <div className="w-full py-2.5 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-center text-xs text-orange-600 dark:text-orange-400 font-medium flex items-center justify-center gap-1">
+                      <Lock className="w-3 h-3" />
+                      Plan Fixé 120J requis
+                    </div>
+                  ) : (
+                    <Button
+                      data-testid={`buy-product-${product.id}`}
+                      size="sm"
+                      onClick={() => handleBuyProduct(product)}
+                      disabled={investMutation.isPending && buyingProductId === product.id}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                    >
+                      <Lock className="w-3 h-3 mr-1" />
+                      {investMutation.isPending && buyingProductId === product.id
+                        ? "Achat en cours..."
+                        : `Investir ${formatCFA(product.price)}`}
+                    </Button>
+                  )}
                 </Card>
               );
             })}
