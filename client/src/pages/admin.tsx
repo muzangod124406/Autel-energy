@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Users, TrendingUp, Download, ArrowLeft, Search, Ban,
   Check, X, DollarSign, Settings, Shield, Eye, Trash2, Plus,
-  Link2, Package, ChevronDown, ChevronUp, Edit2, ToggleLeft, ToggleRight,
+  Link2, Package, Edit2, ToggleLeft, ToggleRight,
   Upload, Calendar, UserCheck, Globe, Wallet, Award, RotateCcw, CreditCard,
   AlertTriangle, Zap, Clock, ShoppingCart
 } from "lucide-react";
@@ -80,6 +80,7 @@ export default function AdminPage() {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [userReferrals, setUserReferrals] = useState<any>(null);
   const [userInvestments, setUserInvestments] = useState<any[]>([]);
+  const [teamModalUser, setTeamModalUser] = useState<any>(null);
 
   // Channel form state
   const [channelForm, setChannelForm] = useState({ name: "", type: "link", redirectUrl: "", isActive: true });
@@ -109,10 +110,6 @@ export default function AdminPage() {
   const [statsFrom, setStatsFrom] = useState("");
   const [appliedStatsFrom, setAppliedStatsFrom] = useState("");
 
-  // Team overview filter
-  const [teamSearch, setTeamSearch] = useState("");
-  const [teamCountry, setTeamCountry] = useState("all");
-  const [teamSortBy, setTeamSortBy] = useState("createdAt");
 
   if (!user?.isAdmin) {
     return (
@@ -418,7 +415,6 @@ export default function AdminPage() {
     { key: "deposits", label: "Dépôts" },
     { key: "withdrawals", label: "Retraits" },
     { key: "users", label: "Utilisateurs" },
-    { key: "team", label: "Équipe" },
     { key: "products", label: "Produits" },
     { key: "channels", label: "Canaux" },
     { key: "tickets", label: "Codes Cadeaux" },
@@ -738,24 +734,9 @@ export default function AdminPage() {
                     {u.isAdmin ? "Retirer Admin" : "Donner Admin"}
                   </Button>
                 </div>
-                <button className="flex items-center gap-1 text-xs text-gray-400" onClick={() => {
-                  const newExp = expandedUser === u.id ? null : u.id;
-                  setExpandedUser(newExp);
-                  if (newExp) { loadUserReferrals(u.id); loadUserInvestments(u.id); }
-                }}>
-                  {expandedUser === u.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  Voir équipe de parrainage
-                </button>
-                {expandedUser === u.id && (
-                  <div className="mt-2 text-xs bg-gray-50 rounded-lg p-3 space-y-1">
-                    {userReferrals ? (
-                      <>
-                        <p>Niv. 1: <strong>{userReferrals.level1?.length || 0}</strong> | Niv. 2: <strong>{userReferrals.level2?.length || 0}</strong> | Niv. 3: <strong>{userReferrals.level3?.length || 0}</strong></p>
-                        <p>Commission: <strong className="text-green-600">{formatCFA(u.commissionBalance)}</strong></p>
-                      </>
-                    ) : <p>Chargement...</p>}
-                  </div>
-                )}
+                <Button size="sm" variant="outline" onClick={() => { setTeamModalUser(u); setUserReferrals(null); loadUserReferrals(u.id); }} className="text-xs h-7" data-testid={`btn-team-${u.id}`}>
+                  <Users className="w-3 h-3 mr-1" /> Voir l'équipe
+                </Button>
               </Card>
             ))}
 
@@ -838,138 +819,95 @@ export default function AdminPage() {
                 </Card>
               </div>
             )}
+
+            {/* Team Modal */}
+            {teamModalUser && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setTeamModalUser(null)}>
+                <Card className="max-w-md w-full p-4 max-h-[88vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-bold text-sm">{teamModalUser.phone}{teamModalUser.nickname ? ` (${teamModalUser.nickname})` : ""}</h3>
+                      <p className="text-xs text-gray-400">{COUNTRIES.find((c: any) => c.id === teamModalUser.country)?.name || teamModalUser.country} · Code: {teamModalUser.referralCode}</p>
+                    </div>
+                    <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setTeamModalUser(null)}>✕</Button>
+                  </div>
+
+                  {/* Own stats */}
+                  {(() => {
+                    const td = (teamOverview as any[]).find((x: any) => x.id === teamModalUser.id);
+                    return td ? (
+                      <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="bg-green-50 rounded-lg p-3 text-center">
+                          <p className="text-xs text-green-600 font-medium">Investissement propre</p>
+                          <p className="font-bold text-green-800">{formatCFA(td.ownInvested)}</p>
+                        </div>
+                        <div className="bg-orange-50 rounded-lg p-3 text-center">
+                          <p className="text-xs text-orange-600 font-medium">Commissions totales</p>
+                          <p className="font-bold text-orange-800">{formatCFA(td.commissionBalance)}</p>
+                        </div>
+                        <div className="bg-blue-50 rounded-lg p-3 text-center">
+                          <p className="text-xs text-blue-600 font-medium">Invest. total équipe</p>
+                          <p className="font-bold text-blue-800">{formatCFA(td.teamTotalInvested)}</p>
+                        </div>
+                        <div className="bg-purple-50 rounded-lg p-3 text-center">
+                          <p className="text-xs text-purple-600 font-medium">Total filleuls</p>
+                          <p className="font-bold text-purple-800">{td.teamL1 + td.teamL2 + td.teamL3}</p>
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+
+                  {!userReferrals ? (
+                    <p className="text-center text-sm text-gray-400 py-4">Chargement de l'équipe...</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {(["level1", "level2", "level3"] as const).map((lvl, idx) => {
+                        const members = userReferrals[lvl] || [];
+                        if (members.length === 0) return (
+                          <div key={lvl}>
+                            <p className="text-xs font-semibold text-gray-500 mb-1">Niveau {idx + 1} — 0 filleul</p>
+                          </div>
+                        );
+                        return (
+                          <div key={lvl}>
+                            <p className="text-xs font-semibold text-gray-500 mb-2">Niveau {idx + 1} — {members.length} filleul(s)</p>
+                            <div className="space-y-2">
+                              {members.map((ref: any) => {
+                                const referred = ref.referred;
+                                const td2 = (teamOverview as any[]).find((x: any) => x.id === ref.referredId);
+                                return (
+                                  <div key={ref.id} className="bg-gray-50 rounded-lg px-3 py-2 text-xs" data-testid={`team-member-${ref.referredId}`}>
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <p className="font-semibold">{referred?.phone || ref.referredId}</p>
+                                        <p className="text-gray-400">{COUNTRIES.find((c: any) => c.id === referred?.country)?.name || referred?.country} · {referred?.referralCode}</p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-green-700 font-bold">{formatCFA(td2?.ownInvested || 0)}</p>
+                                        <p className="text-gray-400">investi</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-3 mt-1 pt-1 border-t border-gray-200">
+                                      <span>Commission: <strong className="text-orange-600">{formatCFA(referred?.commissionBalance || 0)}</strong></span>
+                                      <span>Retrait: <strong className="text-blue-600">{formatCFA(referred?.withdrawBalance || 0)}</strong></span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <Button variant="outline" onClick={() => setTeamModalUser(null)} className="w-full mt-4">Fermer</Button>
+                </Card>
+              </div>
+            )}
           </div>
         )}
-
-        {/* ===================== ÉQUIPE ===================== */}
-        {activeTab === "team" && (() => {
-          const teamData = teamOverview as any[];
-          const filtered = teamData.filter(u => {
-            if (teamCountry !== "all" && u.country !== teamCountry) return false;
-            if (teamSearch) {
-              const q = teamSearch.toLowerCase();
-              if (!u.phone?.toLowerCase().includes(q) && !u.nickname?.toLowerCase().includes(q) && !u.referralCode?.toLowerCase().includes(q)) return false;
-            }
-            return true;
-          }).sort((a, b) => {
-            if (teamSortBy === "ownInvested") return b.ownInvested - a.ownInvested;
-            if (teamSortBy === "teamTotalInvested") return b.teamTotalInvested - a.teamTotalInvested;
-            if (teamSortBy === "totalTeamMembers") return b.totalTeamMembers - a.totalTeamMembers;
-            if (teamSortBy === "commissionBalance") return b.commissionBalance - a.commissionBalance;
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          });
-
-          const totals = {
-            ownInvested: teamData.reduce((s, u) => s + u.ownInvested, 0),
-            teamTotalInvested: teamData.reduce((s, u) => s + u.teamTotalInvested, 0),
-            commissions: teamData.reduce((s, u) => s + u.commissionBalance, 0),
-            members: teamData.reduce((s, u) => s + u.totalTeamMembers, 0),
-          };
-
-          return (
-            <div className="space-y-3">
-              {/* Summary */}
-              <div className="grid grid-cols-2 gap-2">
-                <Card className="p-3">
-                  <p className="text-xs text-gray-500">Total investi</p>
-                  <p className="font-bold text-sm text-green-600">{formatCFA(totals.ownInvested)}</p>
-                </Card>
-                <Card className="p-3">
-                  <p className="text-xs text-gray-500">Investissements équipes</p>
-                  <p className="font-bold text-sm text-blue-600">{formatCFA(totals.teamTotalInvested)}</p>
-                </Card>
-                <Card className="p-3">
-                  <p className="text-xs text-gray-500">Commissions versées</p>
-                  <p className="font-bold text-sm text-orange-600">{formatCFA(totals.commissions)}</p>
-                </Card>
-                <Card className="p-3">
-                  <p className="text-xs text-gray-500">Total filleuls</p>
-                  <p className="font-bold text-sm text-purple-600">{totals.members}</p>
-                </Card>
-              </div>
-
-              {/* Filters */}
-              <div className="space-y-2">
-                <Input placeholder="Rechercher (téléphone, code, pseudo...)" value={teamSearch}
-                  onChange={e => setTeamSearch(e.target.value)} data-testid="input-team-search" />
-                <div className="grid grid-cols-2 gap-2">
-                  <Select value={teamCountry} onValueChange={setTeamCountry}>
-                    <SelectTrigger><SelectValue placeholder="Pays" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les pays</SelectItem>
-                      {COUNTRIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={teamSortBy} onValueChange={setTeamSortBy}>
-                    <SelectTrigger><SelectValue placeholder="Trier par" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="createdAt">Récents d'abord</SelectItem>
-                      <SelectItem value="ownInvested">Investissement personnel</SelectItem>
-                      <SelectItem value="teamTotalInvested">Invest. équipe</SelectItem>
-                      <SelectItem value="totalTeamMembers">Taille équipe</SelectItem>
-                      <SelectItem value="commissionBalance">Commissions</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <p className="text-xs text-gray-400 text-center">{filtered.length} utilisateur(s) affiché(s)</p>
-
-              {/* User cards */}
-              {filtered.length === 0 ? (
-                <Card className="p-6 text-center text-gray-400 text-sm">Aucun utilisateur trouvé</Card>
-              ) : (
-                filtered.map((u: any) => (
-                  <Card key={u.id} className="p-4" data-testid={`card-team-user-${u.id}`}>
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div>
-                        <p className="font-semibold text-sm">{u.phone}{u.nickname ? ` (${u.nickname})` : ""}</p>
-                        <p className="text-xs text-gray-400">{COUNTRIES.find((c: any) => c.id === u.country)?.name || u.country} · Code: {u.referralCode}</p>
-                        <p className="text-xs text-gray-400">{new Date(u.createdAt).toLocaleDateString("fr-FR")}</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-xs text-gray-500">Investi</p>
-                        <p className="font-bold text-sm text-green-700">{formatCFA(u.ownInvested)}</p>
-                      </div>
-                    </div>
-
-                    {/* Team sizes */}
-                    <div className="flex gap-2 mb-3">
-                      <div className="flex-1 bg-blue-50 rounded-lg px-3 py-2 text-center">
-                        <p className="text-xs text-blue-500 font-medium">Niv.1</p>
-                        <p className="text-base font-bold text-blue-700">{u.teamL1}</p>
-                      </div>
-                      <div className="flex-1 bg-purple-50 rounded-lg px-3 py-2 text-center">
-                        <p className="text-xs text-purple-500 font-medium">Niv.2</p>
-                        <p className="text-base font-bold text-purple-700">{u.teamL2}</p>
-                      </div>
-                      <div className="flex-1 bg-orange-50 rounded-lg px-3 py-2 text-center">
-                        <p className="text-xs text-orange-500 font-medium">Niv.3</p>
-                        <p className="text-base font-bold text-orange-700">{u.teamL3}</p>
-                      </div>
-                      <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2 text-center">
-                        <p className="text-xs text-gray-500 font-medium">Total</p>
-                        <p className="text-base font-bold text-gray-700">{u.totalTeamMembers}</p>
-                      </div>
-                    </div>
-
-                    {/* Financial team stats */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-green-50 rounded-lg px-3 py-2">
-                        <p className="text-green-600 font-medium">Invest. équipe</p>
-                        <p className="font-bold text-green-800">{formatCFA(u.teamTotalInvested)}</p>
-                      </div>
-                      <div className="bg-orange-50 rounded-lg px-3 py-2">
-                        <p className="text-orange-600 font-medium">Commissions</p>
-                        <p className="font-bold text-orange-800">{formatCFA(u.commissionBalance)}</p>
-                      </div>
-                    </div>
-                  </Card>
-                ))
-              )}
-            </div>
-          );
-        })()}
 
         {/* ===================== PRODUITS ===================== */}
         {activeTab === "products" && (
@@ -1305,32 +1243,6 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <SaveBtn fields={["referralCommission1", "referralCommission2", "referralCommission3"]} />
-              </Card>
-
-              {/* Liens sociaux */}
-              <Card className="p-4 space-y-3">
-                <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Link2 className="w-4 h-4" /> Liens sociaux</h3>
-                {[
-                  { key: "serviceClient1", label: "Service client 1" },
-                  { key: "serviceClient2", label: "Service client 2" },
-                  { key: "officialChain", label: "Chaine officielle" },
-                  { key: "discussionGroup", label: "Groupe de discussion" },
-                ].map(({ key, label }) => (
-                  <div key={key}>
-                    <label className="text-xs font-medium text-gray-700">{label}</label>
-                    <Input className="mt-1" value={sf[key] || ""}
-                      onChange={e => set(key, e.target.value)}
-                      data-testid={`admin-setting-${key}`} />
-                  </div>
-                ))}
-                <div>
-                  <label className="text-xs font-medium text-gray-700">Lien MoneyFusion</label>
-                  <Input className="mt-1" value={sf.moneyFusionLink || ""}
-                    onChange={e => set("moneyFusionLink", e.target.value)}
-                    data-testid="admin-setting-moneyFusionLink" />
-                  <p className="text-xs text-gray-400 mt-1">Lien MoneyFusion pour Congo Brazzaville et Burkina Faso</p>
-                </div>
-                <SaveBtn fields={["serviceClient1", "serviceClient2", "officialChain", "discussionGroup", "moneyFusionLink"]} />
               </Card>
 
               {/* Liens officiels */}
