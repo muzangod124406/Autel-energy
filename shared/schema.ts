@@ -102,6 +102,17 @@ export const settings = pgTable("settings", {
   telegramChannel: text("telegram_channel").notNull().default(""),
   telegramService: text("telegram_service").notNull().default("@redbull_service"),
   activitiesEnabled: boolean("activities_enabled").notNull().default(true),
+  serviceClient1: text("service_client1").notNull().default(""),
+  serviceClient2: text("service_client2").notNull().default(""),
+  officialChain: text("official_chain").notNull().default(""),
+  discussionGroup: text("discussion_group").notNull().default(""),
+  moneyFusionLink: text("money_fusion_link").notNull().default(""),
+  withdrawMinAmount: integer("withdraw_min_amount").notNull().default(3500),
+  withdrawFeePercent: integer("withdraw_fee_percent").notNull().default(10),
+  withdrawStartHour: integer("withdraw_start_hour").notNull().default(10),
+  withdrawEndHour: integer("withdraw_end_hour").notNull().default(15),
+  soleaspayEnabled: boolean("soleaspay_enabled").notNull().default(false),
+  soleaspayChannelName: text("soleaspay_channel_name").notNull().default(""),
 });
 
 export const paymentChannels = pgTable("payment_channels", {

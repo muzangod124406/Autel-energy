@@ -19,6 +19,14 @@ export interface IStorage {
   getTodayWithdrawersCount(): Promise<number>;
   getTotalWithdrawalsAmount(): Promise<number>;
   getUsersWithProductsCount(): Promise<number>;
+  getPendingDepositsStats(): Promise<{ amount: number; count: number }>;
+  getPendingWithdrawalsStats(): Promise<{ amount: number; count: number }>;
+  getTodayDepositsAmount(): Promise<number>;
+  getTodayWithdrawalsAmount(): Promise<number>;
+  getTotalPlatformBalance(): Promise<number>;
+  getTotalDistributedGains(): Promise<number>;
+  getTotalCommissions(): Promise<number>;
+  getActiveProductsCount(): Promise<number>;
 
   createBankCard(userId: string, data: any): Promise<BankCard>;
   getBankCard(userId: string): Promise<BankCard | undefined>;
@@ -141,6 +149,58 @@ export class DatabaseStorage implements IStorage {
     return unique.size;
   }
 
+  async getPendingDepositsStats(): Promise<{ amount: number; count: number }> {
+    const [result] = await db.select({
+      total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)`,
+      cnt: count()
+    }).from(transactions).where(and(eq(transactions.type, "deposit"), eq(transactions.status, "pending")));
+    return { amount: Number(result.total), count: result.cnt };
+  }
+
+  async getPendingWithdrawalsStats(): Promise<{ amount: number; count: number }> {
+    const [result] = await db.select({
+      total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)`,
+      cnt: count()
+    }).from(transactions).where(and(eq(transactions.type, "withdrawal"), eq(transactions.status, "pending")));
+    return { amount: Number(result.total), count: result.cnt };
+  }
+
+  async getTodayDepositsAmount(): Promise<number> {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` }).from(transactions)
+      .where(and(eq(transactions.type, "deposit"), eq(transactions.status, "approved"), sql`${transactions.createdAt} >= ${today}`));
+    return Number(result.total);
+  }
+
+  async getTodayWithdrawalsAmount(): Promise<number> {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` }).from(transactions)
+      .where(and(eq(transactions.type, "withdrawal"), eq(transactions.status, "approved"), sql`${transactions.createdAt} >= ${today}`));
+    return Number(result.total);
+  }
+
+  async getTotalPlatformBalance(): Promise<number> {
+    const [result] = await db.select({
+      total: sql<number>`COALESCE(SUM(${users.depositBalance} + ${users.withdrawBalance}), 0)`
+    }).from(users);
+    return Number(result.total);
+  }
+
+  async getTotalDistributedGains(): Promise<number> {
+    const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${users.productRevenue}), 0)` }).from(users);
+    return Number(result.total);
+  }
+
+  async getTotalCommissions(): Promise<number> {
+    const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${users.commissionBalance}), 0)` }).from(users);
+    return Number(result.total);
+  }
+
+  async getActiveProductsCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(products).where(eq(products.isActive, true));
+    return result.count;
+  }
+
   async createBankCard(userId: string, data: any): Promise<BankCard> {
     const existing = await this.getBankCard(userId);
     if (existing) {
@@ -191,8 +251,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(transactions).where(eq(transactions.userId, userId)).orderBy(desc(transactions.createdAt));
   }
 
-  async getPendingTransactions(type: string, search?: string): Promise<(Transaction & { user?: User })[]> {
-    const txs = await db.select().from(transactions).where(and(eq(transactions.type, type), eq(transactions.status, "pending"))).orderBy(desc(transactions.createdAt));
+  async getPendingTransactions(type: string, search?: string, status?: string): Promise<(Transaction & { user?: User })[]> {
+    const conditions = [eq(transactions.type, type)];
+    if (status && status !== "all") conditions.push(eq(transactions.status, status));
+    else if (!status) conditions.push(eq(transactions.status, "pending"));
+    const txs = await db.select().from(transactions).where(and(...conditions)).orderBy(desc(transactions.createdAt));
     const result = [];
     for (const tx of txs) {
       const user = await this.getUser(tx.userId);

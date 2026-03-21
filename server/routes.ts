@@ -485,17 +485,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ============ ADMIN ROUTES ============
   app.get("/api/admin/stats", requireAuth, requireAdmin, async (req: Request, res: Response) => {
-    const totalUsers = await storage.getUserCount();
-    const todayRegistrations = await storage.getTodayRegistrations();
-    const todayDeposits = await storage.getTodayDeposits();
-    const todayWithdrawals = await storage.getTodayWithdrawals();
-    const totalDeposits = await storage.getTotalDeposits();
-    const totalWithdrawals = await storage.getTotalWithdrawalsAmount();
-    const activeInvestments = await storage.getActiveInvestmentCount();
-    const todayDepositors = await storage.getTodayDepositorsCount();
-    const todayWithdrawers = await storage.getTodayWithdrawersCount();
-    const usersWithProducts = await storage.getUsersWithProductsCount();
-    res.json({ totalUsers, todayRegistrations, todayDeposits, todayWithdrawals, totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers, usersWithProducts });
+    const [
+      totalUsers, todayRegistrations, todayDeposits, todayWithdrawals,
+      totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers,
+      usersWithProducts, pendingDeposits, pendingWithdrawals, todayDepositsAmount,
+      todayWithdrawalsAmount, totalPlatformBalance, totalDistributedGains,
+      totalCommissions, activeProductsCount
+    ] = await Promise.all([
+      storage.getUserCount(), storage.getTodayRegistrations(),
+      storage.getTodayDeposits(), storage.getTodayWithdrawals(),
+      storage.getTotalDeposits(), storage.getTotalWithdrawalsAmount(),
+      storage.getActiveInvestmentCount(), storage.getTodayDepositorsCount(),
+      storage.getTodayWithdrawersCount(), storage.getUsersWithProductsCount(),
+      storage.getPendingDepositsStats(), storage.getPendingWithdrawalsStats(),
+      storage.getTodayDepositsAmount(), storage.getTodayWithdrawalsAmount(),
+      storage.getTotalPlatformBalance(), storage.getTotalDistributedGains(),
+      storage.getTotalCommissions(), storage.getActiveProductsCount()
+    ]);
+    res.json({
+      totalUsers, todayRegistrations, todayDeposits, todayWithdrawals,
+      totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers,
+      usersWithProducts, pendingDeposits, pendingWithdrawals, todayDepositsAmount,
+      todayWithdrawalsAmount, totalPlatformBalance, totalDistributedGains,
+      totalCommissions, activeProductsCount
+    });
   });
 
   app.get("/api/admin/users", requireAuth, requireAdmin, async (req: Request, res: Response) => {
@@ -549,7 +562,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.get("/api/admin/transactions/:type", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     const search = req.query.search as string | undefined;
-    const txs = await storage.getPendingTransactions(req.params.type, search);
+    const status = req.query.status as string | undefined;
+    const txs = await storage.getPendingTransactions(req.params.type, search, status);
     res.json(txs);
   });
 
