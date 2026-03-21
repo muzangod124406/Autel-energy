@@ -132,7 +132,7 @@ export default function BilletPage() {
         >
           <div className="absolute inset-0 bg-black/40" />
           <div
-            className="relative w-full bg-white rounded-t-3xl px-6 pt-6 pb-10 shadow-2xl animate-slide-up"
+            className="relative w-full bg-white rounded-t-3xl px-6 pt-6 pb-24 shadow-2xl animate-slide-up"
             onClick={e => e.stopPropagation()}
             style={{ animation: "slideUp 0.3s ease-out" }}
           >

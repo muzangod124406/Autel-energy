@@ -204,7 +204,7 @@ export default function DepositPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-between px-6 py-5 border-t border-gray-100">
+            <div className="flex items-center justify-between px-6 py-5 pb-20 border-t border-gray-100">
               <button onClick={() => setShowMethodSheet(false)} className="text-gray-600 font-medium text-base" data-testid="button-cancel-method">
                 Annuler
               </button>

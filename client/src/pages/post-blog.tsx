@@ -49,7 +49,7 @@ export default function PostBlogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f0f0e4] pb-24">
+    <div className="min-h-screen bg-[#f0f0e4] pb-44">
       <div className="bg-[#22c55e] px-4 pt-6 pb-5">
         <div className="flex items-center">
           <button onClick={() => navigate("/billet")} className="text-white mr-4" data-testid="button-back">
@@ -98,7 +98,7 @@ export default function PostBlogPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 px-4 pb-6 bg-[#f0f0e4] pt-2">
+      <div className="fixed bottom-16 left-0 right-0 px-4 pb-6 bg-[#f0f0e4] pt-2">
         <button
           data-testid="button-publish"
           onClick={handlePublish}
