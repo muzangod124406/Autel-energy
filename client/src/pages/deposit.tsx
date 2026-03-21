@@ -237,7 +237,7 @@ export default function DepositPage() {
                     data-testid={`sheet-channel-${ch.id}`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-green-50 rounded-full flex items-center justify-center">
+                      <div className="w-9 h-9 bg-white border border-gray-100 rounded-full flex items-center justify-center">
                         {channelIcon(ch.type)}
                       </div>
                       <div>
