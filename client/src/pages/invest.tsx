@@ -4,10 +4,8 @@ import { INVESTMENT_PLANS, formatCFA } from "@/lib/constants";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Lock, TrendingUp, Zap, Calendar, PackageX, Clock, ShoppingBag, ShieldAlert } from "lucide-react";
+import { Lock, PackageX, Calendar, ShieldAlert, ChevronRight } from "lucide-react";
+import autelImg from "@assets/Autel-MaxiCharger-DC-Fast-60-240KW-EV-Charger-All-Security-Equ_1774131863511.jpg";
 
 const fixedPlan = INVESTMENT_PLANS.fix;
 
@@ -51,7 +49,7 @@ export default function InvestPage() {
   const handleInvestFixed = (plan: any) => {
     if (!user) return;
     if (user.depositBalance < plan.amount) {
-      toast({ title: "Solde de recharge insuffisant", description: "Rechargez votre compte", variant: "destructive" });
+      toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
       return;
     }
     investMutation.mutate({
@@ -67,7 +65,7 @@ export default function InvestPage() {
   const handleBuyProduct = (product: any) => {
     if (!user) return;
     if (user.depositBalance < product.price) {
-      toast({ title: "Solde de recharge insuffisant", description: "Rechargez votre compte", variant: "destructive" });
+      toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
       return;
     }
     setBuyingProductId(product.id);
@@ -82,209 +80,237 @@ export default function InvestPage() {
     });
   };
 
-  // Filter admin products: only active and with remaining stock
   const availableProducts = (adminProducts as any[]).filter((p: any) => {
     if (!p.isActive) return false;
     if (p.purchaseLimit > 0 && p.purchaseCount >= p.purchaseLimit) return false;
     return true;
   });
 
-  const tabs = [
-    { key: "fix" as const, label: "Fixé 120J" },
-    { key: "activities" as const, label: "Activités" },
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 p-4 pt-6">
-        <h1 className="text-white text-xl font-bold text-center">Investir</h1>
-        <p className="text-white/70 text-sm text-center mt-1">Solde recharge: {formatCFA(user?.depositBalance || 0)}</p>
+    <div className="bg-white min-h-screen pb-24">
+      {/* Green header */}
+      <div className="bg-[#22c55e] px-4 pt-6 pb-5">
+        <h1 className="text-white font-bold text-xl text-center">Liste des projets</h1>
+        <p className="text-white/80 text-xs text-center mt-0.5">
+          Solde : {formatCFA(user?.depositBalance || 0)}
+        </p>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 mt-3">
-        <div className="flex gap-1 bg-white dark:bg-gray-900 rounded-xl p-1 shadow-sm mb-4">
-          {tabs.map(tab => (
-            <button
-              key={tab.key}
-              data-testid={`tab-${tab.key}`}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-                activeTab === tab.key
-                  ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}
+      {/* Tab switcher */}
+      <div className="flex px-4 gap-3 mt-4 mb-4">
+        <button
+          data-testid="tab-fix"
+          onClick={() => setActiveTab("fix")}
+          className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${
+            activeTab === "fix"
+              ? "bg-[#22c55e] text-white shadow-sm"
+              : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          Fixe
+        </button>
+        <button
+          data-testid="tab-activities"
+          onClick={() => setActiveTab("activities")}
+          className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${
+            activeTab === "activities"
+              ? "bg-[#22c55e] text-white shadow-sm"
+              : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          Activités
+        </button>
+      </div>
+
+      {/* ── FIXED PLANS ─────────────────────────────── */}
+      {activeTab === "fix" && (
+        <div className="px-3 space-y-3">
+          {fixedPlan.plans.map((plan) => (
+            <div
+              key={plan.vip}
+              data-testid={`plan-card-${plan.vip}`}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
             >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+              {/* Image + info row */}
+              <div className="flex gap-3 p-3 pb-2">
+                {/* Image with badge */}
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={autelImg}
+                    alt={plan.name}
+                    className="w-24 h-24 rounded-xl object-cover"
+                  />
+                  <span className="absolute top-1.5 left-1.5 bg-[#f97316] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                    120jours
+                  </span>
+                </div>
 
-        {/* FIXED 120-DAY PLANS */}
-        {activeTab === "fix" && (
-          <div className="space-y-3">
-            <div className="bg-blue-50 dark:bg-blue-950 rounded-xl p-3 flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
-              <p className="text-xs text-blue-700 dark:text-blue-300">
-                Les gains sont crédités à la fin du cycle de <strong>120 jours</strong>
+                {/* Info */}
+                <div className="flex-1 pt-0.5">
+                  <p className="font-bold text-gray-900 text-sm mb-1">{plan.name}</p>
+                  <p className="text-gray-700 text-xs">
+                    Prix:<span className="font-semibold"> {plan.amount.toLocaleString("fr-FR")}.00XAF</span>
+                  </p>
+                  <p className="text-gray-700 text-xs">
+                    Revenu journalier:<span className="font-semibold"> {plan.dailyGain.toLocaleString("fr-FR")}.00XAF</span>
+                  </p>
+                  <p className="text-gray-700 text-xs">
+                    Revenu total:<span className="font-semibold"> {plan.totalGain.toLocaleString("fr-FR")}.00XAF</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Divider + note */}
+              <div className="border-t border-gray-100 mx-3" />
+              <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
+                les revenus seront réglés toutes les 24 heures.
               </p>
-            </div>
-            {fixedPlan.plans.map((plan) => (
-              <Card key={plan.vip} className="p-4 bg-white dark:bg-gray-900">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm">{(plan as any).name || `Autel Energy S${plan.vip}`}</h3>
-                      <p className="text-xs text-muted-foreground">Fixé 120 jours</p>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="text-xs">120j</Badge>
-                </div>
 
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                    <p className="text-[10px] text-muted-foreground">Investissement</p>
-                    <p className="text-sm font-bold text-blue-600">{formatCFA(plan.amount)}</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                    <p className="text-[10px] text-muted-foreground">Gain/jour</p>
-                    <p className="text-sm font-bold text-green-600">{formatCFA(plan.dailyGain)}</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                    <p className="text-[10px] text-muted-foreground">Gain total</p>
-                    <p className="text-sm font-bold text-purple-600">{formatCFA(plan.totalGain)}</p>
-                  </div>
-                </div>
-
-                <Button
+              {/* Buy button */}
+              <div className="px-3 pb-3">
+                <button
                   data-testid={`invest-vip-${plan.vip}`}
-                  size="sm"
                   onClick={() => handleInvestFixed(plan)}
                   disabled={investMutation.isPending}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                  className="w-full py-3 bg-[#22c55e] text-white font-bold rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-1"
                 >
-                  <Lock className="w-3 h-3 mr-1" /> Investir {formatCFA(plan.amount)}
-                </Button>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* ACTIVITIES — admin-created products */}
-        {activeTab === "activities" && (
-          <div className="space-y-3">
-            {/* Banner: fixed plan required to purchase */}
-            {!hasActiveFixed && (
-              <div className="flex items-center gap-2 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-xl px-3 py-2">
-                <ShieldAlert className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                <p className="text-orange-700 dark:text-orange-300 text-xs">
-                  Achetez le <strong>plan Fixé 120J</strong> pour débloquer l'achat des activités.{" "}
-                  <button onClick={() => setActiveTab("fix")} className="underline font-bold" data-testid="btn-go-to-fixed">
-                    Voir →
-                  </button>
-                </p>
+                  ACHETER <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-            )}
+            </div>
+          ))}
+        </div>
+      )}
 
-            {loadingProducts && (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <Card key={i} className="p-4 animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded mb-2 w-3/4" />
-                    <div className="h-3 bg-gray-100 rounded w-1/2" />
-                  </Card>
-                ))}
-              </div>
-            )}
+      {/* ── ACTIVITIES ──────────────────────────────── */}
+      {activeTab === "activities" && (
+        <div className="px-3 space-y-3">
+          {/* Must have fixed plan */}
+          {!hasActiveFixed && (
+            <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5">
+              <ShieldAlert className="w-4 h-4 text-orange-500 flex-shrink-0" />
+              <p className="text-orange-700 text-xs">
+                Achetez le <strong>plan Fixe 120J</strong> pour accéder aux activités.{" "}
+                <button onClick={() => setActiveTab("fix")} className="underline font-bold" data-testid="btn-go-to-fixed">
+                  Voir →
+                </button>
+              </p>
+            </div>
+          )}
 
-            {!loadingProducts && availableProducts.length === 0 && (
-              <Card className="p-8 text-center">
-                <PackageX className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-600 dark:text-gray-400 font-semibold text-base mb-1">
-                  Produits d'activité non disponibles
-                </p>
-                <p className="text-gray-400 text-sm">
-                  Les produits d'activité ne sont pas disponibles aujourd'hui, veuillez revenir plus tard
-                </p>
-              </Card>
-            )}
-
-            {!loadingProducts && availableProducts.map((product: any) => {
-              const remaining = product.purchaseLimit > 0
-                ? product.purchaseLimit - product.purchaseCount
-                : null;
-              const isLaunched = !product.launchDate || new Date(product.launchDate) <= new Date();
-
-              return (
-                <Card key={product.id} className="p-4 bg-white dark:bg-gray-900" data-testid={`product-card-${product.id}`}>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-2">
-                      {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                      ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Zap className="w-5 h-5 text-white" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="font-bold text-sm">{product.name}</h3>
-                        <p className="text-xs text-muted-foreground">{product.cycleDays} jours</p>
-                      </div>
+          {/* Loading skeleton */}
+          {loadingProducts && (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-3 animate-pulse">
+                  <div className="flex gap-3">
+                    <div className="w-24 h-24 bg-gray-200 rounded-xl" />
+                    <div className="flex-1 space-y-2 pt-1">
+                      <div className="h-3 bg-gray-200 rounded w-3/4" />
+                      <div className="h-2.5 bg-gray-100 rounded w-1/2" />
+                      <div className="h-2.5 bg-gray-100 rounded w-2/3" />
                     </div>
-                    {remaining !== null && (
-                      <Badge variant={remaining <= 5 ? "destructive" : "secondary"} className="text-[10px] flex-shrink-0">
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!loadingProducts && availableProducts.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+              <PackageX className="w-14 h-14 text-gray-200 mb-3" />
+              <p className="text-gray-600 font-semibold text-base mb-1">
+                Aucun produit disponible
+              </p>
+              <p className="text-gray-400 text-sm">
+                Les produits d'activité ne sont pas disponibles aujourd'hui, revenez plus tard.
+              </p>
+            </div>
+          )}
+
+          {/* Product cards */}
+          {!loadingProducts && availableProducts.map((product: any) => {
+            const remaining = product.purchaseLimit > 0
+              ? product.purchaseLimit - product.purchaseCount
+              : null;
+            const isLaunched = !product.launchDate || new Date(product.launchDate) <= new Date();
+            const isBuying = investMutation.isPending && buyingProductId === product.id;
+
+            return (
+              <div
+                key={product.id}
+                data-testid={`product-card-${product.id}`}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+              >
+                {/* Image + info row */}
+                <div className="flex gap-3 p-3 pb-2">
+                  <div className="relative flex-shrink-0">
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} className="w-24 h-24 rounded-xl object-cover" />
+                    ) : (
+                      <div className="w-24 h-24 rounded-xl bg-gray-100 flex items-center justify-center">
+                        <PackageX className="w-8 h-8 text-gray-300" />
+                      </div>
+                    )}
+                    <span className="absolute top-1.5 left-1.5 bg-[#f97316] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                      {product.cycleDays}jours
+                    </span>
+                    {remaining !== null && remaining <= 5 && (
+                      <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
                         {remaining} restant{remaining > 1 ? "s" : ""}
-                      </Badge>
+                      </span>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                      <p className="text-[10px] text-muted-foreground">Investissement</p>
-                      <p className="text-sm font-bold text-blue-600">{formatCFA(product.price)}</p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                      <p className="text-[10px] text-muted-foreground">Gain/jour</p>
-                      <p className="text-sm font-bold text-green-600">{formatCFA(product.dailyGain)}</p>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                      <p className="text-[10px] text-muted-foreground">Gain total</p>
-                      <p className="text-sm font-bold text-purple-600">{formatCFA(product.totalGain)}</p>
-                    </div>
+                  {/* Info */}
+                  <div className="flex-1 pt-0.5">
+                    <p className="font-bold text-gray-900 text-sm mb-1">{product.name}</p>
+                    <p className="text-gray-700 text-xs">
+                      Prix:<span className="font-semibold"> {product.price.toLocaleString("fr-FR")}.00XAF</span>
+                    </p>
+                    <p className="text-gray-700 text-xs">
+                      Revenu journalier:<span className="font-semibold"> {product.dailyGain.toLocaleString("fr-FR")}.00XAF</span>
+                    </p>
+                    <p className="text-gray-700 text-xs">
+                      Revenu total:<span className="font-semibold"> {product.totalGain.toLocaleString("fr-FR")}.00XAF</span>
+                    </p>
                   </div>
+                </div>
 
+                {/* Divider + note */}
+                <div className="border-t border-gray-100 mx-3" />
+                <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
+                  les revenus seront réglés toutes les 24 heures.
+                </p>
+
+                {/* Action button */}
+                <div className="px-3 pb-3">
                   {!isLaunched ? (
-                    <div className="w-full py-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-center text-xs text-gray-500 font-medium">
+                    <div className="w-full py-3 bg-gray-100 rounded-xl text-center text-xs text-gray-500 font-medium">
                       <Calendar className="w-3 h-3 inline mr-1" />
-                      Disponible le {new Date(product.launchDate).toLocaleString("fr-FR")}
+                      Disponible le {new Date(product.launchDate).toLocaleDateString("fr-FR")}
                     </div>
                   ) : !hasActiveFixed ? (
-                    <div className="w-full py-2.5 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg text-center text-xs text-orange-600 dark:text-orange-400 font-medium flex items-center justify-center gap-1">
-                      <Lock className="w-3 h-3" />
-                      Plan Fixé 120J requis
+                    <div className="w-full py-3 bg-orange-50 border border-orange-200 rounded-xl text-center text-xs text-orange-600 font-medium flex items-center justify-center gap-1">
+                      <Lock className="w-3 h-3" /> Plan Fixe 120J requis
                     </div>
                   ) : (
-                    <Button
+                    <button
                       data-testid={`buy-product-${product.id}`}
-                      size="sm"
                       onClick={() => handleBuyProduct(product)}
-                      disabled={investMutation.isPending && buyingProductId === product.id}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                      disabled={isBuying || investMutation.isPending}
+                      className="w-full py-3 bg-[#22c55e] text-white font-bold rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-1"
                     >
-                      <Lock className="w-3 h-3 mr-1" />
-                      {investMutation.isPending && buyingProductId === product.id
-                        ? "Achat en cours..."
-                        : `Investir ${formatCFA(product.price)}`}
-                    </Button>
+                      {isBuying ? "Achat en cours..." : (<>ACHETER <ChevronRight className="w-4 h-4" /></>)}
+                    </button>
                   )}
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
