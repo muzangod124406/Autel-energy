@@ -1,68 +1,95 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, MessageCircle, Users, Clock } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import headsetIcon from "@assets/icon_3-1_1774133434969.png";
+import redirectIcon from "@assets/17496245_1774133420846.png";
+import { SiWhatsapp } from "react-icons/si";
 
 export default function TelegramPage() {
   const [, navigate] = useLocation();
-  const { data: settings } = useQuery({ queryKey: ["/api/settings"] });
+  const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
 
-  const serviceHandle = settings?.telegramService || "@redbull_service";
-  const groupLink = settings?.telegramGroup || "https://t.me/+M9neinnLgK4wYWRk";
+  const serviceClient1 = settings?.serviceClient1 || "";
+  const serviceClient2 = settings?.serviceClient2 || "";
+  const telegramGroup = settings?.telegramGroup || "";
+  const telegramService = settings?.telegramService || "";
+
+  const links = [
+    ...(serviceClient1 ? [{ label: "Services en ligne", url: serviceClient1 }] : []),
+    ...(serviceClient2 ? [{ label: "Service client 2", url: serviceClient2 }] : []),
+    ...(telegramGroup ? [{ label: "Groupe officiel", url: telegramGroup }] : []),
+    ...(telegramService && telegramService.startsWith("http")
+      ? [{ label: "Service Telegram", url: telegramService }]
+      : telegramService
+      ? [{ label: "Service Telegram", url: `https://t.me/${telegramService.replace("@", "")}` }]
+      : []),
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 pt-6">
-        <div className="max-w-lg mx-auto">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-white mb-2" data-testid="button-back-telegram">
-            <ArrowLeft className="w-5 h-5" /> Retour
+    <div className="min-h-screen bg-gray-50 pb-24">
+      {/* Green header */}
+      <div className="bg-[#22c55e] px-4 pt-6 pb-5">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate("/")} data-testid="button-back-service">
+            <ArrowLeft className="w-5 h-5 text-white" />
           </button>
-          <h1 className="text-white text-xl font-bold flex items-center gap-2">
-            <MessageCircle className="w-6 h-6" /> Telegram
-          </h1>
+          <h1 className="text-white font-bold text-lg">Service client</h1>
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 mt-4 space-y-4">
-        <div className="bg-gradient-to-br from-blue-400 to-cyan-500 rounded-2xl p-6 text-center text-white">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-            <MessageCircle className="w-8 h-8" />
+      {/* Hero section */}
+      <div className="relative bg-white mx-4 mt-4 rounded-2xl overflow-hidden shadow-sm">
+        {/* Green blob top-left */}
+        <div
+          className="absolute top-0 left-0 w-44 h-28 bg-[#22c55e] rounded-br-[80px]"
+        />
+        <div className="relative flex items-center justify-between px-5 pt-5 pb-6">
+          <div className="z-10">
+            <p className="font-extrabold text-gray-900 text-lg leading-tight">Un service en ligne</p>
+            <p className="text-gray-500 text-xs mt-1">Bonjour, comment puis-je vous aider!</p>
           </div>
-          <h2 className="text-lg font-bold">Service Client</h2>
-          <p className="text-white/80 text-sm mt-1">Contactez-nous pour toute assistance</p>
+          <img
+            src={headsetIcon}
+            alt="Service client"
+            className="w-20 h-20 object-contain z-10"
+          />
         </div>
+      </div>
 
-        <Card className="p-4">
-          <a
-            href={`https://t.me/${serviceHandle.replace("@", "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="button-service-client"
-          >
-            <Button className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold">
-              <MessageCircle className="w-4 h-4 mr-2" /> Service Client {serviceHandle}
-            </Button>
-          </a>
-        </Card>
-
-        <Card className="p-4">
-          <a
-            href={groupLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="button-official-channel"
-          >
-            <Button variant="outline" className="w-full font-semibold">
-              <Users className="w-4 h-4 mr-2" /> Chaîne Officielle
-            </Button>
-          </a>
-        </Card>
-
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
-          <Clock className="w-4 h-4" />
-          <span>Heure de service client : de 9h à 17h</span>
-        </div>
+      {/* Service links */}
+      <div className="px-4 mt-4 space-y-3">
+        {links.length === 0 ? (
+          <div className="bg-white rounded-2xl p-5 text-center text-gray-400 text-sm shadow-sm">
+            Aucun lien de service configuré
+          </div>
+        ) : (
+          links.map((item, i) => (
+            <a
+              key={i}
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid={`link-service-${i}`}
+              className="flex items-center justify-between bg-white rounded-2xl px-4 py-4 shadow-sm active:bg-gray-50"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-[#22c55e] flex items-center justify-center flex-shrink-0">
+                  <SiWhatsapp className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
+                  <p className="text-gray-400 text-xs mt-0.5 max-w-[200px] truncate">{item.url}</p>
+                </div>
+              </div>
+              <img
+                src={redirectIcon}
+                alt="Ouvrir"
+                className="w-6 h-6 object-contain"
+                style={{ mixBlendMode: "multiply" }}
+              />
+            </a>
+          ))
+        )}
       </div>
     </div>
   );

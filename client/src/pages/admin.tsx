@@ -1568,7 +1568,19 @@ export default function AdminPage() {
                     onChange={e => set("telegramService", e.target.value)}
                     data-testid="admin-telegram-service" />
                 </div>
-                <SaveBtn fields={["telegramGroup", "telegramChannel", "telegramService"]} />
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Service client 1 (lien WhatsApp/autre)</label>
+                  <Input className="mt-1" placeholder="https://wa.me/..." value={sf.serviceClient1 || ""}
+                    onChange={e => set("serviceClient1", e.target.value)}
+                    data-testid="admin-service-client1" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Service client 2 (lien WhatsApp/autre)</label>
+                  <Input className="mt-1" placeholder="https://wa.me/..." value={sf.serviceClient2 || ""}
+                    onChange={e => set("serviceClient2", e.target.value)}
+                    data-testid="admin-service-client2" />
+                </div>
+                <SaveBtn fields={["telegramGroup", "telegramChannel", "telegramService", "serviceClient1", "serviceClient2"]} />
               </Card>
 
               {/* Activités */}
