@@ -481,7 +481,7 @@ export default function AdminPage() {
                   <div>
                     <p className="font-semibold text-sm">{u.phone} {u.nickname && <span className="text-muted-foreground">({u.nickname})</span>}</p>
                     <p className="text-[10px] text-muted-foreground">Code: {u.referralCode} | {COUNTRIES.find((c: any) => c.id === u.country)?.name || u.country}</p>
-                    <p className="text-[10px] text-muted-foreground">Solde: {formatCFA(u.balance)} | VIP: {u.vipLevel} | Inscrit: {new Date(u.createdAt).toLocaleDateString("fr-FR")}</p>
+                    <p className="text-[10px] text-muted-foreground">Recharge: {formatCFA(u.depositBalance)} | Retrait: {formatCFA(u.withdrawBalance)} | VIP: {u.vipLevel} | Inscrit: {new Date(u.createdAt).toLocaleDateString("fr-FR")}</p>
                   </div>
                   <div className="flex gap-1 flex-wrap justify-end">
                     {u.isBanned && <Badge variant="destructive" className="text-[10px]">Banni</Badge>}
@@ -569,11 +569,11 @@ export default function AdminPage() {
                   {selectedUser.isPromoter && <Badge className="mb-3 bg-yellow-100 text-yellow-800 border-0">Promoteur</Badge>}
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs font-medium">Modifier le solde principal</label>
+                      <label className="text-xs font-medium">Modifier le solde de recharge</label>
                       <div className="flex gap-2">
-                        <Input type="number" placeholder="Nouveau solde" value={editBalance} onChange={e => setEditBalance(e.target.value)} data-testid="admin-edit-balance" />
+                        <Input type="number" placeholder="Nouveau solde recharge" value={editBalance} onChange={e => setEditBalance(e.target.value)} data-testid="admin-edit-balance" />
                         <Button size="sm" onClick={() => {
-                          updateUserMutation.mutate({ id: selectedUser.id, data: { balance: parseInt(editBalance) } });
+                          updateUserMutation.mutate({ id: selectedUser.id, data: { depositBalance: parseInt(editBalance) } });
                           setEditBalance("");
                         }}>OK</Button>
                       </div>

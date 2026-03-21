@@ -50,8 +50,8 @@ export default function InvestPage() {
 
   const handleInvestFixed = (plan: any) => {
     if (!user) return;
-    if (user.balance < plan.amount) {
-      toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
+    if (user.depositBalance < plan.amount) {
+      toast({ title: "Solde de recharge insuffisant", description: "Rechargez votre compte", variant: "destructive" });
       return;
     }
     investMutation.mutate({
@@ -66,8 +66,8 @@ export default function InvestPage() {
 
   const handleBuyProduct = (product: any) => {
     if (!user) return;
-    if (user.balance < product.price) {
-      toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
+    if (user.depositBalance < product.price) {
+      toast({ title: "Solde de recharge insuffisant", description: "Rechargez votre compte", variant: "destructive" });
       return;
     }
     setBuyingProductId(product.id);
@@ -98,7 +98,7 @@ export default function InvestPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
       <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 p-4 pt-6">
         <h1 className="text-white text-xl font-bold text-center">Investir</h1>
-        <p className="text-white/70 text-sm text-center mt-1">Solde: {formatCFA(user?.balance || 0)}</p>
+        <p className="text-white/70 text-sm text-center mt-1">Solde recharge: {formatCFA(user?.depositBalance || 0)}</p>
       </div>
 
       <div className="max-w-lg mx-auto px-4 mt-3">

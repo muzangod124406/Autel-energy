@@ -183,7 +183,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
 
       const { planType, vipLevel, amount, dailyGain, duration, totalGain, productId } = req.body;
-      if (user.balance < amount) return res.status(400).json({ message: "Solde insuffisant" });
+      if (user.depositBalance < amount) return res.status(400).json({ message: "Solde de recharge insuffisant" });
 
       // Activities require an active fixed plan
       if (planType === "activity") {
@@ -211,7 +211,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         userId, planType, vipLevel, amount, dailyGain, duration, totalGain, endDate
       });
 
-      await storage.updateUser(userId, { spinTickets: (user.spinTickets || 0) + 1, balance: user.balance - amount });
+      await storage.updateUser(userId, { spinTickets: (user.spinTickets || 0) + 1, depositBalance: user.depositBalance - amount });
 
       // Handle referral commissions
       if (user.referredBy) {
@@ -220,7 +220,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           const commission1 = Math.floor(amount * 0.30);
           await storage.updateUser(level1Referrer.id, {
             commissionBalance: level1Referrer.commissionBalance + commission1,
-            balance: level1Referrer.balance + commission1
+            withdrawBalance: level1Referrer.withdrawBalance + commission1
           });
         }
         if (level1Referrer?.referredBy) {
@@ -229,7 +229,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
             const commission2 = Math.floor(amount * 0.03);
             await storage.updateUser(level2Referrer.id, {
               commissionBalance: level2Referrer.commissionBalance + commission2,
-              balance: level2Referrer.balance + commission2
+              withdrawBalance: level2Referrer.withdrawBalance + commission2
             });
           }
           if (level2Referrer?.referredBy) {
@@ -238,7 +238,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
               const commission3 = Math.floor(amount * 0.02);
               await storage.updateUser(level3Referrer.id, {
                 commissionBalance: level3Referrer.commissionBalance + commission3,
-                balance: level3Referrer.balance + commission3
+                withdrawBalance: level3Referrer.withdrawBalance + commission3
               });
             }
           }
@@ -380,7 +380,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       await storage.updateUser(userId, {
         spinTickets: user.spinTickets - 1,
-        balance: user.balance + amount
+        withdrawBalance: user.withdrawBalance + amount
       });
       await storage.addSpinResult(userId, amount);
 
@@ -561,7 +561,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         const user = await storage.getUser(tx.userId);
         if (user) {
           await storage.updateUser(user.id, {
-            balance: user.balance + tx.amount,
             depositBalance: user.depositBalance + tx.amount
           });
         }
@@ -584,7 +583,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (ticket && status === "approved" && bonus && bonus > 0) {
         const user = await storage.getUser(ticket.userId);
         if (user) {
-          await storage.updateUser(user.id, { balance: user.balance + bonus });
+          await storage.updateUser(user.id, { depositBalance: user.depositBalance + bonus });
         }
       }
       res.json(ticket);

@@ -38,8 +38,8 @@ export default function DepositHistoryPage() {
 
       <div className="px-4 py-4 space-y-3">
         <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <p className="text-gray-900 font-bold text-lg">FCFA{(user?.balance || 0).toFixed(2)}</p>
-          <p className="text-gray-500 text-sm">Solde du compte</p>
+          <p className="text-gray-900 font-bold text-lg">FCFA{(user?.depositBalance || 0).toFixed(2)}</p>
+          <p className="text-gray-500 text-sm">Solde de recharge</p>
         </div>
 
         {deposits.length === 0 ? (
