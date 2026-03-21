@@ -1066,6 +1066,7 @@ export default function AdminPage() {
                   <SelectContent>
                     <SelectItem value="link">Lien de paiement</SelectItem>
                     <SelectItem value="leekpay">LeekPay (API automatique)</SelectItem>
+                    <SelectItem value="westpay">WestPay / RobotPay (Mobile Money)</SelectItem>
                   </SelectContent>
                 </Select>
                 {(editingChannel ? editingChannel.type : channelForm.type) === "link" && (
@@ -1094,7 +1095,7 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between gap-2">
                     <div>
                       <p className="font-semibold text-sm">{ch.name}</p>
-                      <p className="text-xs text-gray-400">{ch.type === "leekpay" ? "LeekPay (API)" : "Lien de paiement"}</p>
+                      <p className="text-xs text-gray-400">{ch.type === "leekpay" ? "LeekPay (API)" : ch.type === "westpay" ? "WestPay / RobotPay" : "Lien de paiement"}</p>
                       {ch.redirectUrl && <p className="text-xs text-blue-500 truncate max-w-[180px]">{ch.redirectUrl}</p>}
                     </div>
                     <div className="flex items-center gap-1">

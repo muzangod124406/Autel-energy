@@ -7,6 +7,10 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { z } from "zod";
+import {
+  buildWestpayPaymentUrl, verifyWestpaySignature, westpayTransfer,
+  slugToWestpayCountry, buildMsisdn, WESTPAY_ENABLED,
+} from "./westpay";
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -294,6 +298,56 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         type: "deposit", amount, country, paymentMethod, phoneNumber, accountName, status: "pending", channelId, channelName
       });
       res.json(tx);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // WestPay (RobotPay) — initiate deposit redirect
+  app.post("/api/user/deposit/westpay/init", requireAuth, async (req: Request, res: Response) => {
+    try {
+      if (!WESTPAY_ENABLED) return res.status(503).json({ message: "WestPay non configuré" });
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
+
+      const { amount, channelId, channelName } = req.body;
+      if (!amount || amount < 100) return res.status(400).json({ message: "Montant invalide" });
+
+      const tx = await storage.createTransaction(userId, {
+        type: "deposit",
+        amount,
+        country: user.country || "",
+        paymentMethod: "WestPay",
+        phoneNumber: user.phone,
+        status: "pending",
+        channelId: channelId || null,
+        channelName: channelName || "WestPay",
+      });
+
+      const origin = `${req.protocol}://${req.get("host")}`;
+      const redirectUrl = `${origin}/deposit-return?txId=${tx.id}`;
+      const payUrl = buildWestpayPaymentUrl({
+        amount,
+        country: slugToWestpayCountry(user.country || ""),
+        redirectUrl,
+      });
+
+      res.json({ txId: tx.id, payUrl });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // WestPay — store external ref from redirect
+  app.post("/api/user/deposit/westpay/confirm/:txId", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { txId } = req.params;
+      const { externalRef } = req.body;
+      if (externalRef) {
+        await storage.updateTransaction(txId, { externalRef } as any);
+      }
+      res.json({ ok: true });
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }
@@ -621,6 +675,24 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           });
         }
       }
+      if (tx && status === "approved" && tx.type === "withdrawal" && WESTPAY_ENABLED) {
+        try {
+          const user = await storage.getUser(tx.userId);
+          if (user && tx.phoneNumber && tx.country) {
+            const msisdn = buildMsisdn(tx.phoneNumber, user.country || tx.country);
+            const nameParts = (tx.accountName || user.firstName || "Client").split(" ");
+            await westpayTransfer({
+              country: slugToWestpayCountry(user.country || tx.country),
+              msisdn,
+              amount: tx.netAmount || tx.amount,
+              firstName: nameParts[0] || "Client",
+              lastName: nameParts.slice(1).join(" ") || user.lastName || ".",
+            });
+          }
+        } catch (wpErr: any) {
+          console.error("[WestPay transfer error]", wpErr.message);
+        }
+      }
       res.json(tx);
     } catch (e: any) {
       res.status(500).json({ message: e.message });
@@ -911,6 +983,58 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       await storage.deleteCountry(req.params.id);
       res.json({ success: true });
     } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // ─── WestPay Webhook (public) ────────────────────────────────────────────
+  app.post("/api/webhook/westpay", async (req: Request, res: Response) => {
+    try {
+      const signature = req.headers["x-robotpay-signature"] as string || "";
+      const rawBody = ((req as any).rawBody as Buffer)?.toString("utf8") || JSON.stringify(req.body);
+
+      if (process.env.WESTPAY_WEBHOOK_SECRET) {
+        if (!verifyWestpaySignature(rawBody, signature)) {
+          return res.status(401).json({ message: "Signature invalide" });
+        }
+      }
+
+      const payload = req.body as any;
+      if (payload.event !== "payment.confirmed") {
+        return res.json({ received: true });
+      }
+
+      const { txId: westpayTxId, amount, payer } = payload;
+
+      // Try to find by externalRef first
+      let tx: any = null;
+      if (westpayTxId) {
+        const allPending = await storage.getPendingTransactions("deposit", undefined, "pending");
+        tx = allPending.find((t: any) => t.externalRef === westpayTxId);
+        // Fallback: match by payer phone and amount
+        if (!tx && payer && amount) {
+          const phone = String(payer).replace(/^\+/, "").replace(/\D/g, "");
+          tx = allPending.find((t: any) => {
+            const txPhone = String(t.phoneNumber || "").replace(/\D/g, "");
+            return txPhone.endsWith(phone.slice(-8)) && t.amount === amount;
+          });
+        }
+      }
+
+      if (!tx) {
+        return res.json({ received: true, matched: false });
+      }
+
+      // Auto-approve and credit user
+      await storage.updateTransaction(tx.id, { status: "approved", externalRef: westpayTxId } as any);
+      const user = await storage.getUser(tx.userId);
+      if (user) {
+        await storage.updateUser(user.id, { depositBalance: user.depositBalance + tx.amount });
+      }
+
+      return res.json({ received: true, matched: true, txId: tx.id });
+    } catch (e: any) {
+      console.error("[Webhook WestPay]", e.message);
       res.status(500).json({ message: e.message });
     }
   });

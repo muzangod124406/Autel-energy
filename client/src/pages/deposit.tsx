@@ -4,7 +4,7 @@ import { BKAPAY_KEY, formatCFA } from "@/lib/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ChevronRight, X, Zap, Link2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, X, Zap, Link2, CreditCard } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function DepositPage() {
@@ -17,6 +17,7 @@ export default function DepositPage() {
   const [showMethodSheet, setShowMethodSheet] = useState(false);
   const [tempChannelId, setTempChannelId] = useState<string>("");
   const [showLinkForm, setShowLinkForm] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [linkFormData, setLinkFormData] = useState({
     accountName: "",
     phoneNumber: user?.phone || "",
@@ -47,7 +48,35 @@ export default function DepositPage() {
     }
   });
 
+  const westpayMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/user/deposit/westpay/init", data);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      if (data.payUrl) {
+        setIsRedirecting(true);
+        window.location.href = data.payUrl;
+      }
+    },
+    onError: (e: any) => {
+      toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur WestPay", variant: "destructive" });
+    }
+  });
+
   const selectedChannel = (channels as any[]).find((c: any) => c.id === selectedChannelId);
+
+  const channelIcon = (type: string) => {
+    if (type === "leekpay") return <Zap className="w-4 h-4 text-yellow-500" />;
+    if (type === "westpay") return <CreditCard className="w-4 h-4 text-blue-500" />;
+    return <Link2 className="w-4 h-4 text-green-600" />;
+  };
+
+  const channelLabel = (type: string) => {
+    if (type === "leekpay") return "Paiement automatique";
+    if (type === "westpay") return "Paiement Mobile Money sécurisé";
+    return "Paiement par lien";
+  };
 
   const handleRecharge = () => {
     const amt = parseInt(amount);
@@ -59,6 +88,17 @@ export default function DepositPage() {
       toast({ title: "Erreur", description: "Veuillez choisir une méthode de recharge", variant: "destructive" });
       return;
     }
+
+    // WestPay channel: redirect to hosted payment page
+    if (selectedChannel?.type === "westpay") {
+      westpayMutation.mutate({
+        amount: amt,
+        channelId: selectedChannel.id,
+        channelName: selectedChannel.name,
+      });
+      return;
+    }
+
     if (!selectedChannel || selectedChannel.type === "leekpay") {
       if (user?.country === "cameroun") {
         const callbackUrl = encodeURIComponent(`${window.location.origin}/api/payment/callback`);
@@ -90,6 +130,8 @@ export default function DepositPage() {
       setTimeout(() => window.open(selectedChannel.redirectUrl, "_blank"), 500);
     }
   };
+
+  const isPending = depositMutation.isPending || westpayMutation.isPending || isRedirecting;
 
   return (
     <div className="bg-white">
@@ -145,10 +187,10 @@ export default function DepositPage() {
           <button
             data-testid="button-deposit-now"
             onClick={handleRecharge}
-            disabled={depositMutation.isPending}
+            disabled={isPending}
             className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
           >
-            {depositMutation.isPending ? "En cours..." : "Recharger"}
+            {isRedirecting ? "Redirection vers WestPay..." : isPending ? "En cours..." : "Recharger"}
           </button>
         </div>
 
@@ -191,11 +233,11 @@ export default function DepositPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-green-50 rounded-full flex items-center justify-center">
-                        {ch.type === "leekpay" ? <Zap className="w-4 h-4 text-yellow-500" /> : <Link2 className="w-4 h-4 text-green-600" />}
+                        {channelIcon(ch.type)}
                       </div>
                       <div>
                         <p className="text-gray-800 font-medium text-sm">{ch.name}</p>
-                        <p className="text-xs text-gray-400">{ch.type === "leekpay" ? "Paiement automatique" : "Paiement par lien"}</p>
+                        <p className="text-xs text-gray-400">{channelLabel(ch.type)}</p>
                       </div>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === ch.id ? "border-[#22c55e]" : "border-gray-300"}`}>

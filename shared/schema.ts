@@ -67,6 +67,7 @@ export const transactions = pgTable("transactions", {
   netAmount: integer("net_amount"),
   channelId: text("channel_id"),
   channelName: text("channel_name"),
+  externalRef: text("external_ref"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
