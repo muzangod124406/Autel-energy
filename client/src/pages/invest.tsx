@@ -136,7 +136,7 @@ export default function InvestPage() {
                       <Zap className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm">VIP {plan.vip}</h3>
+                      <h3 className="font-bold text-sm">{(plan as any).name || `Autel Energy S${plan.vip}`}</h3>
                       <p className="text-xs text-muted-foreground">Fixé 120 jours</p>
                     </div>
                   </div>

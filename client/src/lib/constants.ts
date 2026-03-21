@@ -22,13 +22,15 @@ export const INVESTMENT_PLANS = {
     name: "Fixé 120J",
     duration: 120,
     plans: [
-      { vip: 1, amount: 2500, dailyGain: 300, totalGain: 36000 },
-      { vip: 2, amount: 5000, dailyGain: 600, totalGain: 72000 },
-      { vip: 3, amount: 10000, dailyGain: 1200, totalGain: 144000 },
-      { vip: 4, amount: 20000, dailyGain: 2400, totalGain: 288000 },
-      { vip: 5, amount: 50000, dailyGain: 6000, totalGain: 720000 },
-      { vip: 6, amount: 100000, dailyGain: 12000, totalGain: 1440000 },
-      { vip: 7, amount: 200000, dailyGain: 24000, totalGain: 2880000 },
+      { vip: 1, name: "Autel Energy S1", amount: 2500,   dailyGain: 500,    totalGain: 60000    },
+      { vip: 2, name: "Autel Energy S2", amount: 5000,   dailyGain: 1100,   totalGain: 132000   },
+      { vip: 3, name: "Autel Energy S3", amount: 10000,  dailyGain: 2500,   totalGain: 300000   },
+      { vip: 4, name: "Autel Energy S4", amount: 25000,  dailyGain: 6500,   totalGain: 780000   },
+      { vip: 5, name: "Autel Energy S5", amount: 50000,  dailyGain: 14000,  totalGain: 1680000  },
+      { vip: 6, name: "Autel Energy S6", amount: 100000, dailyGain: 30000,  totalGain: 3600000  },
+      { vip: 7, name: "Autel Energy S7", amount: 250000, dailyGain: 80000,  totalGain: 9600000  },
+      { vip: 8, name: "Autel Energy S8", amount: 500000, dailyGain: 170000, totalGain: 20400000 },
+      { vip: 9, name: "Autel Energy S9", amount: 900000, dailyGain: 320000, totalGain: 38400000 },
     ]
   },
 };

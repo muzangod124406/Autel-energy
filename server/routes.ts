@@ -707,5 +707,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.post("/api/admin/seed-products", async (req: Request, res: Response) => {
+    const autelProducts = [
+      { name: "Autel Energy S1", price: 2500,   dailyGain: 500,    totalGain: 60000,    cycleDays: 120, purchaseLimit: 0, isActive: true },
+      { name: "Autel Energy S2", price: 5000,   dailyGain: 1100,   totalGain: 132000,   cycleDays: 120, purchaseLimit: 0, isActive: true },
+      { name: "Autel Energy S3", price: 10000,  dailyGain: 2500,   totalGain: 300000,   cycleDays: 120, purchaseLimit: 0, isActive: true },
+      { name: "Autel Energy S4", price: 25000,  dailyGain: 6500,   totalGain: 780000,   cycleDays: 120, purchaseLimit: 0, isActive: true },
+      { name: "Autel Energy S5", price: 50000,  dailyGain: 14000,  totalGain: 1680000,  cycleDays: 120, purchaseLimit: 0, isActive: true },
+      { name: "Autel Energy S6", price: 100000, dailyGain: 30000,  totalGain: 3600000,  cycleDays: 120, purchaseLimit: 0, isActive: true },
+      { name: "Autel Energy S7", price: 250000, dailyGain: 80000,  totalGain: 9600000,  cycleDays: 120, purchaseLimit: 0, isActive: true },
+      { name: "Autel Energy S8", price: 500000, dailyGain: 170000, totalGain: 20400000, cycleDays: 120, purchaseLimit: 0, isActive: true },
+      { name: "Autel Energy S9", price: 900000, dailyGain: 320000, totalGain: 38400000, cycleDays: 120, purchaseLimit: 0, isActive: true },
+    ];
+    try {
+      const existing = await storage.getProducts(false);
+      const existingNames = new Set(existing.map((p: any) => p.name));
+      const toInsert = autelProducts.filter(p => !existingNames.has(p.name));
+      for (const p of toInsert) {
+        await storage.createProduct(p as any);
+      }
+      res.json({ inserted: toInsert.length, skipped: autelProducts.length - toInsert.length });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
   return httpServer;
 }
