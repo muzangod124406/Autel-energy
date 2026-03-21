@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { COUNTRIES } from "@/lib/constants";
+import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Phone, KeyRound, User, Shield, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
@@ -39,7 +39,9 @@ export default function AuthPage() {
     }
   }, [otpCountdown]);
 
-  const getCountryObj = (id: string) => COUNTRIES.find(c => c.id === id);
+  const { data: countriesRaw = [] } = useQuery({ queryKey: ["/api/countries"] });
+  const countries = countriesRaw as any[];
+  const getCountryObj = (slug: string) => countries.find((c: any) => c.slug === slug);
 
   const handleSendOtp = async (phone: string) => {
     if (!phone) {
@@ -116,15 +118,15 @@ export default function AuthPage() {
                 </button>
                 {showCountryDropdown && (
                   <div className="absolute z-50 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
-                    {COUNTRIES.map(c => (
+                    {countries.map((c: any) => (
                       <button
                         key={c.id}
                         type="button"
                         className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-800"
-                        onClick={() => { setLoginData({ ...loginData, country: c.id }); setShowCountryDropdown(false); }}
+                        onClick={() => { setLoginData({ ...loginData, country: c.slug }); setShowCountryDropdown(false); }}
                       >
                         <span>{c.flag}</span>
-                        <span>{c.name}({c.code})</span>
+                        <span>{c.name} ({c.code})</span>
                       </button>
                     ))}
                   </div>
@@ -203,15 +205,15 @@ export default function AuthPage() {
                 </button>
                 {showRegCountryDropdown && (
                   <div className="absolute z-50 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
-                    {COUNTRIES.map(c => (
+                    {countries.map((c: any) => (
                       <button
                         key={c.id}
                         type="button"
                         className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-800"
-                        onClick={() => { setRegData({ ...regData, country: c.id }); setShowRegCountryDropdown(false); }}
+                        onClick={() => { setRegData({ ...regData, country: c.slug }); setShowRegCountryDropdown(false); }}
                       >
                         <span>{c.flag}</span>
-                        <span>{c.name}({c.code})</span>
+                        <span>{c.name} ({c.code})</span>
                       </button>
                     ))}
                   </div>

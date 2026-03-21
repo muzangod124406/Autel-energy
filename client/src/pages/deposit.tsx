@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { BKAPAY_KEY, COUNTRIES, formatCFA } from "@/lib/constants";
+import { BKAPAY_KEY, formatCFA } from "@/lib/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,8 @@ export default function DepositPage() {
 
   const { data: channels = [] } = useQuery<any[]>({ queryKey: ["/api/channels"] });
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
+  const { data: countriesRaw = [] } = useQuery({ queryKey: ["/api/countries"] });
+  const countriesList = countriesRaw as any[];
 
   const depositMinAmount = settings?.depositMinAmount || 1000;
 
@@ -259,7 +261,7 @@ export default function DepositPage() {
                   className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-white"
                 >
                   <option value="">Sélectionner un pays</option>
-                  {(COUNTRIES as any[]).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {countriesList.map((c: any) => <option key={c.id} value={c.slug}>{c.name}</option>)}
                 </select>
               </div>
               <button

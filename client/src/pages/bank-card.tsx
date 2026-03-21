@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { getPaymentMethods } from "@/lib/constants";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -9,10 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, User, CreditCard, DollarSign, Lock, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 
-const PAYMENT_METHODS = [
-  "Moov Money", "MTN Mobile Money", "Orange Money", "Wave", "Free Money",
-  "Airtel Money", "M-Pesa", "Flooz", "T-Money", "CeltisPay",
-];
+const FALLBACK_METHODS = ["Orange Money", "MTN Mobile Money", "Moov Money", "Wave", "Celtis"];
 
 export default function BankCardPage() {
   const { user } = useAuth();
@@ -20,6 +16,7 @@ export default function BankCardPage() {
   const [, navigate] = useLocation();
 
   const { data: existingCard } = useQuery({ queryKey: ["/api/user/bank-card"] });
+  const { data: countriesRaw = [] } = useQuery({ queryKey: ["/api/countries"] });
 
   const [paymentMethod, setPaymentMethod] = useState((existingCard as any)?.paymentMethod || "");
   const [accountName, setAccountName] = useState((existingCard as any)?.accountName || "");
@@ -27,8 +24,8 @@ export default function BankCardPage() {
   const [usdtWallet, setUsdtWallet] = useState((existingCard as any)?.usdtWallet || "");
   const [txPassword, setTxPassword] = useState("");
 
-  const paymentMethods = getPaymentMethods(user?.country || "");
-  const allMethods = paymentMethods.length > 0 ? paymentMethods : PAYMENT_METHODS;
+  const userCountry = (countriesRaw as any[]).find((c: any) => c.slug === (user?.country || ""));
+  const allMethods: string[] = userCountry?.operators?.length > 0 ? userCountry.operators : FALLBACK_METHODS;
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {

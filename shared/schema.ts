@@ -120,6 +120,17 @@ export const settings = pgTable("settings", {
   statsResetDate: timestamp("stats_reset_date"),
 });
 
+export const countries = pgTable("countries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  flag: text("flag").notNull().default(""),
+  code: text("code").notNull().default(""),
+  operators: text("operators").array().notNull().default(sql`'{}'::text[]`),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const giftCodes = pgTable("gift_codes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),
@@ -220,6 +231,14 @@ export const insertPaymentChannelSchema = createInsertSchema(paymentChannels).pi
   isActive: true,
 });
 
+export const insertCountrySchema = createInsertSchema(countries).pick({
+  name: true,
+  flag: true,
+  code: true,
+  operators: true,
+  isActive: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type BankCard = typeof bankCards.$inferSelect;
@@ -232,3 +251,4 @@ export type Settings = typeof settings.$inferSelect;
 export type PaymentChannel = typeof paymentChannels.$inferSelect;
 export type Product = typeof products.$inferSelect;
 export type GiftCode = typeof giftCodes.$inferSelect;
+export type Country = typeof countries.$inferSelect;

@@ -1,8 +1,8 @@
 import { db } from "./db";
 import { eq, and, desc, sql, or, ilike, count, gte } from "drizzle-orm";
 import {
-  users, bankCards, investments, transactions, referrals, spinResults, tickets, settings, paymentChannels, products, giftCodes,
-  type User, type InsertUser, type BankCard, type Investment, type Transaction, type Referral, type SpinResult, type Ticket, type Settings, type PaymentChannel, type Product, type GiftCode
+  users, bankCards, investments, transactions, referrals, spinResults, tickets, settings, paymentChannels, products, giftCodes, countries,
+  type User, type InsertUser, type BankCard, type Investment, type Transaction, type Referral, type SpinResult, type Ticket, type Settings, type PaymentChannel, type Product, type GiftCode, type Country
 } from "@shared/schema";
 import bcrypt from "bcryptjs";
 
@@ -79,6 +79,11 @@ export interface IStorage {
   deleteGiftCode(id: string): Promise<void>;
 
   getUserTeamOverview(): Promise<any[]>;
+
+  getCountries(activeOnly?: boolean): Promise<Country[]>;
+  createCountry(data: any): Promise<Country>;
+  updateCountry(id: string, data: Partial<Country>): Promise<Country | undefined>;
+  deleteCountry(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -501,6 +506,27 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGiftCode(id: string): Promise<void> {
     await db.delete(giftCodes).where(eq(giftCodes.id, id));
+  }
+
+  async getCountries(activeOnly = false): Promise<Country[]> {
+    if (activeOnly) {
+      return await db.select().from(countries).where(eq(countries.isActive, true)).orderBy(countries.name);
+    }
+    return await db.select().from(countries).orderBy(countries.name);
+  }
+
+  async createCountry(data: any): Promise<Country> {
+    const [c] = await db.insert(countries).values(data).returning();
+    return c;
+  }
+
+  async updateCountry(id: string, data: Partial<Country>): Promise<Country | undefined> {
+    const [c] = await db.update(countries).set(data).where(eq(countries.id, id)).returning();
+    return c;
+  }
+
+  async deleteCountry(id: string): Promise<void> {
+    await db.delete(countries).where(eq(countries.id, id));
   }
 }
 

@@ -1,5 +1,5 @@
 import { useAuth } from "@/lib/auth";
-import { getCountry } from "@/lib/constants";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ChevronRight, LogOut, Shield, Headphones, Diamond, Settings, Star, Lock } from "lucide-react";
 import lv0Img from "@assets/lv0_1773607669331.png";
@@ -13,7 +13,8 @@ export default function AccountPage() {
 
   if (!user) return null;
 
-  const country = getCountry(user.country);
+  const { data: countriesRaw = [] } = useQuery({ queryKey: ["/api/countries"] });
+  const country = (countriesRaw as any[]).find((c: any) => c.slug === (user.country || ""));
   const maskedPhone = user.phone.slice(0, 3) + "****" + user.phone.slice(-3);
   const vipTarget = 2000;
   const vipProgress = Math.min((user.depositBalance / vipTarget) * 100, 100);

@@ -48,6 +48,19 @@ function requireAdmin(req: Request, res: Response, next: any) {
   next();
 }
 
+const INITIAL_COUNTRIES = [
+  { name: "Cameroun",     slug: "cameroun",     flag: "🇨🇲", code: "+237", operators: ["Orange Money", "MTN Mobile Money"], isActive: true },
+  { name: "Bénin",        slug: "benin",         flag: "🇧🇯", code: "+229", operators: ["Celtis", "Moov Money", "MTN", "Momo"], isActive: true },
+  { name: "Burkina Faso", slug: "burkina_faso",  flag: "🇧🇫", code: "+226", operators: ["Orange Money", "Moov Money"], isActive: true },
+];
+
+function toSlug(name: string): string {
+  return name.toLowerCase()
+    .replace(/[àáâãäå]/g, "a").replace(/[è-ë]/g, "e").replace(/[ì-ï]/g, "i")
+    .replace(/[ò-ö]/g, "o").replace(/[ù-ü]/g, "u").replace(/ç/g, "c").replace(/ñ/g, "n")
+    .replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+}
+
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   app.use(
     session({
@@ -57,6 +70,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
     })
   );
+
+  // Seed countries if empty
+  try {
+    const existing = await storage.getCountries();
+    if (existing.length === 0) {
+      for (const c of INITIAL_COUNTRIES) await storage.createCountry(c);
+    }
+  } catch {}
 
   // Auth routes
   app.post("/api/auth/send-otp", async (req: Request, res: Response) => {
@@ -827,6 +848,68 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         await storage.createProduct(p as any);
       }
       res.json({ inserted: toInsert.length, skipped: autelProducts.length - toInsert.length });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // Countries routes (public - active only)
+  app.get("/api/countries", async (req: Request, res: Response) => {
+    try {
+      const list = await storage.getCountries(true);
+      res.json(list);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // Admin countries routes
+  app.get("/api/admin/countries", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const list = await storage.getCountries(false);
+      res.json(list);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.post("/api/admin/countries", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { name, flag, code, operators, isActive } = req.body;
+      if (!name || !code) return res.status(400).json({ message: "Nom et indicatif téléphonique requis" });
+      const ops = Array.isArray(operators) ? operators : (operators || "").split(",").map((o: string) => o.trim()).filter(Boolean);
+      const slug = toSlug(name.trim());
+      const c = await storage.createCountry({ name: name.trim(), slug, flag: (flag || "").trim(), code: code.trim(), operators: ops, isActive: isActive !== false });
+      res.json(c);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.patch("/api/admin/countries/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { name, flag, code, operators, isActive } = req.body;
+      const update: any = {};
+      if (name !== undefined) update.name = name.trim();
+      if (flag !== undefined) update.flag = flag.trim();
+      if (code !== undefined) update.code = code.trim();
+      if (isActive !== undefined) update.isActive = isActive;
+      if (operators !== undefined) {
+        update.operators = Array.isArray(operators) ? operators : operators.split(",").map((o: string) => o.trim()).filter(Boolean);
+      }
+      const c = await storage.updateCountry(id, update);
+      if (!c) return res.status(404).json({ message: "Pays introuvable" });
+      res.json(c);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.delete("/api/admin/countries/:id", requireAdmin, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteCountry(req.params.id);
+      res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }

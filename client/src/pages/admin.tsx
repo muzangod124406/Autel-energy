@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { formatCFA, COUNTRIES, INVESTMENT_PLANS } from "@/lib/constants";
+import { formatCFA, INVESTMENT_PLANS } from "@/lib/constants";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -107,6 +107,11 @@ export default function AdminPage() {
   const [settingsForm, setSettingsForm] = useState<any>(null);
   const [settingsSaving, setSettingsSaving] = useState(false);
 
+  // Country form state
+  const [showCountryForm, setShowCountryForm] = useState(false);
+  const [editingCountry, setEditingCountry] = useState<any>(null);
+  const [countryForm, setCountryForm] = useState({ name: "", flag: "", code: "", operators: "", isActive: true });
+
   // Stats date filter
   const [statsFrom, setStatsFrom] = useState("");
   const [appliedStatsFrom, setAppliedStatsFrom] = useState("");
@@ -130,6 +135,23 @@ export default function AdminPage() {
   });
   const { data: allUsers = [] } = useQuery({ queryKey: ["/api/admin/users"] });
   const { data: teamOverview = [] } = useQuery({ queryKey: ["/api/admin/team-overview"] });
+  const { data: adminCountries = [] } = useQuery({ queryKey: ["/api/admin/countries"] });
+
+  const createCountryMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/admin/countries", data).then(r => r.json()),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/countries"] }); queryClient.invalidateQueries({ queryKey: ["/api/countries"] }); setShowCountryForm(false); setEditingCountry(null); setCountryForm({ name: "", flag: "", code: "", operators: "", isActive: true }); toast({ title: "Pays créé" }); },
+    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" }),
+  });
+  const updateCountryMutation = useMutation({
+    mutationFn: ({ id, ...data }: any) => apiRequest("PATCH", `/api/admin/countries/${id}`, data).then(r => r.json()),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/countries"] }); queryClient.invalidateQueries({ queryKey: ["/api/countries"] }); setShowCountryForm(false); setEditingCountry(null); toast({ title: "Pays mis à jour" }); },
+    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" }),
+  });
+  const deleteCountryMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/admin/countries/${id}`).then(r => r.json()),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/countries"] }); queryClient.invalidateQueries({ queryKey: ["/api/countries"] }); toast({ title: "Pays supprimé" }); },
+    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" }),
+  });
   const { data: deposits = [], refetch: refetchDeposits } = useQuery({
     queryKey: ["/api/admin/transactions", "deposit", txSearch, depositStatus],
     queryFn: async () => {
@@ -420,6 +442,7 @@ export default function AdminPage() {
     { key: "channels", label: "Canaux" },
     { key: "billets", label: "Billets" },
     { key: "tickets", label: "Codes Cadeaux" },
+    { key: "pays", label: "Pays" },
     { key: "settings", label: "Paramètres" },
   ];
 
@@ -830,7 +853,7 @@ export default function AdminPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-bold text-sm">{teamModalUser.phone}{teamModalUser.nickname ? ` (${teamModalUser.nickname})` : ""}</h3>
-                      <p className="text-xs text-gray-400">{COUNTRIES.find((c: any) => c.id === teamModalUser.country)?.name || teamModalUser.country} · Code: {teamModalUser.referralCode}</p>
+                      <p className="text-xs text-gray-400">{(adminCountries as any[]).find((c: any) => c.slug === teamModalUser.country)?.name || teamModalUser.country} · Code: {teamModalUser.referralCode}</p>
                     </div>
                     <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setTeamModalUser(null)}>✕</Button>
                   </div>
@@ -883,7 +906,7 @@ export default function AdminPage() {
                                     <div className="flex items-center justify-between">
                                       <div>
                                         <p className="font-semibold">{referred?.phone || ref.referredId}</p>
-                                        <p className="text-gray-400">{COUNTRIES.find((c: any) => c.id === referred?.country)?.name || referred?.country} · {referred?.referralCode}</p>
+                                        <p className="text-gray-400">{(adminCountries as any[]).find((c: any) => c.slug === referred?.country)?.name || referred?.country} · {referred?.referralCode}</p>
                                       </div>
                                       <div className="text-right">
                                         <p className="text-green-700 font-bold">{formatCFA(td2?.ownInvested || 0)}</p>
@@ -1224,6 +1247,103 @@ export default function AdminPage() {
         )}
 
         {/* ===================== PARAMÈTRES ===================== */}
+        {activeTab === "pays" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-gray-900">Gestion des Pays</h3>
+              <Button size="sm" onClick={() => { setEditingCountry(null); setCountryForm({ name: "", flag: "", code: "", operators: "", isActive: true }); setShowCountryForm(true); }} data-testid="button-add-country">
+                <Plus className="w-4 h-4 mr-1" /> Ajouter
+              </Button>
+            </div>
+
+            {showCountryForm && (
+              <Card className="p-4 space-y-3 border-2 border-blue-200">
+                <h4 className="font-semibold text-sm text-blue-700">{editingCountry ? "Modifier le pays" : "Nouveau pays"}</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Nom du pays</label>
+                    <Input className="mt-1" placeholder="ex: Sénégal" value={countryForm.name}
+                      onChange={e => setCountryForm(f => ({ ...f, name: e.target.value }))}
+                      data-testid="input-country-name" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Drapeau (emoji)</label>
+                    <Input className="mt-1" placeholder="🇸🇳" value={countryForm.flag}
+                      onChange={e => setCountryForm(f => ({ ...f, flag: e.target.value }))}
+                      data-testid="input-country-flag" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Indicatif téléphonique</label>
+                  <Input className="mt-1" placeholder="+221" value={countryForm.code}
+                    onChange={e => setCountryForm(f => ({ ...f, code: e.target.value }))}
+                    data-testid="input-country-code" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Opérateurs (séparés par des virgules)</label>
+                  <Input className="mt-1" placeholder="Orange Money, Wave, MTN" value={countryForm.operators}
+                    onChange={e => setCountryForm(f => ({ ...f, operators: e.target.value }))}
+                    data-testid="input-country-operators" />
+                  <p className="text-xs text-gray-400 mt-1">Ces opérateurs apparaîtront dans le formulaire de carte bancaire des utilisateurs de ce pays</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="country-active" checked={countryForm.isActive}
+                    onChange={e => setCountryForm(f => ({ ...f, isActive: e.target.checked }))}
+                    data-testid="check-country-active" />
+                  <label htmlFor="country-active" className="text-sm text-gray-700">Pays actif (visible sur la plateforme)</label>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { setShowCountryForm(false); setEditingCountry(null); }} className="flex-1">Annuler</Button>
+                  <Button size="sm" className="flex-1" data-testid="button-save-country"
+                    disabled={createCountryMutation.isPending || updateCountryMutation.isPending}
+                    onClick={() => {
+                      const payload = { name: countryForm.name, flag: countryForm.flag, code: countryForm.code, operators: countryForm.operators, isActive: countryForm.isActive };
+                      if (editingCountry) { updateCountryMutation.mutate({ id: editingCountry.id, ...payload }); }
+                      else { createCountryMutation.mutate(payload); }
+                    }}>
+                    <Check className="w-4 h-4 mr-1" /> Enregistrer
+                  </Button>
+                </div>
+              </Card>
+            )}
+
+            {(adminCountries as any[]).length === 0 ? (
+              <Card className="p-6 text-center text-gray-400 text-sm">Aucun pays configuré</Card>
+            ) : (
+              (adminCountries as any[]).map((c: any) => (
+                <Card key={c.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{c.flag}</span>
+                      <div>
+                        <p className="font-semibold text-gray-900 text-sm">{c.name} <span className="text-gray-400 font-normal">{c.code}</span></p>
+                        <p className="text-xs text-gray-500">{(c.operators || []).join(", ") || "Aucun opérateur"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={c.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+                        {c.isActive ? "Actif" : "Inactif"}
+                      </Badge>
+                      <button title="Modifier" onClick={() => { setEditingCountry(c); setCountryForm({ name: c.name, flag: c.flag || "", code: c.code || "", operators: (c.operators || []).join(", "), isActive: c.isActive }); setShowCountryForm(true); }}
+                        data-testid={`button-edit-country-${c.id}`} className="p-1.5 rounded-lg hover:bg-gray-100 text-blue-600">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button title={c.isActive ? "Désactiver" : "Activer"} onClick={() => updateCountryMutation.mutate({ id: c.id, isActive: !c.isActive })}
+                        data-testid={`button-toggle-country-${c.id}`} className="p-1.5 rounded-lg hover:bg-gray-100">
+                        {c.isActive ? <ToggleRight className="w-5 h-5 text-green-600" /> : <ToggleLeft className="w-5 h-5 text-gray-400" />}
+                      </button>
+                      <button title="Supprimer" onClick={() => { if (confirm(`Supprimer ${c.name} ?`)) deleteCountryMutation.mutate(c.id); }}
+                        data-testid={`button-delete-country-${c.id}`} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+
         {activeTab === "settings" && (() => {
           const sf = settingsForm || {};
           const set = (k: string, v: any) => setSettingsForm((p: any) => ({ ...p, [k]: v }));
