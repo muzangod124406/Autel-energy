@@ -31,6 +31,22 @@ export async function getWestpayToken(): Promise<string> {
   return cachedToken!;
 }
 
+// Returns the X-API-KEY for a given country slug (optional but required for some endpoints)
+export function getCountryApiKey(countrySlug: string): string | undefined {
+  const slug = countrySlug.toUpperCase().replace(/-/g, "_");
+  return process.env[`WESTPAY_API_KEY_${slug}`] || undefined;
+}
+
+// Returns status of all configured country API keys (without exposing values)
+export function getCountryApiKeyStatus(): Record<string, boolean> {
+  const countries = ["CAMEROUN", "BENIN", "BURKINA_FASO", "TOGO", "SENEGAL", "COTE_DIVOIRE", "MALI", "CONGO", "GABON"];
+  const result: Record<string, boolean> = {};
+  for (const c of countries) {
+    result[c] = !!process.env[`WESTPAY_API_KEY_${c}`];
+  }
+  return result;
+}
+
 export function buildWestpayPaymentUrl(params: {
   amount: number;
   country: string;
@@ -48,20 +64,28 @@ export function buildWestpayPaymentUrl(params: {
 }
 
 export async function westpayTransfer(params: {
-  country: string;
+  country: string;       // WestPay country name (e.g. "Cameroun")
+  countrySlug: string;   // our slug (e.g. "cameroun") for API key lookup
   msisdn: string;
   amount: number;
   firstName: string;
   lastName: string;
 }): Promise<{ reference: string; status: string; fees: number }> {
   const token = await getWestpayToken();
+  const apiKey = getCountryApiKey(params.countrySlug);
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  };
+  if (apiKey) headers["X-API-KEY"] = apiKey;
+
+  const { countrySlug: _skip, ...body } = params;
+
   const res = await fetch(`${BASE_URL}/api/merchant/transfer`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
-    body: JSON.stringify(params),
+    headers,
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -72,6 +96,15 @@ export async function westpayTransfer(params: {
   return res.json() as any;
 }
 
+export async function westpayGetBalances(): Promise<any[]> {
+  const token = await getWestpayToken();
+  const res = await fetch(`${BASE_URL}/api/merchant/balance`, {
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`WestPay balance error ${res.status}`);
+  return res.json() as any;
+}
+
 export function verifyWestpaySignature(rawBody: string, signature: string): boolean {
   const secret = process.env.WESTPAY_WEBHOOK_SECRET;
   if (!secret) return false;
@@ -79,7 +112,11 @@ export function verifyWestpaySignature(rawBody: string, signature: string): bool
     .createHmac("sha256", secret)
     .update(rawBody, "utf8")
     .digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(signature, "hex"));
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(signature, "hex"));
+  } catch {
+    return false;
+  }
 }
 
 export function slugToWestpayCountry(slug: string): string {

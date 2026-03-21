@@ -10,6 +10,7 @@ import { z } from "zod";
 import {
   buildWestpayPaymentUrl, verifyWestpaySignature, westpayTransfer,
   slugToWestpayCountry, buildMsisdn, WESTPAY_ENABLED,
+  getCountryApiKeyStatus, westpayGetBalances,
 } from "./westpay";
 
 const upload = multer({
@@ -679,10 +680,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         try {
           const user = await storage.getUser(tx.userId);
           if (user && tx.phoneNumber && tx.country) {
-            const msisdn = buildMsisdn(tx.phoneNumber, user.country || tx.country);
+            const countrySlug = user.country || tx.country;
+            const msisdn = buildMsisdn(tx.phoneNumber, countrySlug);
             const nameParts = (tx.accountName || user.firstName || "Client").split(" ");
             await westpayTransfer({
-              country: slugToWestpayCountry(user.country || tx.country),
+              country: slugToWestpayCountry(countrySlug),
+              countrySlug,
               msisdn,
               amount: tx.netAmount || tx.amount,
               firstName: nameParts[0] || "Client",
@@ -982,6 +985,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       await storage.deleteCountry(req.params.id);
       res.json({ success: true });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // ─── WestPay Admin ───────────────────────────────────────────────────────
+  app.get("/api/admin/westpay/status", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    res.json({
+      enabled: WESTPAY_ENABLED,
+      merchantSlug: process.env.WESTPAY_MERCHANT_SLUG || null,
+      webhookSecretConfigured: !!process.env.WESTPAY_WEBHOOK_SECRET,
+      countryApiKeys: getCountryApiKeyStatus(),
+    });
+  });
+
+  app.get("/api/admin/westpay/balances", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      if (!WESTPAY_ENABLED) return res.status(503).json({ message: "WestPay non configuré" });
+      const balances = await westpayGetBalances();
+      res.json(balances);
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }

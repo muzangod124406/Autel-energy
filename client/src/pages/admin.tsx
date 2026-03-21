@@ -443,6 +443,7 @@ export default function AdminPage() {
     { key: "billets", label: "Billets" },
     { key: "tickets", label: "Codes Cadeaux" },
     { key: "pays", label: "Pays" },
+    { key: "westpay", label: "WestPay" },
     { key: "settings", label: "Paramètres" },
   ];
 
@@ -1344,6 +1345,116 @@ export default function AdminPage() {
             )}
           </div>
         )}
+
+        {activeTab === "westpay" && (() => {
+          const { data: wpStatus } = useQuery<any>({ queryKey: ["/api/admin/westpay/status"], enabled: activeTab === "westpay" });
+          const { data: wpBalances, refetch: refetchBalances, isFetching: balFetching } = useQuery<any[]>({
+            queryKey: ["/api/admin/westpay/balances"], enabled: false,
+          });
+
+          const COUNTRY_KEYS = [
+            { slug: "CAMEROUN", label: "🇨🇲 Cameroun", envVar: "WESTPAY_API_KEY_CAMEROUN" },
+            { slug: "BENIN", label: "🇧🇯 Bénin", envVar: "WESTPAY_API_KEY_BENIN" },
+            { slug: "BURKINA_FASO", label: "🇧🇫 Burkina Faso", envVar: "WESTPAY_API_KEY_BURKINA_FASO" },
+            { slug: "TOGO", label: "🇹🇬 Togo", envVar: "WESTPAY_API_KEY_TOGO" },
+            { slug: "SENEGAL", label: "🇸🇳 Sénégal", envVar: "WESTPAY_API_KEY_SENEGAL" },
+            { slug: "COTE_DIVOIRE", label: "🇨🇮 Côte d'Ivoire", envVar: "WESTPAY_API_KEY_COTE_DIVOIRE" },
+            { slug: "MALI", label: "🇲🇱 Mali", envVar: "WESTPAY_API_KEY_MALI" },
+          ];
+
+          return (
+            <div className="space-y-3">
+              {/* Statut général */}
+              <Card className="p-4">
+                <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-blue-500" /> Statut WestPay / RobotPay
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Intégration</span>
+                    <Badge variant={wpStatus?.enabled ? "default" : "secondary"} className={wpStatus?.enabled ? "bg-green-500" : ""}>
+                      {wpStatus?.enabled ? "✓ Activé" : "Non configuré"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Marchand (slug)</span>
+                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{wpStatus?.merchantSlug || "—"}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600">Clé secrète webhook</span>
+                    <Badge variant={wpStatus?.webhookSecretConfigured ? "default" : "secondary"} className={wpStatus?.webhookSecretConfigured ? "bg-green-500" : "bg-orange-400 text-white"}>
+                      {wpStatus?.webhookSecretConfigured ? "✓ Configurée" : "⚠ Manquante"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-600">URL Webhook</span>
+                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded max-w-[200px] truncate">{window.location.origin}/api/webhook/westpay</span>
+                  </div>
+                </div>
+                {!wpStatus?.webhookSecretConfigured && (
+                  <p className="text-xs text-orange-600 bg-orange-50 rounded p-2 mt-2">
+                    Ajoutez le secret <strong>WESTPAY_WEBHOOK_SECRET</strong> dans les secrets Replit pour sécuriser les webhooks.
+                  </p>
+                )}
+              </Card>
+
+              {/* Clés API par pays */}
+              <Card className="p-4">
+                <h3 className="font-bold text-sm mb-1 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-green-500" /> Clés API par pays
+                </h3>
+                <p className="text-xs text-gray-500 mb-3">
+                  Chaque pays actif nécessite une clé API séparée. Ajoutez-les dans les <strong>Secrets Replit</strong> avec les noms ci-dessous.
+                </p>
+                <div className="space-y-1">
+                  {COUNTRY_KEYS.map(ck => {
+                    const configured = wpStatus?.countryApiKeys?.[ck.slug];
+                    return (
+                      <div key={ck.slug} className="flex items-center justify-between py-2 border-b border-gray-50">
+                        <div>
+                          <span className="text-sm font-medium">{ck.label}</span>
+                          <p className="text-xs font-mono text-gray-400">{ck.envVar}</p>
+                        </div>
+                        <Badge variant={configured ? "default" : "secondary"} className={configured ? "bg-green-500 text-xs" : "text-xs"}>
+                          {configured ? "✓ OK" : "Manquant"}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-400 mt-3">
+                  Trouvez vos clés dans le dashboard WestPay → onglet <strong>"Clés API"</strong>. Format : CMR-xxxxxx...
+                </p>
+              </Card>
+
+              {/* Soldes WestPay */}
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-sm flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-green-500" /> Soldes WestPay
+                  </h3>
+                  <Button size="sm" variant="outline" onClick={() => refetchBalances()} disabled={balFetching} data-testid="btn-refresh-balances">
+                    {balFetching ? "Chargement..." : "Actualiser"}
+                  </Button>
+                </div>
+                {!wpBalances ? (
+                  <p className="text-sm text-gray-400">Cliquez sur "Actualiser" pour charger les soldes.</p>
+                ) : wpBalances.length === 0 ? (
+                  <p className="text-sm text-gray-400">Aucun solde disponible.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {wpBalances.map((b: any, i: number) => (
+                      <div key={i} className="flex justify-between items-center py-2 border-b border-gray-50">
+                        <span className="text-sm text-gray-700">{b.country}</span>
+                        <span className="font-bold text-sm text-green-600">{(b.balance || 0).toLocaleString()} FCFA</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+          );
+        })()}
 
         {activeTab === "settings" && (() => {
           const sf = settingsForm || {};
