@@ -81,6 +81,7 @@ export default function AdminPage() {
   const [userReferrals, setUserReferrals] = useState<any>(null);
   const [userInvestments, setUserInvestments] = useState<any[]>([]);
   const [teamModalUser, setTeamModalUser] = useState<any>(null);
+  const [ticketBonuses, setTicketBonuses] = useState<Record<string, string>>({});
 
   // Channel form state
   const [channelForm, setChannelForm] = useState({ name: "", type: "link", redirectUrl: "", isActive: true });
@@ -417,6 +418,7 @@ export default function AdminPage() {
     { key: "users", label: "Utilisateurs" },
     { key: "products", label: "Produits" },
     { key: "channels", label: "Canaux" },
+    { key: "billets", label: "Billets" },
     { key: "tickets", label: "Codes Cadeaux" },
     { key: "settings", label: "Paramètres" },
   ];
@@ -1080,6 +1082,62 @@ export default function AdminPage() {
                       <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => setEditingChannel({ ...ch })} data-testid={`btn-edit-channel-${ch.id}`}><Edit2 className="w-3 h-3" /></Button>
                       <Button size="sm" variant="destructive" className="h-7 px-2" onClick={() => deleteChannelMutation.mutate(ch.id)} data-testid={`btn-delete-channel-${ch.id}`}><Trash2 className="w-3 h-3" /></Button>
                     </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* ===================== BILLETS ===================== */}
+        {activeTab === "billets" && (
+          <div className="space-y-3">
+            <p className="text-xs text-gray-400 text-center">
+              {(pendingTickets as any[]).length} billet(s) en attente
+            </p>
+            {(pendingTickets as any[]).length === 0 ? (
+              <Card className="p-6 text-center text-gray-400 text-sm">Aucun billet en attente</Card>
+            ) : (
+              (pendingTickets as any[]).map((t: any) => (
+                <Card key={t.id} className="p-4 space-y-3" data-testid={`card-ticket-${t.id}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-sm">{t.user?.phone || t.userId}</p>
+                      <p className="text-xs text-gray-400">{new Date(t.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                    </div>
+                    <Badge className={
+                      t.status === "pending" ? "bg-yellow-100 text-yellow-800 border-0 text-xs" :
+                      t.status === "approved" ? "bg-green-100 text-green-800 border-0 text-xs" :
+                      "bg-red-100 text-red-700 border-0 text-xs"
+                    }>{t.status === "pending" ? "En attente" : t.status === "approved" ? "Approuvé" : "Refusé"}</Badge>
+                  </div>
+
+                  {t.description && (
+                    <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-2">{t.description}</p>
+                  )}
+                  {t.imageUrl && (
+                    <img src={t.imageUrl} alt="Capture" className="rounded-lg w-full max-h-48 object-contain bg-gray-100" />
+                  )}
+
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      type="number"
+                      placeholder="Bonus (FCFA)"
+                      className="h-8 text-sm"
+                      value={ticketBonuses[t.id] || ""}
+                      onChange={e => setTicketBonuses(p => ({ ...p, [t.id]: e.target.value }))}
+                      data-testid={`input-ticket-bonus-${t.id}`}
+                    />
+                    <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
+                      onClick={() => updateTicketMutation.mutate({ id: t.id, status: "approved", bonus: parseInt(ticketBonuses[t.id] || "0") })}
+                      data-testid={`btn-approve-ticket-${t.id}`}>
+                      <Check className="w-3 h-3 mr-1" /> Approuver
+                    </Button>
+                    <Button size="sm" variant="destructive" className="h-8 whitespace-nowrap"
+                      onClick={() => updateTicketMutation.mutate({ id: t.id, status: "rejected" })}
+                      data-testid={`btn-reject-ticket-${t.id}`}>
+                      <X className="w-3 h-3 mr-1" /> Refuser
+                    </Button>
                   </div>
                 </Card>
               ))
