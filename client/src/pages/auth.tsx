@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Phone, KeyRound, User, Shield, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
-import autelLogo from "@assets/autel_green_logo_110x@2x_1773598927579.png";
+import autelLogo from "@assets/images_(11)_1774131992392.png";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -99,7 +99,7 @@ export default function AuthPage() {
     <div className="min-h-screen bg-[#f0f0e4] flex flex-col items-center pt-12 px-4 pb-8">
       <div className="w-full max-w-sm">
         <div className="flex items-center justify-center mb-10">
-          <img src={autelLogo} alt="Autel Energy" className="h-12 object-contain" />
+          <img src={autelLogo} alt="Autel Energy" className="h-20 w-20 object-cover rounded-2xl shadow-md" />
         </div>
 
         {mode === "login" && (

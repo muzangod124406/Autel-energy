@@ -1,6 +1,6 @@
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
-import autelLogo from "@assets/autel_green_logo_110x@2x_1773598927579.png";
+import autelLogo from "@assets/images_(11)_1774131992392.png";
 import rechargeIcon from "@assets/recharge_(1)_1773608231085.png";
 import withdrawIcon from "@assets/withdraw_1773608230743.png";
 import blogIcon from "@assets/blog_(1)_1773608231117.png";
@@ -28,7 +28,7 @@ export default function HomePage() {
           <div className="w-14 h-14 rounded-full border-2 border-white bg-white flex items-center justify-center overflow-hidden shrink-0">
             <span className="text-2xl">🦁</span>
           </div>
-          <img src={autelLogo} alt="Autel" className="h-7 object-contain brightness-0 invert" />
+          <img src={autelLogo} alt="Autel" className="h-10 w-10 object-cover rounded-xl" />
         </div>
 
         <div className="flex items-center justify-between mb-6">
