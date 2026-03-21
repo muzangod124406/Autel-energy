@@ -113,6 +113,22 @@ export const settings = pgTable("settings", {
   withdrawEndHour: integer("withdraw_end_hour").notNull().default(15),
   soleaspayEnabled: boolean("soleaspay_enabled").notNull().default(false),
   soleaspayChannelName: text("soleaspay_channel_name").notNull().default(""),
+  referralCommission1: integer("referral_commission1").notNull().default(30),
+  referralCommission2: integer("referral_commission2").notNull().default(3),
+  referralCommission3: integer("referral_commission3").notNull().default(2),
+  statsResetDate: timestamp("stats_reset_date"),
+});
+
+export const giftCodes = pgTable("gift_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
+  recipientPhone: text("recipient_phone"),
+  amount: integer("amount").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isUsed: boolean("is_used").notNull().default(false),
+  usedBy: text("used_by"),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const paymentChannels = pgTable("payment_channels", {
@@ -214,3 +230,4 @@ export type Ticket = typeof tickets.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
 export type PaymentChannel = typeof paymentChannels.$inferSelect;
 export type Product = typeof products.$inferSelect;
+export type GiftCode = typeof giftCodes.$inferSelect;

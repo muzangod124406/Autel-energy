@@ -183,6 +183,45 @@ export default function AdminPage() {
     }
   });
 
+  const resetStatsMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/admin/reset-stats", {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Statistiques réinitialisées" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+    },
+    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" })
+  });
+
+  const { data: giftCodes = [] } = useQuery({ queryKey: ["/api/admin/gift-codes"] });
+  const [newCode, setNewCode] = useState({ code: "", recipientPhone: "", amount: "", expiresAt: "" });
+
+  const createGiftCodeMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/admin/gift-codes", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Code cadeau créé" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/gift-codes"] });
+      setNewCode({ code: "", recipientPhone: "", amount: "", expiresAt: "" });
+    },
+    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" })
+  });
+
+  const deleteGiftCodeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/admin/gift-codes/${id}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Code supprimé" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/gift-codes"] });
+    }
+  });
+
   const updateSettingsMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("PUT", "/api/admin/settings", data);
@@ -498,7 +537,8 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <Button variant="destructive" size="sm" className="flex-shrink-0 flex items-center gap-1"
-                  onClick={() => toast({ title: "Fonctionnalité désactivée", description: "Contactez le support technique", variant: "destructive" })}>
+                  disabled={resetStatsMutation.isPending}
+                  onClick={() => { if (confirm("Réinitialiser toutes les statistiques ?")) resetStatsMutation.mutate(); }}>
                   <RotateCcw className="w-3.5 h-3.5" /> Réinitialiser
                 </Button>
               </div>
@@ -958,24 +998,76 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ===================== CODES CADEAUX (TICKETS) ===================== */}
+        {/* ===================== CODES CADEAUX ===================== */}
         {activeTab === "tickets" && (
-          <div className="space-y-3">
-            <p className="text-xs text-gray-400 text-center">Billets de dépôt soumis par les utilisateurs</p>
-            {(pendingTickets as any[]).length === 0 ? (
-              <Card className="p-6 text-center text-gray-400 text-sm">Aucun billet en attente</Card>
+          <div className="space-y-4">
+            {/* Create form */}
+            <Card className="p-4 space-y-3">
+              <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Award className="w-4 h-4" /> Créer un code cadeau</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Code</label>
+                  <Input className="mt-1 uppercase" placeholder="ex: PROMO2025" value={newCode.code}
+                    onChange={e => setNewCode(p => ({ ...p, code: e.target.value.toUpperCase() }))}
+                    data-testid="input-gift-code" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Montant (FCFA)</label>
+                  <Input className="mt-1" type="number" placeholder="5000" value={newCode.amount}
+                    onChange={e => setNewCode(p => ({ ...p, amount: e.target.value }))}
+                    data-testid="input-gift-amount" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700">Téléphone destinataire (optionnel)</label>
+                <Input className="mt-1" placeholder="Laisser vide = tout le monde" value={newCode.recipientPhone}
+                  onChange={e => setNewCode(p => ({ ...p, recipientPhone: e.target.value }))}
+                  data-testid="input-gift-recipient" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-700">Date d'expiration</label>
+                <Input className="mt-1" type="datetime-local" value={newCode.expiresAt}
+                  onChange={e => setNewCode(p => ({ ...p, expiresAt: e.target.value }))}
+                  data-testid="input-gift-expires" />
+              </div>
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={createGiftCodeMutation.isPending}
+                onClick={() => {
+                  if (!newCode.code || !newCode.amount || !newCode.expiresAt) return;
+                  createGiftCodeMutation.mutate({ code: newCode.code, recipientPhone: newCode.recipientPhone || null, amount: parseInt(newCode.amount), expiresAt: newCode.expiresAt });
+                }}
+                data-testid="button-create-gift-code">
+                <Plus className="w-4 h-4 mr-2" /> Créer le code
+              </Button>
+            </Card>
+
+            {/* List */}
+            <p className="text-xs text-gray-400 text-center">{(giftCodes as any[]).length} code(s) au total</p>
+            {(giftCodes as any[]).length === 0 ? (
+              <Card className="p-6 text-center text-gray-400 text-sm">Aucun code cadeau créé</Card>
             ) : (
-              (pendingTickets as any[]).map((ticket: any) => (
-                <Card key={ticket.id} className="p-4">
-                  {ticket.imageUrl && <img src={ticket.imageUrl} alt="Ticket" className="w-full h-40 object-cover rounded-lg mb-3" />}
-                  <p className="text-sm mb-1">{ticket.description || "Pas de description"}</p>
-                  <p className="text-xs text-gray-400 mb-3">Par: {ticket.user?.phone} | {new Date(ticket.createdAt).toLocaleDateString("fr-FR")}</p>
-                  <div className="flex gap-2">
-                    <Button size="sm" onClick={() => updateTicketMutation.mutate({ id: ticket.id, status: "approved", bonus: 100 })} className="bg-blue-600 hover:bg-blue-700 text-white flex-1">
-                      <Check className="w-4 h-4 mr-1" /> Approuver (+100)
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => updateTicketMutation.mutate({ id: ticket.id, status: "rejected" })} className="flex-1">
-                      <X className="w-4 h-4 mr-1" /> Rejeter
+              (giftCodes as any[]).map((gc: any) => (
+                <Card key={gc.id} className="p-4" data-testid={`card-gift-code-${gc.id}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono font-bold text-blue-700 text-sm">{gc.code}</span>
+                        {gc.isUsed ? (
+                          <Badge className="bg-gray-200 text-gray-600 text-xs">Utilisé</Badge>
+                        ) : new Date(gc.expiresAt) < new Date() ? (
+                          <Badge className="bg-red-100 text-red-600 text-xs">Expiré</Badge>
+                        ) : (
+                          <Badge className="bg-green-100 text-green-700 text-xs">Actif</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm font-semibold text-gray-900 mt-1">{formatCFA(gc.amount)}</p>
+                      {gc.recipientPhone && <p className="text-xs text-gray-500">Pour: {gc.recipientPhone}</p>}
+                      {gc.isUsed && gc.usedBy && <p className="text-xs text-gray-400">Utilisé par: {gc.usedBy}</p>}
+                      <p className="text-xs text-gray-400">Expire: {new Date(gc.expiresAt).toLocaleString("fr-FR")}</p>
+                    </div>
+                    <Button size="sm" variant="outline" className="text-red-500 border-red-200 flex-shrink-0"
+                      onClick={() => deleteGiftCodeMutation.mutate(gc.id)}
+                      data-testid={`button-delete-gift-${gc.id}`}>
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </Card>
@@ -1044,27 +1136,28 @@ export default function AdminPage() {
               </div>
             </Card>
 
-            {/* Paiement automatique */}
+            {/* Commissions de parrainage */}
             <Card className="p-4 space-y-3">
-              <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><CreditCard className="w-4 h-4" /> Paiement automatique (Soleaspay)</h3>
-              <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+              <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Users className="w-4 h-4" /> Commissions de parrainage</h3>
+              <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <p className="font-semibold text-sm">Activer Soleaspay</p>
-                  <p className="text-xs text-gray-400">Permet le paiement automatique via mobile money</p>
+                  <label className="text-xs font-medium text-gray-700">Niveau 1 (%)</label>
+                  <Input className="mt-1" type="number" min={0} max={100} defaultValue={(settingsData as any)?.referralCommission1 ?? 30}
+                    onBlur={e => updateSettingsMutation.mutate({ referralCommission1: parseInt(e.target.value) })}
+                    data-testid="admin-setting-commission1" />
                 </div>
-                <button
-                  onClick={() => updateSettingsMutation.mutate({ soleaspayEnabled: !(settingsData as any)?.soleaspayEnabled })}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${(settingsData as any)?.soleaspayEnabled ? "bg-blue-600" : "bg-gray-300"}`}
-                  data-testid="admin-toggle-soleaspay"
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${(settingsData as any)?.soleaspayEnabled ? "translate-x-6" : "translate-x-1"}`} />
-                </button>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-700">Nom du canal (affiché aux utilisateurs)</label>
-                <Input className="mt-1" defaultValue={(settingsData as any)?.soleaspayChannelName || ""}
-                  onBlur={e => updateSettingsMutation.mutate({ soleaspayChannelName: e.target.value })}
-                  data-testid="admin-setting-soleaspayChannelName" />
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Niveau 2 (%)</label>
+                  <Input className="mt-1" type="number" min={0} max={100} defaultValue={(settingsData as any)?.referralCommission2 ?? 3}
+                    onBlur={e => updateSettingsMutation.mutate({ referralCommission2: parseInt(e.target.value) })}
+                    data-testid="admin-setting-commission2" />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Niveau 3 (%)</label>
+                  <Input className="mt-1" type="number" min={0} max={100} defaultValue={(settingsData as any)?.referralCommission3 ?? 2}
+                    onBlur={e => updateSettingsMutation.mutate({ referralCommission3: parseInt(e.target.value) })}
+                    data-testid="admin-setting-commission3" />
+                </div>
               </div>
             </Card>
 

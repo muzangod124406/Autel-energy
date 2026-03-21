@@ -1,12 +1,20 @@
+import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { formatCFA } from "@/lib/constants";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Wallet, TrendingUp, DollarSign, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Wallet, TrendingUp, DollarSign, ShoppingBag, Gift } from "lucide-react";
 import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function BalancePage() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const [giftCode, setGiftCode] = useState("");
 
   if (!user) return null;
 
@@ -19,6 +27,19 @@ export default function BalancePage() {
     { label: "Revenu Produit", value: user.productRevenue, icon: ShoppingBag, color: "text-purple-600", note: "" },
     { label: "Commission Parrainage", value: user.commissionBalance, icon: TrendingUp, color: "text-cyan-600", note: "" },
   ];
+
+  const redeemMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/user/redeem-gift-code", { code: giftCode.trim().toUpperCase() });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      toast({ title: `Code activé ! +${formatCFA(data.amount)} ajouté à votre solde de retrait.` });
+      setGiftCode("");
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+    },
+    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" })
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -58,6 +79,31 @@ export default function BalancePage() {
             <span className={`font-bold ${item.color}`}>{formatCFA(item.value)}</span>
           </Card>
         ))}
+
+        {/* Gift code redemption */}
+        <Card className="p-4 space-y-3">
+          <h3 className="font-semibold text-sm flex items-center gap-2 text-purple-700">
+            <Gift className="w-4 h-4" /> Code Cadeau
+          </h3>
+          <p className="text-xs text-gray-500">Entrez un code cadeau pour créditer votre solde de retrait</p>
+          <div className="flex gap-2">
+            <Input
+              className="uppercase font-mono"
+              placeholder="ex: PROMO2025"
+              value={giftCode}
+              onChange={e => setGiftCode(e.target.value.toUpperCase())}
+              data-testid="input-redeem-gift-code"
+            />
+            <Button
+              className="bg-purple-600 hover:bg-purple-700 text-white flex-shrink-0"
+              disabled={!giftCode.trim() || redeemMutation.isPending}
+              onClick={() => redeemMutation.mutate()}
+              data-testid="button-redeem-gift-code"
+            >
+              Activer
+            </Button>
+          </div>
+        </Card>
       </div>
     </div>
   );

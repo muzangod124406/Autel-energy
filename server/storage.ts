@@ -1,8 +1,8 @@
 import { db } from "./db";
 import { eq, and, desc, sql, or, ilike, count, gte } from "drizzle-orm";
 import {
-  users, bankCards, investments, transactions, referrals, spinResults, tickets, settings, paymentChannels, products,
-  type User, type InsertUser, type BankCard, type Investment, type Transaction, type Referral, type SpinResult, type Ticket, type Settings, type PaymentChannel, type Product
+  users, bankCards, investments, transactions, referrals, spinResults, tickets, settings, paymentChannels, products, giftCodes,
+  type User, type InsertUser, type BankCard, type Investment, type Transaction, type Referral, type SpinResult, type Ticket, type Settings, type PaymentChannel, type Product, type GiftCode
 } from "@shared/schema";
 import bcrypt from "bcryptjs";
 
@@ -71,6 +71,12 @@ export interface IStorage {
   updateProduct(id: string, data: Partial<Product>): Promise<Product | undefined>;
   deleteProduct(id: string): Promise<void>;
   incrementProductPurchaseCount(id: string): Promise<void>;
+
+  getAllGiftCodes(): Promise<GiftCode[]>;
+  getGiftCodeByCode(code: string): Promise<GiftCode | undefined>;
+  createGiftCode(data: any): Promise<GiftCode>;
+  redeemGiftCode(id: string, userId: string): Promise<GiftCode>;
+  deleteGiftCode(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -425,6 +431,29 @@ export class DatabaseStorage implements IStorage {
 
   async incrementProductPurchaseCount(id: string): Promise<void> {
     await db.update(products).set({ purchaseCount: sql`${products.purchaseCount} + 1` }).where(eq(products.id, id));
+  }
+
+  async getAllGiftCodes(): Promise<GiftCode[]> {
+    return await db.select().from(giftCodes).orderBy(desc(giftCodes.createdAt));
+  }
+
+  async getGiftCodeByCode(code: string): Promise<GiftCode | undefined> {
+    const [gc] = await db.select().from(giftCodes).where(eq(giftCodes.code, code.toUpperCase()));
+    return gc;
+  }
+
+  async createGiftCode(data: any): Promise<GiftCode> {
+    const [gc] = await db.insert(giftCodes).values({ ...data, code: data.code.toUpperCase() }).returning();
+    return gc;
+  }
+
+  async redeemGiftCode(id: string, userId: string): Promise<GiftCode> {
+    const [gc] = await db.update(giftCodes).set({ isUsed: true, usedBy: userId, usedAt: new Date() }).where(eq(giftCodes.id, id)).returning();
+    return gc;
+  }
+
+  async deleteGiftCode(id: string): Promise<void> {
+    await db.delete(giftCodes).where(eq(giftCodes.id, id));
   }
 }
 

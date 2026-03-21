@@ -213,11 +213,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       await storage.updateUser(userId, { spinTickets: (user.spinTickets || 0) + 1, depositBalance: user.depositBalance - amount });
 
-      // Handle referral commissions
+      // Handle referral commissions (configurable via settings)
       if (user.referredBy) {
+        const cfg = await storage.getSettings();
+        const rate1 = (cfg.referralCommission1 ?? 30) / 100;
+        const rate2 = (cfg.referralCommission2 ?? 3) / 100;
+        const rate3 = (cfg.referralCommission3 ?? 2) / 100;
+
         const level1Referrer = await storage.getUser(user.referredBy);
         if (level1Referrer) {
-          const commission1 = Math.floor(amount * 0.30);
+          const commission1 = Math.floor(amount * rate1);
           await storage.updateUser(level1Referrer.id, {
             commissionBalance: level1Referrer.commissionBalance + commission1,
             withdrawBalance: level1Referrer.withdrawBalance + commission1
@@ -226,7 +231,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         if (level1Referrer?.referredBy) {
           const level2Referrer = await storage.getUser(level1Referrer.referredBy);
           if (level2Referrer) {
-            const commission2 = Math.floor(amount * 0.03);
+            const commission2 = Math.floor(amount * rate2);
             await storage.updateUser(level2Referrer.id, {
               commissionBalance: level2Referrer.commissionBalance + commission2,
               withdrawBalance: level2Referrer.withdrawBalance + commission2
@@ -235,7 +240,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           if (level2Referrer?.referredBy) {
             const level3Referrer = await storage.getUser(level2Referrer.referredBy);
             if (level3Referrer) {
-              const commission3 = Math.floor(amount * 0.02);
+              const commission3 = Math.floor(amount * rate3);
               await storage.updateUser(level3Referrer.id, {
                 commissionBalance: level3Referrer.commissionBalance + commission3,
                 withdrawBalance: level3Referrer.withdrawBalance + commission3
@@ -302,8 +307,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const hasActive = activeInvestments.some(i => i.status === "active");
       if (!hasActive) return res.status(400).json({ message: "Vous devez avoir au moins un produit actif" });
 
+      const cfg = await storage.getSettings();
       const { amount, country, paymentMethod, phoneNumber, accountName, transactionPassword } = req.body;
-      if (!amount || amount < 2000) return res.status(400).json({ message: "Retrait minimum: 2 000 FCFA" });
+      const minAmount = cfg.withdrawMinAmount || 2000;
+      if (!amount || amount < minAmount) return res.status(400).json({ message: `Retrait minimum: ${minAmount.toLocaleString()} FCFA` });
       if (amount > 4500000) return res.status(400).json({ message: "Retrait maximum: 4 500 000 FCFA" });
       if (user.withdrawBalance < amount) return res.status(400).json({ message: "Solde de retrait insuffisant" });
       if (user.transactionPassword && transactionPassword) {
@@ -313,7 +320,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const now = new Date();
       const hour = now.getHours();
-      if (hour < 10 || hour > 15) return res.status(400).json({ message: "Horaire de retrait: 10h à 15h" });
+      const startHour = cfg.withdrawStartHour ?? 10;
+      const endHour = cfg.withdrawEndHour ?? 15;
+      if (hour < startHour || hour > endHour) return res.status(400).json({ message: `Horaire de retrait: ${startHour}h à ${endHour}h` });
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -321,7 +330,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const todayWithdrawal = todayTxs.find(t => new Date(t.createdAt) >= today);
       if (todayWithdrawal) return res.status(400).json({ message: "1 retrait par jour maximum" });
 
-      const fees = Math.floor(amount * 0.10);
+      const feePercent = cfg.withdrawFeePercent ?? 10;
+      const fees = Math.floor(amount * (feePercent / 100));
       const netAmount = amount - fees;
 
       const tx = await storage.createTransaction(userId, {
@@ -696,6 +706,71 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.delete("/api/admin/products/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       await storage.deleteProduct(req.params.id);
+      res.json({ success: true });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // Gift Codes — Admin CRUD
+  app.get("/api/admin/gift-codes", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const codes = await storage.getAllGiftCodes();
+      res.json(codes);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.post("/api/admin/gift-codes", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { code, recipientPhone, amount, expiresAt } = req.body;
+      if (!code || !amount || !expiresAt) return res.status(400).json({ message: "Code, montant et date d'expiration sont requis" });
+      const gc = await storage.createGiftCode({ code, recipientPhone: recipientPhone || null, amount, expiresAt: new Date(expiresAt) });
+      res.json(gc);
+    } catch (e: any) {
+      if (e.message?.includes("unique")) return res.status(400).json({ message: "Ce code existe déjà" });
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.delete("/api/admin/gift-codes/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteGiftCode(req.params.id);
+      res.json({ success: true });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // Gift Code — User Redeem
+  app.post("/api/user/redeem-gift-code", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
+
+      const { code } = req.body;
+      if (!code) return res.status(400).json({ message: "Code requis" });
+
+      const gc = await storage.getGiftCodeByCode(code);
+      if (!gc) return res.status(404).json({ message: "Code cadeau invalide" });
+      if (gc.isUsed) return res.status(400).json({ message: "Ce code a déjà été utilisé" });
+      if (new Date(gc.expiresAt) < new Date()) return res.status(400).json({ message: "Ce code a expiré" });
+      if (gc.recipientPhone && gc.recipientPhone !== user.phone) return res.status(400).json({ message: "Ce code ne vous est pas destiné" });
+
+      await storage.redeemGiftCode(gc.id, userId);
+      await storage.updateUser(userId, { withdrawBalance: user.withdrawBalance + gc.amount });
+      res.json({ success: true, amount: gc.amount });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // Stats Reset
+  app.post("/api/admin/reset-stats", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      await storage.updateSettings({ statsResetDate: new Date() });
       res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ message: e.message });
