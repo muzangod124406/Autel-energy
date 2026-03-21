@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 import redirectIcon from "@assets/17496245_1774133420846.png";
-import { SiWhatsapp } from "react-icons/si";
+import { SiTelegram } from "react-icons/si";
 import EmptyState from "@/components/empty-state";
 
 export default function TelegramPage() {
@@ -73,7 +73,7 @@ export default function TelegramPage() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-full bg-[#22c55e] flex items-center justify-center flex-shrink-0">
-                  <SiWhatsapp className="w-6 h-6 text-white" />
+                  <SiTelegram className="w-6 h-6 text-white" />
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
