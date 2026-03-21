@@ -105,6 +105,15 @@ export default function AdminPage() {
   const [settingsForm, setSettingsForm] = useState<any>(null);
   const [settingsSaving, setSettingsSaving] = useState(false);
 
+  // Stats date filter
+  const [statsFrom, setStatsFrom] = useState("");
+  const [appliedStatsFrom, setAppliedStatsFrom] = useState("");
+
+  // Team overview filter
+  const [teamSearch, setTeamSearch] = useState("");
+  const [teamCountry, setTeamCountry] = useState("all");
+  const [teamSortBy, setTeamSortBy] = useState("createdAt");
+
   if (!user?.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -113,8 +122,16 @@ export default function AdminPage() {
     );
   }
 
-  const { data: stats } = useQuery({ queryKey: ["/api/admin/stats"] });
+  const { data: stats } = useQuery({
+    queryKey: ["/api/admin/stats", appliedStatsFrom],
+    queryFn: async () => {
+      const url = appliedStatsFrom ? `/api/admin/stats?from=${appliedStatsFrom}` : "/api/admin/stats";
+      const res = await fetch(url, { credentials: "include" });
+      return res.json();
+    }
+  });
   const { data: allUsers = [] } = useQuery({ queryKey: ["/api/admin/users"] });
+  const { data: teamOverview = [] } = useQuery({ queryKey: ["/api/admin/team-overview"] });
   const { data: deposits = [], refetch: refetchDeposits } = useQuery({
     queryKey: ["/api/admin/transactions", "deposit", txSearch, depositStatus],
     queryFn: async () => {
@@ -400,9 +417,10 @@ export default function AdminPage() {
     { key: "deposits", label: "Dépôts" },
     { key: "withdrawals", label: "Retraits" },
     { key: "users", label: "Utilisateurs" },
+    { key: "team", label: "Équipe" },
     { key: "products", label: "Produits" },
     { key: "channels", label: "Canaux" },
-    { key: "tickets", label: `Codes Cadeaux` },
+    { key: "tickets", label: "Codes Cadeaux" },
     { key: "settings", label: "Paramètres" },
   ];
 
@@ -453,25 +471,27 @@ export default function AdminPage() {
             <Card className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="w-4 h-4 text-blue-600" />
-                <span className="font-semibold text-sm">Filtrer par date</span>
+                <span className="font-semibold text-sm">Filtrer les statistiques depuis</span>
+                {appliedStatsFrom && (
+                  <span className="ml-auto text-xs text-blue-600 font-medium">depuis {new Date(appliedStatsFrom).toLocaleDateString("fr-FR")}</span>
+                )}
               </div>
+              <Input type="date" value={statsFrom} onChange={e => setStatsFrom(e.target.value)}
+                className="mb-2" data-testid="admin-stats-from-date" />
               <div className="flex gap-2">
-                <Select defaultValue="">
-                  <SelectTrigger className="flex-1"><SelectValue placeholder="Mois" /></SelectTrigger>
-                  <SelectContent>
-                    {["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"].map((m, i) => (
-                      <SelectItem key={i} value={String(i+1)}>{m}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select defaultValue="">
-                  <SelectTrigger className="flex-1"><SelectValue placeholder="Année" /></SelectTrigger>
-                  <SelectContent>
-                    {[2024, 2025, 2026].map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" size="sm"
+                  onClick={() => setAppliedStatsFrom(statsFrom || "")}
+                  data-testid="btn-apply-stats-filter">
+                  Appliquer
+                </Button>
+                {appliedStatsFrom && (
+                  <Button variant="outline" size="sm" className="flex-shrink-0"
+                    onClick={() => { setStatsFrom(""); setAppliedStatsFrom(""); }}
+                    data-testid="btn-clear-stats-filter">
+                    Tout
+                  </Button>
+                )}
               </div>
-              <Button className="mt-3 bg-blue-600 hover:bg-blue-700 text-white w-full" size="sm">Appliquer</Button>
             </Card>
 
             {/* Vue générale */}
@@ -819,6 +839,136 @@ export default function AdminPage() {
             )}
           </div>
         )}
+
+        {/* ===================== ÉQUIPE ===================== */}
+        {activeTab === "team" && (() => {
+          const teamData = teamOverview as any[];
+          const filtered = teamData.filter(u => {
+            if (teamCountry !== "all" && u.country !== teamCountry) return false;
+            if (teamSearch) {
+              const q = teamSearch.toLowerCase();
+              if (!u.phone?.toLowerCase().includes(q) && !u.nickname?.toLowerCase().includes(q) && !u.referralCode?.toLowerCase().includes(q)) return false;
+            }
+            return true;
+          }).sort((a, b) => {
+            if (teamSortBy === "ownInvested") return b.ownInvested - a.ownInvested;
+            if (teamSortBy === "teamTotalInvested") return b.teamTotalInvested - a.teamTotalInvested;
+            if (teamSortBy === "totalTeamMembers") return b.totalTeamMembers - a.totalTeamMembers;
+            if (teamSortBy === "commissionBalance") return b.commissionBalance - a.commissionBalance;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+
+          const totals = {
+            ownInvested: teamData.reduce((s, u) => s + u.ownInvested, 0),
+            teamTotalInvested: teamData.reduce((s, u) => s + u.teamTotalInvested, 0),
+            commissions: teamData.reduce((s, u) => s + u.commissionBalance, 0),
+            members: teamData.reduce((s, u) => s + u.totalTeamMembers, 0),
+          };
+
+          return (
+            <div className="space-y-3">
+              {/* Summary */}
+              <div className="grid grid-cols-2 gap-2">
+                <Card className="p-3">
+                  <p className="text-xs text-gray-500">Total investi</p>
+                  <p className="font-bold text-sm text-green-600">{formatCFA(totals.ownInvested)}</p>
+                </Card>
+                <Card className="p-3">
+                  <p className="text-xs text-gray-500">Investissements équipes</p>
+                  <p className="font-bold text-sm text-blue-600">{formatCFA(totals.teamTotalInvested)}</p>
+                </Card>
+                <Card className="p-3">
+                  <p className="text-xs text-gray-500">Commissions versées</p>
+                  <p className="font-bold text-sm text-orange-600">{formatCFA(totals.commissions)}</p>
+                </Card>
+                <Card className="p-3">
+                  <p className="text-xs text-gray-500">Total filleuls</p>
+                  <p className="font-bold text-sm text-purple-600">{totals.members}</p>
+                </Card>
+              </div>
+
+              {/* Filters */}
+              <div className="space-y-2">
+                <Input placeholder="Rechercher (téléphone, code, pseudo...)" value={teamSearch}
+                  onChange={e => setTeamSearch(e.target.value)} data-testid="input-team-search" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={teamCountry} onValueChange={setTeamCountry}>
+                    <SelectTrigger><SelectValue placeholder="Pays" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les pays</SelectItem>
+                      {COUNTRIES.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={teamSortBy} onValueChange={setTeamSortBy}>
+                    <SelectTrigger><SelectValue placeholder="Trier par" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="createdAt">Récents d'abord</SelectItem>
+                      <SelectItem value="ownInvested">Investissement personnel</SelectItem>
+                      <SelectItem value="teamTotalInvested">Invest. équipe</SelectItem>
+                      <SelectItem value="totalTeamMembers">Taille équipe</SelectItem>
+                      <SelectItem value="commissionBalance">Commissions</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-400 text-center">{filtered.length} utilisateur(s) affiché(s)</p>
+
+              {/* User cards */}
+              {filtered.length === 0 ? (
+                <Card className="p-6 text-center text-gray-400 text-sm">Aucun utilisateur trouvé</Card>
+              ) : (
+                filtered.map((u: any) => (
+                  <Card key={u.id} className="p-4" data-testid={`card-team-user-${u.id}`}>
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div>
+                        <p className="font-semibold text-sm">{u.phone}{u.nickname ? ` (${u.nickname})` : ""}</p>
+                        <p className="text-xs text-gray-400">{COUNTRIES.find((c: any) => c.id === u.country)?.name || u.country} · Code: {u.referralCode}</p>
+                        <p className="text-xs text-gray-400">{new Date(u.createdAt).toLocaleDateString("fr-FR")}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xs text-gray-500">Investi</p>
+                        <p className="font-bold text-sm text-green-700">{formatCFA(u.ownInvested)}</p>
+                      </div>
+                    </div>
+
+                    {/* Team sizes */}
+                    <div className="flex gap-2 mb-3">
+                      <div className="flex-1 bg-blue-50 rounded-lg px-3 py-2 text-center">
+                        <p className="text-xs text-blue-500 font-medium">Niv.1</p>
+                        <p className="text-base font-bold text-blue-700">{u.teamL1}</p>
+                      </div>
+                      <div className="flex-1 bg-purple-50 rounded-lg px-3 py-2 text-center">
+                        <p className="text-xs text-purple-500 font-medium">Niv.2</p>
+                        <p className="text-base font-bold text-purple-700">{u.teamL2}</p>
+                      </div>
+                      <div className="flex-1 bg-orange-50 rounded-lg px-3 py-2 text-center">
+                        <p className="text-xs text-orange-500 font-medium">Niv.3</p>
+                        <p className="text-base font-bold text-orange-700">{u.teamL3}</p>
+                      </div>
+                      <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2 text-center">
+                        <p className="text-xs text-gray-500 font-medium">Total</p>
+                        <p className="text-base font-bold text-gray-700">{u.totalTeamMembers}</p>
+                      </div>
+                    </div>
+
+                    {/* Financial team stats */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-green-50 rounded-lg px-3 py-2">
+                        <p className="text-green-600 font-medium">Invest. équipe</p>
+                        <p className="font-bold text-green-800">{formatCFA(u.teamTotalInvested)}</p>
+                      </div>
+                      <div className="bg-orange-50 rounded-lg px-3 py-2">
+                        <p className="text-orange-600 font-medium">Commissions</p>
+                        <p className="font-bold text-orange-800">{formatCFA(u.commissionBalance)}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          );
+        })()}
 
         {/* ===================== PRODUITS ===================== */}
         {activeTab === "products" && (

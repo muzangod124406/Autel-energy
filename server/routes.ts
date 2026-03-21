@@ -495,6 +495,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ============ ADMIN ROUTES ============
   app.get("/api/admin/stats", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    const fromDate = req.query.from ? new Date(req.query.from as string) : undefined;
     const [
       totalUsers, todayRegistrations, todayDeposits, todayWithdrawals,
       totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers,
@@ -502,13 +503,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       todayWithdrawalsAmount, totalPlatformBalance, totalDistributedGains,
       totalCommissions, activeProductsCount
     ] = await Promise.all([
-      storage.getUserCount(), storage.getTodayRegistrations(),
+      storage.getUserCount(fromDate), storage.getTodayRegistrations(fromDate),
       storage.getTodayDeposits(), storage.getTodayWithdrawals(),
-      storage.getTotalDeposits(), storage.getTotalWithdrawalsAmount(),
+      storage.getTotalDeposits(fromDate), storage.getTotalWithdrawalsAmount(fromDate),
       storage.getActiveInvestmentCount(), storage.getTodayDepositorsCount(),
       storage.getTodayWithdrawersCount(), storage.getUsersWithProductsCount(),
       storage.getPendingDepositsStats(), storage.getPendingWithdrawalsStats(),
-      storage.getTodayDepositsAmount(), storage.getTodayWithdrawalsAmount(),
+      storage.getTodayDepositsAmount(fromDate), storage.getTodayWithdrawalsAmount(fromDate),
       storage.getTotalPlatformBalance(), storage.getTotalDistributedGains(),
       storage.getTotalCommissions(), storage.getActiveProductsCount()
     ]);
@@ -517,8 +518,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers,
       usersWithProducts, pendingDeposits, pendingWithdrawals, todayDepositsAmount,
       todayWithdrawalsAmount, totalPlatformBalance, totalDistributedGains,
-      totalCommissions, activeProductsCount
+      totalCommissions, activeProductsCount,
+      statsFromDate: fromDate ? fromDate.toISOString() : null
     });
+  });
+
+  app.get("/api/admin/team-overview", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const data = await storage.getUserTeamOverview();
+      res.json(data);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
   });
 
   app.get("/api/admin/users", requireAuth, requireAdmin, async (req: Request, res: Response) => {

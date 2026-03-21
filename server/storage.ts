@@ -77,6 +77,8 @@ export interface IStorage {
   createGiftCode(data: any): Promise<GiftCode>;
   redeemGiftCode(id: string, userId: string): Promise<GiftCode>;
   deleteGiftCode(id: string): Promise<void>;
+
+  getUserTeamOverview(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -113,15 +115,18 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
-  async getUserCount(): Promise<number> {
+  async getUserCount(fromDate?: Date): Promise<number> {
+    if (fromDate) {
+      const [result] = await db.select({ count: count() }).from(users).where(sql`${users.createdAt} >= ${fromDate}`);
+      return result.count;
+    }
     const [result] = await db.select({ count: count() }).from(users);
     return result.count;
   }
 
-  async getTodayRegistrations(): Promise<number> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const [result] = await db.select({ count: count() }).from(users).where(sql`${users.createdAt} >= ${today}`);
+  async getTodayRegistrations(fromDate?: Date): Promise<number> {
+    const from = fromDate ?? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
+    const [result] = await db.select({ count: count() }).from(users).where(sql`${users.createdAt} >= ${from}`);
     return result.count;
   }
 
@@ -143,9 +148,10 @@ export class DatabaseStorage implements IStorage {
     return unique.size;
   }
 
-  async getTotalWithdrawalsAmount(): Promise<number> {
-    const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` }).from(transactions)
-      .where(and(eq(transactions.type, "withdrawal"), eq(transactions.status, "approved")));
+  async getTotalWithdrawalsAmount(fromDate?: Date): Promise<number> {
+    const conditions = [eq(transactions.type, "withdrawal"), eq(transactions.status, "approved")];
+    if (fromDate) conditions.push(sql`${transactions.createdAt} >= ${fromDate}`);
+    const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` }).from(transactions).where(and(...conditions));
     return Number(result.total);
   }
 
@@ -171,18 +177,57 @@ export class DatabaseStorage implements IStorage {
     return { amount: Number(result.total), count: result.cnt };
   }
 
-  async getTodayDepositsAmount(): Promise<number> {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
+  async getTodayDepositsAmount(fromDate?: Date): Promise<number> {
+    const from = fromDate ?? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
     const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` }).from(transactions)
-      .where(and(eq(transactions.type, "deposit"), eq(transactions.status, "approved"), sql`${transactions.createdAt} >= ${today}`));
+      .where(and(eq(transactions.type, "deposit"), eq(transactions.status, "approved"), sql`${transactions.createdAt} >= ${from}`));
     return Number(result.total);
   }
 
-  async getTodayWithdrawalsAmount(): Promise<number> {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
+  async getTodayWithdrawalsAmount(fromDate?: Date): Promise<number> {
+    const from = fromDate ?? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
     const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` }).from(transactions)
-      .where(and(eq(transactions.type, "withdrawal"), eq(transactions.status, "approved"), sql`${transactions.createdAt} >= ${today}`));
+      .where(and(eq(transactions.type, "withdrawal"), eq(transactions.status, "approved"), sql`${transactions.createdAt} >= ${from}`));
     return Number(result.total);
+  }
+
+  async getUserTeamOverview(): Promise<any[]> {
+    const allUsers = await db.select().from(users).orderBy(desc(users.createdAt));
+    const allReferrals = await db.select().from(referrals);
+    const allInvestments = await db.select({ userId: investments.userId, amount: investments.amount }).from(investments).where(eq(investments.status, "active"));
+
+    const refsByReferrer: Record<string, { l1: string[]; l2: string[]; l3: string[] }> = {};
+    for (const ref of allReferrals) {
+      if (!refsByReferrer[ref.referrerId]) refsByReferrer[ref.referrerId] = { l1: [], l2: [], l3: [] };
+      if (ref.level === 1) refsByReferrer[ref.referrerId].l1.push(ref.referredId);
+      else if (ref.level === 2) refsByReferrer[ref.referrerId].l2.push(ref.referredId);
+      else if (ref.level === 3) refsByReferrer[ref.referrerId].l3.push(ref.referredId);
+    }
+
+    const investByUser: Record<string, number> = {};
+    for (const inv of allInvestments) {
+      investByUser[inv.userId] = (investByUser[inv.userId] || 0) + inv.amount;
+    }
+
+    return allUsers.map(u => {
+      const refs = refsByReferrer[u.id] || { l1: [], l2: [], l3: [] };
+      const allRefIds = [...refs.l1, ...refs.l2, ...refs.l3];
+      const teamTotalInvested = allRefIds.reduce((sum, id) => sum + (investByUser[id] || 0), 0);
+      return {
+        id: u.id, phone: u.phone, nickname: u.nickname, country: u.country,
+        ownInvested: investByUser[u.id] || 0,
+        teamL1: refs.l1.length, teamL2: refs.l2.length, teamL3: refs.l3.length,
+        totalTeamMembers: allRefIds.length,
+        teamTotalInvested,
+        commissionBalance: u.commissionBalance,
+        productRevenue: u.productRevenue,
+        withdrawBalance: u.withdrawBalance,
+        depositBalance: u.depositBalance,
+        createdAt: u.createdAt,
+        referralCode: u.referralCode,
+        referredBy: u.referredBy,
+      };
+    });
   }
 
   async getTotalPlatformBalance(): Promise<number> {
@@ -296,8 +341,10 @@ export class DatabaseStorage implements IStorage {
     return result.count;
   }
 
-  async getTotalDeposits(): Promise<number> {
-    const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` }).from(transactions).where(and(eq(transactions.type, "deposit"), eq(transactions.status, "approved")));
+  async getTotalDeposits(fromDate?: Date): Promise<number> {
+    const conditions = [eq(transactions.type, "deposit"), eq(transactions.status, "approved")];
+    if (fromDate) conditions.push(sql`${transactions.createdAt} >= ${fromDate}`);
+    const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` }).from(transactions).where(and(...conditions));
     return Number(result.total);
   }
 
