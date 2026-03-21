@@ -185,6 +185,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const { planType, vipLevel, amount, dailyGain, duration, totalGain, productId } = req.body;
       if (user.balance < amount) return res.status(400).json({ message: "Solde insuffisant" });
 
+      // Activities require an active fixed plan
+      if (planType === "activity") {
+        const allInvestments = await storage.getUserInvestments(userId);
+        const hasActiveFixed = allInvestments.some(i => i.status === "active" && i.planType === "fix");
+        if (!hasActiveFixed) {
+          return res.status(400).json({ message: "Vous devez d'abord acheter le plan fixe 120J pour accéder aux produits d'activité" });
+        }
+      }
+
       if (productId) {
         const product = await storage.getProduct(productId);
         if (!product) return res.status(404).json({ message: "Produit non trouvé" });

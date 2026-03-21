@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, TrendingUp, Zap, Calendar, PackageX, Clock, ShoppingBag } from "lucide-react";
+import { Lock, TrendingUp, Zap, Calendar, PackageX, Clock, ShoppingBag, ShieldAlert } from "lucide-react";
 
 const fixedPlan = INVESTMENT_PLANS.fix;
 
@@ -20,6 +20,14 @@ export default function InvestPage() {
   const { data: adminProducts = [], isLoading: loadingProducts } = useQuery<any[]>({
     queryKey: ["/api/products"],
   });
+
+  const { data: userInvestments = [] } = useQuery<any[]>({
+    queryKey: ["/api/user/investments"],
+  });
+
+  const hasActiveFixed = (userInvestments as any[]).some(
+    (i: any) => i.status === "active" && i.planType === "fix"
+  );
 
   const investMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -167,7 +175,27 @@ export default function InvestPage() {
         {/* ACTIVITIES — admin-created products */}
         {activeTab === "activities" && (
           <div className="space-y-3">
-            {loadingProducts ? (
+            {/* Lock gate: must have active fixed plan */}
+            {!hasActiveFixed && (
+              <Card className="p-8 text-center border-orange-200 bg-orange-50 dark:bg-orange-950 dark:border-orange-800">
+                <ShieldAlert className="w-12 h-12 mx-auto text-orange-400 mb-3" />
+                <p className="text-orange-700 dark:text-orange-300 font-bold text-base mb-1">
+                  Accès verrouillé
+                </p>
+                <p className="text-orange-600 dark:text-orange-400 text-sm mb-4">
+                  Vous devez d'abord acheter le plan <strong>Fixé 120J</strong> pour débloquer l'accès aux produits d'activité.
+                </p>
+                <button
+                  onClick={() => setActiveTab("fix")}
+                  className="bg-orange-500 text-white font-bold px-5 py-2.5 rounded-full text-sm"
+                  data-testid="btn-go-to-fixed"
+                >
+                  Voir le plan Fixé 120J →
+                </button>
+              </Card>
+            )}
+
+            {hasActiveFixed && loadingProducts && (
               <div className="space-y-3">
                 {[1, 2, 3].map(i => (
                   <Card key={i} className="p-4 animate-pulse">
@@ -176,7 +204,9 @@ export default function InvestPage() {
                   </Card>
                 ))}
               </div>
-            ) : availableProducts.length === 0 ? (
+            )}
+
+            {hasActiveFixed && !loadingProducts && availableProducts.length === 0 && (
               <Card className="p-8 text-center">
                 <PackageX className="w-12 h-12 mx-auto text-gray-300 mb-3" />
                 <p className="text-gray-600 dark:text-gray-400 font-semibold text-base mb-1">
@@ -186,8 +216,9 @@ export default function InvestPage() {
                   Les produits d'activité ne sont pas disponibles aujourd'hui, veuillez revenir plus tard
                 </p>
               </Card>
-            ) : (
-              availableProducts.map((product: any) => {
+            )}
+
+            {hasActiveFixed && !loadingProducts && availableProducts.length > 0 && availableProducts.map((product: any) => {
                 const remaining = product.purchaseLimit > 0
                   ? product.purchaseLimit - product.purchaseCount
                   : null;
@@ -268,8 +299,7 @@ export default function InvestPage() {
                     </div>
                   </Card>
                 );
-              })
-            )}
+              })}
           </div>
         )}
       </div>
