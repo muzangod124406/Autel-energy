@@ -211,16 +211,22 @@ export default function DepositPage() {
         <div className="fixed inset-0 z-50" onClick={() => setShowMethodSheet(false)}>
           <div className="absolute inset-0 bg-black/40" />
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl"
-            style={{ maxHeight: "70vh", overflowY: "auto" }}
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl flex flex-col"
+            style={{ maxHeight: "60vh" }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex justify-center pt-3 pb-2">
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
-            <p className="font-bold text-gray-900 text-base px-5 pb-3 border-b border-gray-100">Méthode de recharge</p>
 
-            <div className="divide-y divide-gray-100">
+            {/* Title */}
+            <p className="flex-shrink-0 font-bold text-gray-900 text-base px-5 pb-3 border-b border-gray-100">
+              Méthode de recharge
+            </p>
+
+            {/* Scrollable channel list */}
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
               {(channels as any[]).length === 0 ? (
                 <p className="text-center text-gray-400 text-sm py-8">Aucune méthode disponible</p>
               ) : (
@@ -248,7 +254,8 @@ export default function DepositPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-between px-6 py-5 pb-20 border-t border-gray-100">
+            {/* Footer — fixé hors de la zone scrollable, au-dessus de la nav */}
+            <div className="flex-shrink-0 flex items-center justify-between px-6 py-5 border-t border-gray-100" style={{ paddingBottom: "calc(64px + 16px)" }}>
               <button onClick={() => setShowMethodSheet(false)} className="text-gray-600 font-medium text-base" data-testid="button-cancel-method">
                 Annuler
               </button>
