@@ -182,8 +182,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
 
-      const { planType, vipLevel, amount, dailyGain, duration, totalGain } = req.body;
+      const { planType, vipLevel, amount, dailyGain, duration, totalGain, productId } = req.body;
       if (user.balance < amount) return res.status(400).json({ message: "Solde insuffisant" });
+
+      if (productId) {
+        const product = await storage.getProduct(productId);
+        if (!product) return res.status(404).json({ message: "Produit non trouvé" });
+        if (!product.isActive) return res.status(400).json({ message: "Produit non disponible" });
+        if (product.purchaseLimit > 0 && product.purchaseCount >= product.purchaseLimit) {
+          return res.status(400).json({ message: "Limite d'achat atteinte pour ce produit" });
+        }
+        await storage.incrementProductPurchaseCount(productId);
+      }
 
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + duration);
@@ -192,9 +202,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         userId, planType, vipLevel, amount, dailyGain, duration, totalGain, endDate
       });
 
-      await storage.updateUser(userId, { balance: user.balance - amount });
-
-      // Give spin ticket for purchase
       await storage.updateUser(userId, { spinTickets: (user.spinTickets || 0) + 1, balance: user.balance - amount });
 
       // Handle referral commissions
@@ -245,11 +252,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/user/deposit", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req.session as any).userId;
-      const { amount, country, paymentMethod, phoneNumber, accountName } = req.body;
+      const { amount, country, paymentMethod, phoneNumber, accountName, channelId, channelName } = req.body;
       if (!amount || amount < 100) return res.status(400).json({ message: "Montant minimum: 100 FCFA" });
 
       const tx = await storage.createTransaction(userId, {
-        type: "deposit", amount, country, paymentMethod, phoneNumber, accountName, status: "pending"
+        type: "deposit", amount, country, paymentMethod, phoneNumber, accountName, status: "pending", channelId, channelName
       });
       res.json(tx);
     } catch (e: any) {
@@ -263,6 +270,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
       if (user.withdrawBlocked) return res.status(400).json({ message: "Vos retraits sont bloqués" });
+
+      // Check require invite to withdraw
+      if (user.requireInviteToWithdraw) {
+        const level1Refs = await storage.getUserReferrals(userId, 1);
+        const hasInvestingRef = await Promise.all(
+          level1Refs.map(async ref => {
+            if (!ref.referred) return false;
+            const invs = await storage.getUserInvestments(ref.referred.id);
+            return invs.some(i => i.status === "active");
+          })
+        );
+        if (!hasInvestingRef.some(Boolean)) {
+          return res.status(400).json({ message: "Vous devez parrainer une personne qui a investi avant de pouvoir retirer" });
+        }
+      }
 
       const bankCard = await storage.getBankCard(userId);
       if (!bankCard) return res.status(400).json({ message: "Vous devez d'abord enregistrer une carte bancaire" });
@@ -434,11 +456,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/payment/callback", async (req: Request, res: Response) => {
     try {
       const { status, transactionId, amount } = req.query;
-      // Just redirect back to home with status
       res.redirect(`/?paymentStatus=${status}&transactionId=${transactionId}&amount=${amount}`);
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }
+  });
+
+  // Public: payment channels
+  app.get("/api/channels", async (req: Request, res: Response) => {
+    const channels = await storage.getPaymentChannels(true);
+    res.json(channels);
+  });
+
+  // Public: products
+  app.get("/api/products", async (req: Request, res: Response) => {
+    const prods = await storage.getProducts(true);
+    res.json(prods);
   });
 
   // ============ ADMIN ROUTES ============
@@ -448,8 +481,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const todayDeposits = await storage.getTodayDeposits();
     const todayWithdrawals = await storage.getTodayWithdrawals();
     const totalDeposits = await storage.getTotalDeposits();
+    const totalWithdrawals = await storage.getTotalWithdrawalsAmount();
     const activeInvestments = await storage.getActiveInvestmentCount();
-    res.json({ totalUsers, todayRegistrations, todayDeposits, todayWithdrawals, totalDeposits, activeInvestments });
+    const todayDepositors = await storage.getTodayDepositorsCount();
+    const todayWithdrawers = await storage.getTodayWithdrawersCount();
+    const usersWithProducts = await storage.getUsersWithProductsCount();
+    res.json({ totalUsers, todayRegistrations, todayDeposits, todayWithdrawals, totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers, usersWithProducts });
   });
 
   app.get("/api/admin/users", requireAuth, requireAdmin, async (req: Request, res: Response) => {
@@ -471,6 +508,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const level2 = await storage.getUserReferrals(req.params.id, 2);
     const level3 = await storage.getUserReferrals(req.params.id, 3);
     res.json({ level1, level2, level3 });
+  });
+
+  app.get("/api/admin/users/:id/investments", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    const invs = await storage.getUserInvestments(req.params.id);
+    res.json(invs);
   });
 
   app.post("/api/admin/users/:id/assign-product", requireAuth, requireAdmin, async (req: Request, res: Response) => {
@@ -497,7 +539,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   app.get("/api/admin/transactions/:type", requireAuth, requireAdmin, async (req: Request, res: Response) => {
-    const txs = await storage.getPendingTransactions(req.params.type);
+    const search = req.query.search as string | undefined;
+    const txs = await storage.getPendingTransactions(req.params.type, search);
     res.json(txs);
   });
 
@@ -545,6 +588,93 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const s = await storage.updateSettings(req.body);
       res.json(s);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // Admin: Payment Channels
+  app.get("/api/admin/channels", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    const channels = await storage.getPaymentChannels(false);
+    res.json(channels);
+  });
+
+  app.post("/api/admin/channels", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const channel = await storage.createPaymentChannel(req.body);
+      res.json(channel);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.put("/api/admin/channels/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const channel = await storage.updatePaymentChannel(req.params.id, req.body);
+      res.json(channel);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.delete("/api/admin/channels/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      await storage.deletePaymentChannel(req.params.id);
+      res.json({ success: true });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // Admin: Products
+  app.get("/api/admin/products", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    const prods = await storage.getProducts(false);
+    res.json(prods);
+  });
+
+  app.post("/api/admin/products", requireAuth, requireAdmin, upload.single("image"), async (req: Request, res: Response) => {
+    try {
+      const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl || null;
+      const data = {
+        name: req.body.name,
+        imageUrl,
+        price: parseInt(req.body.price),
+        dailyGain: parseInt(req.body.dailyGain),
+        totalGain: parseInt(req.body.totalGain),
+        cycleDays: parseInt(req.body.cycleDays),
+        purchaseLimit: parseInt(req.body.purchaseLimit) || 0,
+        isActive: req.body.isActive !== "false",
+        launchDate: req.body.launchDate ? new Date(req.body.launchDate) : null,
+      };
+      const product = await storage.createProduct(data);
+      res.json(product);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.put("/api/admin/products/:id", requireAuth, requireAdmin, upload.single("image"), async (req: Request, res: Response) => {
+    try {
+      const updates: any = { ...req.body };
+      if (req.file) updates.imageUrl = `/uploads/${req.file.filename}`;
+      if (updates.price) updates.price = parseInt(updates.price);
+      if (updates.dailyGain) updates.dailyGain = parseInt(updates.dailyGain);
+      if (updates.totalGain) updates.totalGain = parseInt(updates.totalGain);
+      if (updates.cycleDays) updates.cycleDays = parseInt(updates.cycleDays);
+      if (updates.purchaseLimit) updates.purchaseLimit = parseInt(updates.purchaseLimit);
+      if (updates.launchDate) updates.launchDate = new Date(updates.launchDate);
+      if (typeof updates.isActive === "string") updates.isActive = updates.isActive !== "false";
+      const product = await storage.updateProduct(req.params.id, updates);
+      res.json(product);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.delete("/api/admin/products/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteProduct(req.params.id);
+      res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }

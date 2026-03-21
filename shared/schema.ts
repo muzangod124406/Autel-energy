@@ -23,6 +23,7 @@ export const users = pgTable("users", {
   isBanned: boolean("is_banned").notNull().default(false),
   isPromoter: boolean("is_promoter").notNull().default(false),
   withdrawBlocked: boolean("withdraw_blocked").notNull().default(false),
+  requireInviteToWithdraw: boolean("require_invite_to_withdraw").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -64,6 +65,8 @@ export const transactions = pgTable("transactions", {
   accountName: text("account_name"),
   fees: integer("fees").default(0),
   netAmount: integer("net_amount"),
+  channelId: text("channel_id"),
+  channelName: text("channel_name"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -96,8 +99,33 @@ export const tickets = pgTable("tickets", {
 export const settings = pgTable("settings", {
   id: varchar("id").primaryKey().default(sql`'main'`),
   telegramGroup: text("telegram_group").notNull().default("https://t.me/+M9neinnLgK4wYWRk"),
+  telegramChannel: text("telegram_channel").notNull().default(""),
   telegramService: text("telegram_service").notNull().default("@redbull_service"),
   activitiesEnabled: boolean("activities_enabled").notNull().default(true),
+});
+
+export const paymentChannels = pgTable("payment_channels", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  type: text("type").notNull().default("link"),
+  redirectUrl: text("redirect_url"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const products = pgTable("products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  imageUrl: text("image_url"),
+  price: integer("price").notNull(),
+  dailyGain: integer("daily_gain").notNull(),
+  totalGain: integer("total_gain").notNull(),
+  cycleDays: integer("cycle_days").notNull(),
+  purchaseLimit: integer("purchase_limit").notNull().default(0),
+  purchaseCount: integer("purchase_count").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  launchDate: timestamp("launch_date"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -145,6 +173,25 @@ export const insertTicketSchema = createInsertSchema(tickets).pick({
   description: true,
 });
 
+export const insertProductSchema = createInsertSchema(products).pick({
+  name: true,
+  imageUrl: true,
+  price: true,
+  dailyGain: true,
+  totalGain: true,
+  cycleDays: true,
+  purchaseLimit: true,
+  isActive: true,
+  launchDate: true,
+});
+
+export const insertPaymentChannelSchema = createInsertSchema(paymentChannels).pick({
+  name: true,
+  type: true,
+  redirectUrl: true,
+  isActive: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type BankCard = typeof bankCards.$inferSelect;
@@ -154,3 +201,5 @@ export type Referral = typeof referrals.$inferSelect;
 export type SpinResult = typeof spinResults.$inferSelect;
 export type Ticket = typeof tickets.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
+export type PaymentChannel = typeof paymentChannels.$inferSelect;
+export type Product = typeof products.$inferSelect;

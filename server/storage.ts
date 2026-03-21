@@ -1,8 +1,8 @@
 import { db } from "./db";
-import { eq, and, desc, sql, or, ilike, count } from "drizzle-orm";
+import { eq, and, desc, sql, or, ilike, count, gte } from "drizzle-orm";
 import {
-  users, bankCards, investments, transactions, referrals, spinResults, tickets, settings,
-  type User, type InsertUser, type BankCard, type Investment, type Transaction, type Referral, type SpinResult, type Ticket, type Settings
+  users, bankCards, investments, transactions, referrals, spinResults, tickets, settings, paymentChannels, products,
+  type User, type InsertUser, type BankCard, type Investment, type Transaction, type Referral, type SpinResult, type Ticket, type Settings, type PaymentChannel, type Product
 } from "@shared/schema";
 import bcrypt from "bcryptjs";
 
@@ -15,6 +15,10 @@ export interface IStorage {
   getAllUsers(filter?: any): Promise<User[]>;
   getUserCount(): Promise<number>;
   getTodayRegistrations(): Promise<number>;
+  getTodayDepositorsCount(): Promise<number>;
+  getTodayWithdrawersCount(): Promise<number>;
+  getTotalWithdrawalsAmount(): Promise<number>;
+  getUsersWithProductsCount(): Promise<number>;
 
   createBankCard(userId: string, data: any): Promise<BankCard>;
   getBankCard(userId: string): Promise<BankCard | undefined>;
@@ -27,7 +31,7 @@ export interface IStorage {
 
   createTransaction(userId: string, data: any): Promise<Transaction>;
   getUserTransactions(userId: string, type?: string): Promise<Transaction[]>;
-  getPendingTransactions(type: string): Promise<(Transaction & { user?: User })[]>;
+  getPendingTransactions(type: string, search?: string): Promise<(Transaction & { user?: User })[]>;
   updateTransaction(id: string, data: Partial<Transaction>): Promise<Transaction | undefined>;
   getTodayDeposits(): Promise<number>;
   getTodayWithdrawals(): Promise<number>;
@@ -47,6 +51,18 @@ export interface IStorage {
 
   getSettings(): Promise<Settings>;
   updateSettings(data: Partial<Settings>): Promise<Settings>;
+
+  getPaymentChannels(activeOnly?: boolean): Promise<PaymentChannel[]>;
+  createPaymentChannel(data: any): Promise<PaymentChannel>;
+  updatePaymentChannel(id: string, data: Partial<PaymentChannel>): Promise<PaymentChannel | undefined>;
+  deletePaymentChannel(id: string): Promise<void>;
+
+  getProducts(activeOnly?: boolean): Promise<Product[]>;
+  getProduct(id: string): Promise<Product | undefined>;
+  createProduct(data: any): Promise<Product>;
+  updateProduct(id: string, data: Partial<Product>): Promise<Product | undefined>;
+  deleteProduct(id: string): Promise<void>;
+  incrementProductPurchaseCount(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -80,8 +96,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllUsers(filter?: any): Promise<User[]> {
-    let query = db.select().from(users);
-    return await query.orderBy(desc(users.createdAt));
+    return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
   async getUserCount(): Promise<number> {
@@ -94,6 +109,36 @@ export class DatabaseStorage implements IStorage {
     today.setHours(0, 0, 0, 0);
     const [result] = await db.select({ count: count() }).from(users).where(sql`${users.createdAt} >= ${today}`);
     return result.count;
+  }
+
+  async getTodayDepositorsCount(): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await db.select({ userId: transactions.userId }).from(transactions)
+      .where(and(eq(transactions.type, "deposit"), eq(transactions.status, "approved"), sql`${transactions.createdAt} >= ${today}`));
+    const unique = new Set(result.map(r => r.userId));
+    return unique.size;
+  }
+
+  async getTodayWithdrawersCount(): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const result = await db.select({ userId: transactions.userId }).from(transactions)
+      .where(and(eq(transactions.type, "withdrawal"), eq(transactions.status, "approved"), sql`${transactions.createdAt} >= ${today}`));
+    const unique = new Set(result.map(r => r.userId));
+    return unique.size;
+  }
+
+  async getTotalWithdrawalsAmount(): Promise<number> {
+    const [result] = await db.select({ total: sql<number>`COALESCE(SUM(${transactions.amount}), 0)` }).from(transactions)
+      .where(and(eq(transactions.type, "withdrawal"), eq(transactions.status, "approved")));
+    return Number(result.total);
+  }
+
+  async getUsersWithProductsCount(): Promise<number> {
+    const result = await db.select({ userId: investments.userId }).from(investments).where(eq(investments.status, "active"));
+    const unique = new Set(result.map(r => r.userId));
+    return unique.size;
   }
 
   async createBankCard(userId: string, data: any): Promise<BankCard> {
@@ -146,11 +191,18 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(transactions).where(eq(transactions.userId, userId)).orderBy(desc(transactions.createdAt));
   }
 
-  async getPendingTransactions(type: string): Promise<(Transaction & { user?: User })[]> {
+  async getPendingTransactions(type: string, search?: string): Promise<(Transaction & { user?: User })[]> {
     const txs = await db.select().from(transactions).where(and(eq(transactions.type, type), eq(transactions.status, "pending"))).orderBy(desc(transactions.createdAt));
     const result = [];
     for (const tx of txs) {
       const user = await this.getUser(tx.userId);
+      if (search) {
+        const q = search.toLowerCase();
+        const matchPhone = tx.phoneNumber?.toLowerCase().includes(q);
+        const matchAccount = tx.accountName?.toLowerCase().includes(q);
+        const matchUser = user?.phone?.toLowerCase().includes(q);
+        if (!matchPhone && !matchAccount && !matchUser) continue;
+      }
       result.push({ ...tx, user });
     }
     return result;
@@ -259,6 +311,57 @@ export class DatabaseStorage implements IStorage {
   async updateSettings(data: Partial<Settings>): Promise<Settings> {
     const [s] = await db.update(settings).set(data).where(eq(settings.id, "main")).returning();
     return s;
+  }
+
+  async getPaymentChannels(activeOnly = false): Promise<PaymentChannel[]> {
+    if (activeOnly) {
+      return await db.select().from(paymentChannels).where(eq(paymentChannels.isActive, true)).orderBy(desc(paymentChannels.createdAt));
+    }
+    return await db.select().from(paymentChannels).orderBy(desc(paymentChannels.createdAt));
+  }
+
+  async createPaymentChannel(data: any): Promise<PaymentChannel> {
+    const [ch] = await db.insert(paymentChannels).values(data).returning();
+    return ch;
+  }
+
+  async updatePaymentChannel(id: string, data: Partial<PaymentChannel>): Promise<PaymentChannel | undefined> {
+    const [ch] = await db.update(paymentChannels).set(data).where(eq(paymentChannels.id, id)).returning();
+    return ch;
+  }
+
+  async deletePaymentChannel(id: string): Promise<void> {
+    await db.delete(paymentChannels).where(eq(paymentChannels.id, id));
+  }
+
+  async getProducts(activeOnly = false): Promise<Product[]> {
+    if (activeOnly) {
+      return await db.select().from(products).where(eq(products.isActive, true)).orderBy(desc(products.createdAt));
+    }
+    return await db.select().from(products).orderBy(desc(products.createdAt));
+  }
+
+  async getProduct(id: string): Promise<Product | undefined> {
+    const [p] = await db.select().from(products).where(eq(products.id, id));
+    return p;
+  }
+
+  async createProduct(data: any): Promise<Product> {
+    const [p] = await db.insert(products).values(data).returning();
+    return p;
+  }
+
+  async updateProduct(id: string, data: Partial<Product>): Promise<Product | undefined> {
+    const [p] = await db.update(products).set(data).where(eq(products.id, id)).returning();
+    return p;
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    await db.delete(products).where(eq(products.id, id));
+  }
+
+  async incrementProductPurchaseCount(id: string): Promise<void> {
+    await db.update(products).set({ purchaseCount: sql`${products.purchaseCount} + 1` }).where(eq(products.id, id));
   }
 }
 

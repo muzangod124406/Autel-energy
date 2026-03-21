@@ -1,7 +1,7 @@
 import { useAuth } from "@/lib/auth";
 import { getCountry } from "@/lib/constants";
 import { useLocation } from "wouter";
-import { ChevronRight, LogOut, Shield, Headphones, Diamond, Settings } from "lucide-react";
+import { ChevronRight, LogOut, Shield, Headphones, Diamond, Settings, Star, Lock } from "lucide-react";
 import lv0Img from "@assets/lv0_1773607669331.png";
 import noticeImg from "@assets/notice_1773607669301.png";
 import withdrawRecordImg from "@assets/withdraw_record_1773607669270.png";
@@ -33,6 +33,21 @@ export default function AccountPage() {
             <div>
               <p className="text-white font-bold text-base">{user.nickname || "Utilisateur"}</p>
               <p className="text-white/80 text-sm">{maskedPhone} ID: {user.referralCode}</p>
+              <div className="flex gap-1 mt-1 flex-wrap">
+                {(user as any).isPromoter && (
+                  <span className="bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                    <Star className="w-2.5 h-2.5" /> Promoteur
+                  </span>
+                )}
+                {(user as any).requireInviteToWithdraw && (
+                  <span className="bg-orange-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                    <Lock className="w-2.5 h-2.5" /> Invitation requise
+                  </span>
+                )}
+                {(user as any).withdrawBlocked && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">Retrait bloqué</span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
