@@ -7,33 +7,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lock, TrendingUp, Clock, Zap, Calendar } from "lucide-react";
+import { Lock, TrendingUp, Zap, Calendar, PackageX, Clock, ShoppingBag } from "lucide-react";
 
-
-type PlanKey = keyof typeof INVESTMENT_PLANS;
-
-const fixTabs = [
-  { key: "fix1" as PlanKey, label: "Fixé 1" },
-  { key: "fix2" as PlanKey, label: "Fixé 2" },
-  { key: "fix3" as PlanKey, label: "Fixé 3" },
-  { key: "activities" as const, label: "Activités" },
-];
-
-const activityTabs = [
-  { key: "activity_3" as PlanKey, label: "3J" },
-  { key: "activity_5" as PlanKey, label: "5J" },
-  { key: "activity_15" as PlanKey, label: "15J" },
-  { key: "activity_30" as PlanKey, label: "30J" },
-];
+const fixedPlan = INVESTMENT_PLANS.fix;
 
 export default function InvestPage() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<PlanKey | "activities">("fix1");
-  const [activityTab, setActivityTab] = useState<PlanKey>("activity_3");
+  const [activeTab, setActiveTab] = useState<"fix" | "activities">("fix");
+  const [buyingProductId, setBuyingProductId] = useState<string | null>(null);
 
-  const { data: settingsData } = useQuery({ queryKey: ["/api/settings"] });
-  const activitiesEnabled = settingsData?.activitiesEnabled !== false;
+  const { data: adminProducts = [], isLoading: loadingProducts } = useQuery<any[]>({
+    queryKey: ["/api/products"],
+  });
 
   const investMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -44,31 +30,61 @@ export default function InvestPage() {
       toast({ title: "Investissement réussi", description: "Votre investissement a été enregistré" });
       queryClient.invalidateQueries({ queryKey: ["/api/user/investments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       refreshUser();
+      setBuyingProductId(null);
     },
     onError: (e: any) => {
       toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur", variant: "destructive" });
+      setBuyingProductId(null);
     }
   });
 
-  const currentPlanKey = activeTab === "activities" ? activityTab : activeTab;
-  const currentPlan = INVESTMENT_PLANS[currentPlanKey];
-
-  const handleInvest = (plan: any) => {
+  const handleInvestFixed = (plan: any) => {
     if (!user) return;
     if (user.balance < plan.amount) {
       toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
       return;
     }
     investMutation.mutate({
-      planType: currentPlanKey,
+      planType: "fix",
       vipLevel: plan.vip,
       amount: plan.amount,
       dailyGain: plan.dailyGain,
-      duration: currentPlan.duration,
+      duration: fixedPlan.duration,
       totalGain: plan.totalGain,
     });
   };
+
+  const handleBuyProduct = (product: any) => {
+    if (!user) return;
+    if (user.balance < product.price) {
+      toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
+      return;
+    }
+    setBuyingProductId(product.id);
+    investMutation.mutate({
+      planType: "activity",
+      vipLevel: 1,
+      amount: product.price,
+      dailyGain: product.dailyGain,
+      duration: product.cycleDays,
+      totalGain: product.totalGain,
+      productId: product.id,
+    });
+  };
+
+  // Filter admin products: only active and with remaining stock
+  const availableProducts = (adminProducts as any[]).filter((p: any) => {
+    if (!p.isActive) return false;
+    if (p.purchaseLimit > 0 && p.purchaseCount >= p.purchaseLimit) return false;
+    return true;
+  });
+
+  const tabs = [
+    { key: "fix" as const, label: "Fixé 120J" },
+    { key: "activities" as const, label: "Activités" },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
@@ -77,14 +93,14 @@ export default function InvestPage() {
         <p className="text-white/70 text-sm text-center mt-1">Solde: {formatCFA(user?.balance || 0)}</p>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 -mt-2">
-        <div className="flex gap-1 bg-white dark:bg-gray-900 rounded-xl p-1 shadow-sm">
-          {fixTabs.map(tab => (
+      <div className="max-w-lg mx-auto px-4 mt-3">
+        <div className="flex gap-1 bg-white dark:bg-gray-900 rounded-xl p-1 shadow-sm mb-4">
+          {tabs.map(tab => (
             <button
               key={tab.key}
               data-testid={`tab-${tab.key}`}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+              className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
                 activeTab === tab.key
                   ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-sm"
                   : "text-gray-600 dark:text-gray-400"
@@ -95,37 +111,16 @@ export default function InvestPage() {
           ))}
         </div>
 
-        {activeTab === "activities" && (
-          <>
-            {!activitiesEnabled ? (
-              <Card className="mt-4 p-6 text-center">
-                <Lock className="w-10 h-10 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-500 font-medium">Les activités sont temporairement désactivées</p>
-              </Card>
-            ) : (
-              <div className="flex gap-1 mt-3 bg-white dark:bg-gray-900 rounded-lg p-1">
-                {activityTabs.map(tab => (
-                  <button
-                    key={tab.key}
-                    data-testid={`tab-${tab.key}`}
-                    onClick={() => setActivityTab(tab.key)}
-                    className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${
-                      activityTab === tab.key
-                        ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
-                        : "text-gray-600 dark:text-gray-400"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {(activeTab !== "activities" || activitiesEnabled) && (
-          <div className="mt-4 space-y-3">
-            {currentPlan?.plans.map((plan) => (
+        {/* FIXED 120-DAY PLANS */}
+        {activeTab === "fix" && (
+          <div className="space-y-3">
+            <div className="bg-blue-50 dark:bg-blue-950 rounded-xl p-3 flex items-center gap-2 mb-1">
+              <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                Les gains sont crédités à la fin du cycle de <strong>120 jours</strong>
+              </p>
+            </div>
+            {fixedPlan.plans.map((plan) => (
               <Card key={plan.vip} className="p-4 bg-white dark:bg-gray-900">
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2">
@@ -134,47 +129,147 @@ export default function InvestPage() {
                     </div>
                     <div>
                       <h3 className="font-bold text-sm">VIP {plan.vip}</h3>
-                      <p className="text-xs text-muted-foreground">{currentPlan.name} - {currentPlan.duration}j</p>
+                      <p className="text-xs text-muted-foreground">Fixé 120 jours</p>
                     </div>
                   </div>
-                  <Badge variant="secondary" className="text-xs">
-                    {currentPlan.duration}j
-                  </Badge>
+                  <Badge variant="secondary" className="text-xs">120j</Badge>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                    <p className="text-[10px] text-muted-foreground">Montant</p>
+                    <p className="text-[10px] text-muted-foreground">Investissement</p>
                     <p className="text-sm font-bold text-blue-600">{formatCFA(plan.amount)}</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                    <p className="text-[10px] text-muted-foreground">Gain/jour</p>
+                    <p className="text-sm font-bold text-green-600">{formatCFA(plan.dailyGain)}</p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
                     <p className="text-[10px] text-muted-foreground">Gain total</p>
-                    <p className="text-sm font-bold text-green-600">{formatCFA(plan.totalGain)}</p>
+                    <p className="text-sm font-bold text-purple-600">{formatCFA(plan.totalGain)}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <TrendingUp className="w-3 h-3" />
-                    <span>{formatCFA(plan.dailyGain)}/jour</span>
-                  </div>
-                  <Button
-                    data-testid={`invest-vip-${plan.vip}`}
-                    size="sm"
-                    onClick={() => handleInvest(plan)}
-                    disabled={investMutation.isPending}
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs"
-                  >
-                    <Lock className="w-3 h-3 mr-1" /> Investir
-                  </Button>
-                </div>
-
-                <div className="mt-2 flex items-center gap-1 text-[10px] text-amber-600">
-                  <Lock className="w-3 h-3" />
-                  <span>Gains bloqués et crédités à la fin du cycle</span>
-                </div>
+                <Button
+                  data-testid={`invest-vip-${plan.vip}`}
+                  size="sm"
+                  onClick={() => handleInvestFixed(plan)}
+                  disabled={investMutation.isPending}
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white"
+                >
+                  <Lock className="w-3 h-3 mr-1" /> Investir {formatCFA(plan.amount)}
+                </Button>
               </Card>
             ))}
+          </div>
+        )}
+
+        {/* ACTIVITIES — admin-created products */}
+        {activeTab === "activities" && (
+          <div className="space-y-3">
+            {loadingProducts ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Card key={i} className="p-4 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded mb-2 w-3/4" />
+                    <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  </Card>
+                ))}
+              </div>
+            ) : availableProducts.length === 0 ? (
+              <Card className="p-8 text-center">
+                <PackageX className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-600 dark:text-gray-400 font-semibold text-base mb-1">
+                  Produits d'activité non disponibles
+                </p>
+                <p className="text-gray-400 text-sm">
+                  Les produits d'activité ne sont pas disponibles aujourd'hui, veuillez revenir plus tard
+                </p>
+              </Card>
+            ) : (
+              availableProducts.map((product: any) => {
+                const remaining = product.purchaseLimit > 0
+                  ? product.purchaseLimit - product.purchaseCount
+                  : null;
+                const isLaunched = !product.launchDate || new Date(product.launchDate) <= new Date();
+
+                return (
+                  <Card key={product.id} className="overflow-hidden bg-white dark:bg-gray-900" data-testid={`product-card-${product.id}`}>
+                    {product.imageUrl && (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-36 object-cover"
+                      />
+                    )}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div>
+                          <h3 className="font-bold text-base">{product.name}</h3>
+                          {product.launchDate && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                              <Calendar className="w-3 h-3" />
+                              <span>Lancement: {new Date(product.launchDate).toLocaleString("fr-FR")}</span>
+                            </div>
+                          )}
+                        </div>
+                        {remaining !== null && (
+                          <Badge variant={remaining <= 5 ? "destructive" : "secondary"} className="text-[10px] flex-shrink-0">
+                            {remaining} restant{remaining > 1 ? "s" : ""}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                          <p className="text-[10px] text-muted-foreground">Prix</p>
+                          <p className="text-sm font-bold text-blue-600">{formatCFA(product.price)}</p>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                          <p className="text-[10px] text-muted-foreground">Gain/jour</p>
+                          <p className="text-sm font-bold text-green-600">{formatCFA(product.dailyGain)}</p>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
+                          <p className="text-[10px] text-muted-foreground">Gain total</p>
+                          <p className="text-sm font-bold text-purple-600">{formatCFA(product.totalGain)}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3" />
+                          <span>Cycle: {product.cycleDays} jours</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <ShoppingBag className="w-3 h-3" />
+                          <span>{product.purchaseCount} acheté{product.purchaseCount > 1 ? "s" : ""}</span>
+                        </div>
+                      </div>
+
+                      {!isLaunched ? (
+                        <div className="w-full py-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-center text-xs text-gray-500 font-medium">
+                          <Calendar className="w-3 h-3 inline mr-1" />
+                          Disponible le {new Date(product.launchDate).toLocaleString("fr-FR")}
+                        </div>
+                      ) : (
+                        <Button
+                          data-testid={`buy-product-${product.id}`}
+                          size="sm"
+                          onClick={() => handleBuyProduct(product)}
+                          disabled={investMutation.isPending && buyingProductId === product.id}
+                          className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+                        >
+                          <ShoppingBag className="w-3 h-3 mr-1" />
+                          {investMutation.isPending && buyingProductId === product.id
+                            ? "Achat en cours..."
+                            : `Acheter — ${formatCFA(product.price)}`}
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })
+            )}
           </div>
         )}
       </div>

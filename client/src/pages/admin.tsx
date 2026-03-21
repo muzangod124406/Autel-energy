@@ -599,39 +599,64 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {/* Assign investment plan */}
+                    {/* Assign fixed plan (120j) */}
                     <div>
-                      <label className="text-xs font-medium">Attribuer un plan d'investissement</label>
+                      <label className="text-xs font-medium">Attribuer plan Fixé 120J</label>
                       <Select value={assignPlan} onValueChange={setAssignPlan}>
-                        <SelectTrigger><SelectValue placeholder="Choisir un plan" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Choisir un niveau VIP" /></SelectTrigger>
                         <SelectContent>
-                          {Object.entries(INVESTMENT_PLANS).map(([key, plan]: any) =>
-                            plan.plans.map((p: any) => (
-                              <SelectItem key={`${key}-${p.vip}`} value={`${key}-${p.vip}`}>
-                                {plan.name} VIP {p.vip} - {formatCFA(p.amount)}
-                              </SelectItem>
-                            ))
-                          )}
+                          {INVESTMENT_PLANS.fix.plans.map((p: any) => (
+                            <SelectItem key={`fix-${p.vip}`} value={`fix-${p.vip}`}>
+                              Fixé 120J — VIP {p.vip} — {formatCFA(p.amount)}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <Button size="sm" className="mt-2 w-full" onClick={() => {
                         if (!assignPlan) return;
-                        const [planKey, vipStr] = assignPlan.split("-");
-                        const plan = INVESTMENT_PLANS[planKey as keyof typeof INVESTMENT_PLANS] as any;
-                        const vipPlan = plan.plans.find((p: any) => p.vip === parseInt(vipStr));
-                        if (plan && vipPlan) {
+                        const [, vipStr] = assignPlan.split("-");
+                        const vipPlan = INVESTMENT_PLANS.fix.plans.find((p: any) => p.vip === parseInt(vipStr));
+                        if (vipPlan) {
                           assignProductMutation.mutate({
                             userId: selectedUser.id,
                             plan: {
-                              planType: planKey, vipLevel: vipPlan.vip, amount: vipPlan.amount,
-                              dailyGain: vipPlan.dailyGain, duration: plan.duration, totalGain: vipPlan.totalGain
+                              planType: "fix", vipLevel: vipPlan.vip, amount: vipPlan.amount,
+                              dailyGain: vipPlan.dailyGain, duration: INVESTMENT_PLANS.fix.duration, totalGain: vipPlan.totalGain
                             }
                           });
                         }
                       }} data-testid="admin-assign-product">
-                        <Plus className="w-3 h-3 mr-1" /> Attribuer
+                        <Plus className="w-3 h-3 mr-1" /> Attribuer plan fixé
                       </Button>
                     </div>
+
+                    {/* Assign admin-created product */}
+                    {(adminProducts as any[]).length > 0 && (
+                      <div>
+                        <label className="text-xs font-medium">Attribuer un produit d'activité</label>
+                        <div className="space-y-1 mt-1">
+                          {(adminProducts as any[]).filter((p: any) => p.isActive).map((p: any) => (
+                            <div key={p.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded p-2 text-xs">
+                              <div>
+                                <span className="font-medium">{p.name}</span>
+                                <span className="text-muted-foreground ml-2">{formatCFA(p.price)}</span>
+                              </div>
+                              <Button size="sm" className="h-6 text-[10px] px-2" onClick={() => {
+                                assignProductMutation.mutate({
+                                  userId: selectedUser.id,
+                                  plan: {
+                                    planType: "activity", vipLevel: 1, amount: p.price,
+                                    dailyGain: p.dailyGain, duration: p.cycleDays, totalGain: p.totalGain
+                                  }
+                                });
+                              }} data-testid={`admin-assign-admin-product-${p.id}`}>
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* User investments */}
                     {userInvestments.length > 0 && (
