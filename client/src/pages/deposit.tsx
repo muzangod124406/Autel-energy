@@ -207,20 +207,25 @@ export default function DepositPage() {
         </div>
       </div>
 
-      {/* Method modal — centré sur l'écran */}
+      {/* Method bottom sheet */}
       {showMethodSheet && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-5"
+          className="fixed inset-0 z-50 flex items-end overlay-fade-in"
           onClick={() => setShowMethodSheet(false)}
         >
-          <div className="absolute inset-0 bg-black/50 overlay-fade-in" />
+          <div className="absolute inset-0 bg-black/50" />
           <div
-            className="relative w-full bg-white rounded-2xl flex flex-col shadow-xl overflow-hidden modal-zoom-in"
-            style={{ maxHeight: "70vh" }}
+            className="relative w-full bg-white rounded-t-3xl flex flex-col modal-zoom-in"
+            style={{ minHeight: "52vh", maxHeight: "75vh", paddingBottom: "80px" }}
             onClick={e => e.stopPropagation()}
           >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="w-10 h-1 bg-gray-200 rounded-full" />
+            </div>
+
             {/* Title */}
-            <p className="flex-shrink-0 font-bold text-gray-900 text-base px-5 pt-5 pb-4 border-b border-gray-100">
+            <p className="flex-shrink-0 font-bold text-gray-900 text-base px-5 pt-3 pb-4 border-b border-gray-100">
               Méthode de recharge
             </p>
 
@@ -253,8 +258,11 @@ export default function DepositPage() {
               )}
             </div>
 
-            {/* Footer */}
-            <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-gray-100">
+            {/* Footer — fixé en bas, au-dessus de la nav */}
+            <div
+              className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-white absolute bottom-0 left-0 right-0"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+            >
               <button onClick={() => setShowMethodSheet(false)} className="text-gray-600 font-medium text-base" data-testid="button-cancel-method">
                 Annuler
               </button>
