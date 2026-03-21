@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { formatCFA } from "@/lib/constants";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import EmptyState from "@/components/empty-state";
 import atmIcon from "@assets/icon_2_1774134662224.png";
+import downloadIcon from "@assets/telecharger_1774135111449.png";
 
 function downloadReceipt(tx: any, type: "deposit" | "withdrawal") {
   const label = type === "deposit" ? "Dépôt" : "Retrait";
@@ -49,7 +49,7 @@ export default function TransactionsPage() {
 
   const statusMap: Record<string, { label: string; color: string }> = {
     pending:  { label: "En attente",       color: "text-yellow-500" },
-    approved: { label: tab === "deposit" ? "Succès du dépôt" : "Succès du retrait", color: "text-green-500" },
+    approved: { label: tab === "deposit" ? "Succès du dépôt" : "Succès du retrait", color: "text-green-600" },
     rejected: { label: "Rejeté",           color: "text-red-500" },
   };
 
@@ -60,11 +60,11 @@ export default function TransactionsPage() {
     : "Téléchargez le bon de retrait pour partager la joie avec tout le monde";
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(160deg, #5b6fe6 0%, #7c3aed 100%)" }}>
+    <div className="min-h-screen bg-[#f0f0e4]">
 
-      {/* ── Header ──────────────────────────────── */}
-      <div className="px-4 pt-10 pb-4">
-        <div className="flex items-center gap-3 mb-1">
+      {/* ── Header vert ─────────────────────────── */}
+      <div className="bg-[#22c55e] px-4 pt-10 pb-4">
+        <div className="flex items-center gap-3">
           <button
             data-testid="button-back-transactions"
             onClick={() => navigate("/account")}
@@ -76,17 +76,17 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* ── White card container ─────────────────── */}
-      <div className="bg-gray-50 min-h-screen rounded-t-3xl px-4 pt-4 pb-24">
+      {/* ── Contenu ─────────────────────────────── */}
+      <div className="px-4 pt-4 pb-24 space-y-3">
 
-        {/* ── Tabs ─────────────────────────────── */}
-        <div className="flex bg-white rounded-2xl p-1 shadow-sm mb-4">
+        {/* ── Onglets ──────────────────────────── */}
+        <div className="flex bg-white rounded-2xl p-1 shadow-sm">
           <button
             data-testid="tab-withdrawals"
             onClick={() => setTab("withdrawal")}
             className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all ${
               tab === "withdrawal"
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow"
+                ? "bg-[#22c55e] text-white shadow"
                 : "text-gray-500"
             }`}
           >
@@ -97,7 +97,7 @@ export default function TransactionsPage() {
             onClick={() => setTab("deposit")}
             className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all ${
               tab === "deposit"
-                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow"
+                ? "bg-[#22c55e] text-white shadow"
                 : "text-gray-500"
             }`}
           >
@@ -105,24 +105,24 @@ export default function TransactionsPage() {
           </button>
         </div>
 
-        {/* ── Download banner ───────────────────── */}
-        <div className="bg-blue-50 border border-blue-100 rounded-2xl px-4 py-3 flex items-center gap-3 mb-4">
+        {/* ── Bannière téléchargement ───────────── */}
+        <div className="bg-green-50 border border-green-100 rounded-2xl px-4 py-3 flex items-center gap-3">
           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
             <img src={atmIcon} alt="atm" className="w-7 h-7 object-contain" />
           </div>
-          <p className="text-blue-800 font-semibold text-xs flex-1 leading-snug">{bannerText}</p>
+          <p className="text-green-800 font-semibold text-xs flex-1 leading-snug">{bannerText}</p>
           {filtered.length > 0 && (
             <button
               data-testid="button-download-all"
               onClick={() => filtered.forEach((tx: any) => downloadReceipt(tx, tab))}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shrink-0"
+              className="bg-[#22c55e] text-white text-xs font-bold px-3 py-1.5 rounded-full shrink-0"
             >
               Tout télécharger
             </button>
           )}
         </div>
 
-        {/* ── List ─────────────────────────────── */}
+        {/* ── Liste ─────────────────────────────── */}
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -138,7 +138,7 @@ export default function TransactionsPage() {
           <div className="space-y-3">
             {filtered.map((tx: any) => {
               const st = statusMap[tx.status] || statusMap.pending;
-              const amountColor = isDeposit ? "text-green-500" : "text-red-500";
+              const amountColor = isDeposit ? "text-green-600" : "text-red-500";
               const sign = isDeposit ? "+" : "-";
               const dateStr = new Date(tx.createdAt).toLocaleString("fr-FR");
 
@@ -146,14 +146,14 @@ export default function TransactionsPage() {
                 <div
                   key={tx.id}
                   data-testid={`card-transaction-${tx.id}`}
-                  className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm border-l-4 border-blue-400"
+                  className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm border-l-4 border-[#22c55e]"
                 >
-                  {/* Icon */}
-                  <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                  {/* Icône */}
+                  <div className="w-11 h-11 rounded-full bg-green-50 flex items-center justify-center shrink-0">
                     <img src={atmIcon} alt="atm" className="w-7 h-7 object-contain" />
                   </div>
 
-                  {/* Label + date */}
+                  {/* Libellé + date */}
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 text-sm">
                       {isDeposit ? "Déposer" : "Retirer"}
@@ -161,7 +161,7 @@ export default function TransactionsPage() {
                     <p className="text-gray-400 text-xs mt-0.5">{dateStr}</p>
                   </div>
 
-                  {/* Amount + status */}
+                  {/* Montant + statut */}
                   <div className="text-right shrink-0">
                     <p className={`font-bold text-sm ${amountColor}`}>
                       {sign}{tx.amount}FCFA
@@ -169,14 +169,14 @@ export default function TransactionsPage() {
                     <p className={`text-xs mt-0.5 ${st.color}`}>{st.label}</p>
                   </div>
 
-                  {/* Download button */}
+                  {/* Bouton téléchargement */}
                   <button
                     data-testid={`button-download-${tx.id}`}
                     onClick={() => downloadReceipt(tx, tab)}
-                    className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 ml-1"
+                    className="w-9 h-9 rounded-full bg-gray-50 flex items-center justify-center shrink-0 ml-1"
                     title="Télécharger le bon"
                   >
-                    <Download className="w-4 h-4 text-gray-500" />
+                    <img src={downloadIcon} alt="télécharger" className="w-5 h-5 object-contain" />
                   </button>
                 </div>
               );

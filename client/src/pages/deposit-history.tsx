@@ -30,7 +30,7 @@ export default function DepositHistoryPage() {
     <div className="min-h-screen bg-[#f0f0e4]">
       <div className="bg-[#22c55e] px-4 pt-5 pb-5">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/deposit")} data-testid="button-back-history">
+          <button onClick={() => navigate("/account")} data-testid="button-back-history">
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
           <h1 className="text-white font-bold text-lg">Historique des recharges</h1>
