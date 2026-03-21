@@ -47,6 +47,13 @@ export default function AdminPage() {
   const [productImageFile, setProductImageFile] = useState<File | null>(null);
   const productImageRef = useRef<HTMLInputElement>(null);
 
+  // Bulk generation state
+  const [bulkText, setBulkText] = useState("");
+  const [bulkParsed, setBulkParsed] = useState<any[]>([]);
+  const [bulkShowModal, setBulkShowModal] = useState(false);
+  const [bulkLaunchDate, setBulkLaunchDate] = useState("");
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   if (!user?.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -236,6 +243,62 @@ export default function AdminPage() {
     setProductForm({ name: "", price: "", dailyGain: "", totalGain: "", cycleDays: "", purchaseLimit: "0", isActive: true, launchDate: "" });
     setProductImageFile(null);
     if (productImageRef.current) productImageRef.current.value = "";
+  };
+
+  // Parse a pasted product list into structured objects
+  const parseBulkText = (text: string) => {
+    const cleanNum = (s: string) => parseInt(s.replace(/\s+/g, "").replace(/[^\d]/g, ""), 10);
+    const products: any[] = [];
+    const blocks = text.split(/(?=📦)/);
+    for (const block of blocks) {
+      if (!block.trim()) continue;
+      const nameMatch = block.match(/📦\s*(.+)/);
+      const priceMatch = block.match(/💵[^\d]*(\d[\d\s]*)/);
+      const dailyMatch = block.match(/📈[^\d]*(\d[\d\s]*)/);
+      const totalMatch = block.match(/💸[^\d]*(\d[\d\s]*)/);
+      const daysMatch  = block.match(/⏳[^\d]*(\d+)\s*jours/i);
+      const limitMatch = block.match(/🔢[^\d]*(\d+)/);
+      if (!nameMatch || !priceMatch) continue;
+      products.push({
+        name:          nameMatch[1].trim(),
+        price:         cleanNum(priceMatch[1]),
+        dailyGain:     dailyMatch  ? cleanNum(dailyMatch[1])  : 0,
+        totalGain:     totalMatch  ? cleanNum(totalMatch[1])  : 0,
+        cycleDays:     daysMatch   ? parseInt(daysMatch[1])   : 120,
+        purchaseLimit: limitMatch  ? parseInt(limitMatch[1])  : 0,
+        isActive:      true,
+      });
+    }
+    return products;
+  };
+
+  const handleBulkGenerate = () => {
+    const parsed = parseBulkText(bulkText);
+    if (parsed.length === 0) {
+      toast({ title: "Aucun produit détecté", description: "Vérifiez le format de votre liste", variant: "destructive" });
+      return;
+    }
+    setBulkParsed(parsed);
+    setBulkShowModal(true);
+  };
+
+  const confirmBulkGenerate = async () => {
+    setBulkLoading(true);
+    let ok = 0; let err = 0;
+    for (const p of bulkParsed) {
+      try {
+        const body = { ...p, ...(bulkLaunchDate ? { launchDate: new Date(bulkLaunchDate).toISOString() } : {}) };
+        await apiRequest("POST", "/api/admin/products", body);
+        ok++;
+      } catch { err++; }
+    }
+    setBulkLoading(false);
+    setBulkShowModal(false);
+    setBulkText("");
+    setBulkParsed([]);
+    setBulkLaunchDate("");
+    refetchProducts();
+    toast({ title: `${ok} produit${ok > 1 ? "s" : ""} créé${ok > 1 ? "s" : ""}${err > 0 ? ` (${err} erreur${err > 1 ? "s" : ""})` : ""}` });
   };
 
   const loadUserReferrals = async (userId: string) => {
@@ -780,6 +843,62 @@ export default function AdminPage() {
         {/* PRODUCTS */}
         {activeTab === "products" && (
           <div className="space-y-3">
+
+            {/* BULK GENERATION */}
+            <Card className="p-4 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950">
+              <h3 className="font-bold text-sm mb-2 flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                <Package className="w-4 h-4" /> Génération en lot
+              </h3>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mb-2">
+                Collez votre liste de produits ci-dessous (format emoji 📦 💵 📈 💸 ⏳), puis cliquez sur Générer.
+              </p>
+              <textarea
+                className="w-full border rounded-lg p-2 text-sm min-h-[120px] bg-white dark:bg-gray-900 resize-y"
+                placeholder={"📦 Nom du produit\n💵 Prix : FCFA 5 000\n📈 Revenu quotidien : FCFA 1 100\n💸 Revenu total : FCFA 132 000\n⏳ Temps : 120 jours\n\n📦 Produit 2\n..."}
+                value={bulkText}
+                onChange={e => setBulkText(e.target.value)}
+                data-testid="admin-bulk-text"
+              />
+              <Button className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white" onClick={handleBulkGenerate} data-testid="btn-bulk-generate">
+                <Plus className="w-4 h-4 mr-2" /> Générer les produits
+              </Button>
+            </Card>
+
+            {/* BULK CONFIRMATION MODAL */}
+            {bulkShowModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+                <Card className="w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
+                  <h3 className="font-bold text-base mb-1">Confirmer la génération</h3>
+                  <p className="text-sm text-muted-foreground mb-3">{bulkParsed.length} produit{bulkParsed.length > 1 ? "s" : ""} détecté{bulkParsed.length > 1 ? "s" : ""}</p>
+
+                  {/* Preview */}
+                  <div className="space-y-1 mb-4 max-h-48 overflow-y-auto">
+                    {bulkParsed.map((p, i) => (
+                      <div key={i} className="bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 text-xs">
+                        <p className="font-semibold">{p.name}</p>
+                        <p className="text-muted-foreground">{formatCFA(p.price)} · {formatCFA(p.dailyGain)}/j · {p.cycleDays}j</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Launch date */}
+                  <div className="mb-4">
+                    <label className="text-xs font-medium flex items-center gap-1 mb-1">
+                      <Calendar className="w-3 h-3" /> Date et heure de lancement (optionnel — même date pour tous)
+                    </label>
+                    <Input type="datetime-local" value={bulkLaunchDate} onChange={e => setBulkLaunchDate(e.target.value)} data-testid="admin-bulk-launch-date" />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button className="flex-1" onClick={confirmBulkGenerate} disabled={bulkLoading} data-testid="btn-bulk-confirm">
+                      <Check className="w-4 h-4 mr-1" /> {bulkLoading ? "Création..." : "Confirmer et créer"}
+                    </Button>
+                    <Button variant="outline" onClick={() => { setBulkShowModal(false); setBulkParsed([]); }}>Annuler</Button>
+                  </div>
+                </Card>
+              </div>
+            )}
+
             <Button className="w-full" onClick={() => { setEditingProduct(null); resetProductForm(); setShowProductForm(!showProductForm); }} data-testid="btn-toggle-product-form">
               <Plus className="w-4 h-4 mr-2" /> {showProductForm && !editingProduct ? "Masquer le formulaire" : "Créer un nouveau produit"}
             </Button>
