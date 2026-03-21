@@ -155,15 +155,15 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: "linear-gradient(180deg, #d1fae5 0%, #f0fdf4 60%, #f9fafb 100%)" }}>
+    <div className="min-h-screen pb-24 overflow-x-hidden" style={{ background: "linear-gradient(180deg, #d1fae5 0%, #f0fdf4 60%, #f9fafb 100%)" }}>
 
       {/* ── Header ─────────────────────────────────── */}
-      <div className="relative px-4 pt-6 pb-6">
-        {/* Decorative circle */}
-        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-green-200/40 pointer-events-none" />
-        <div className="absolute top-0 -left-8 w-32 h-32 rounded-full bg-green-300/20 pointer-events-none" />
+      <div className="relative px-4 pt-6 pb-6 overflow-hidden">
+        {/* Decorative circles — clipped to header */}
+        <div className="absolute -top-6 right-0 w-40 h-40 rounded-full bg-green-200/40 pointer-events-none" />
+        <div className="absolute top-4 -left-6 w-28 h-28 rounded-full bg-green-300/20 pointer-events-none" />
 
-        <div className="relative flex items-start justify-between">
+        <div className="relative flex items-center justify-between">
           {/* Left: logo + name */}
           <div className="flex items-center gap-3">
             <img src={autelLogo} alt="Autel" className="w-14 h-14 rounded-full border-2 border-white shadow-sm object-cover" />
