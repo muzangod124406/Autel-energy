@@ -88,16 +88,8 @@ export default function InvestPage() {
 
   return (
     <div className="bg-white min-h-screen pb-24">
-      {/* Green header */}
-      <div className="bg-[#22c55e] px-4 pt-6 pb-5">
-        <h1 className="text-white font-bold text-xl text-center">Liste des projets</h1>
-        <p className="text-white/80 text-xs text-center mt-0.5">
-          Solde : {formatCFA(user?.depositBalance || 0)}
-        </p>
-      </div>
-
       {/* Tab switcher */}
-      <div className="flex px-4 gap-3 mt-4 mb-4">
+      <div className="flex px-4 gap-3 pt-5 mb-4">
         <button
           data-testid="tab-fix"
           onClick={() => setActiveTab("fix")}
@@ -163,7 +155,7 @@ export default function InvestPage() {
               {/* Divider + note */}
               <div className="border-t border-gray-100 mx-3" />
               <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
-                les revenus seront réglés toutes les 24 heures.
+                Un produit qui vous permet de faire travailler votre argent et de générer <span className="font-semibold text-[#22c55e] not-italic">{plan.dailyGain.toLocaleString("fr-FR")} FCFA</span> par jour pendant 120 jours.
               </p>
 
               {/* Buy button */}
@@ -281,7 +273,9 @@ export default function InvestPage() {
                 {/* Divider + note */}
                 <div className="border-t border-gray-100 mx-3" />
                 <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
-                  les revenus seront réglés toutes les 24 heures.
+                  {product.description
+                    ? product.description
+                    : <>Un produit d'activité qui génère <span className="font-semibold text-[#22c55e] not-italic">{product.dailyGain.toLocaleString("fr-FR")} FCFA</span> par jour pendant {product.duration} jours.</>}
                 </p>
 
                 {/* Action button */}
