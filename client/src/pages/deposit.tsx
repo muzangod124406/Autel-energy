@@ -213,9 +213,9 @@ export default function DepositPage() {
           className="fixed inset-0 z-50 flex items-center justify-center px-5"
           onClick={() => setShowMethodSheet(false)}
         >
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-black/50 overlay-fade-in" />
           <div
-            className="relative w-full bg-white rounded-2xl flex flex-col shadow-xl overflow-hidden"
+            className="relative w-full bg-white rounded-2xl flex flex-col shadow-xl overflow-hidden modal-zoom-in"
             style={{ maxHeight: "70vh" }}
             onClick={e => e.stopPropagation()}
           >
