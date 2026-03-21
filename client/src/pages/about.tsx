@@ -37,7 +37,7 @@ export default function AboutPage() {
         <div className="grid grid-cols-2 gap-3">
           {[
             { icon: Shield, label: "Sécurisé", desc: "Transactions protégées" },
-            { icon: Globe, label: "Multi-pays", desc: "Togo, Bénin, CI, Sénégal" },
+            { icon: Globe, label: "Multi-pays", desc: "Cameroun, Bénin, Burkina Faso" },
             { icon: Clock, label: "24/7", desc: "Investissement continu" },
             { icon: Award, label: "Fiable", desc: "Paiements garantis" },
           ].map(item => (

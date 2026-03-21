@@ -796,7 +796,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const admin = await storage.createUser({
         phone: "99935673",
         password: "AAbb11##",
-        country: "togo",
+        country: "cameroun",
         referralCode: "ADMIN1",
         referredBy: null,
       });
