@@ -107,6 +107,7 @@ export const settings = pgTable("settings", {
   officialChain: text("official_chain").notNull().default(""),
   discussionGroup: text("discussion_group").notNull().default(""),
   moneyFusionLink: text("money_fusion_link").notNull().default(""),
+  depositMinAmount: integer("deposit_min_amount").notNull().default(1000),
   withdrawMinAmount: integer("withdraw_min_amount").notNull().default(3500),
   withdrawFeePercent: integer("withdraw_fee_percent").notNull().default(10),
   withdrawStartHour: integer("withdraw_start_hour").notNull().default(10),

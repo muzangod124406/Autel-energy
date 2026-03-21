@@ -1245,6 +1245,18 @@ export default function AdminPage() {
             <div className="space-y-4">
               {!settingsForm && <Card className="p-4 text-center text-gray-400 text-sm">Chargement des paramètres...</Card>}
 
+              {/* Recharge */}
+              <Card className="p-4 space-y-3">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Wallet className="w-4 h-4" /> Configuration des recharges</h3>
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Recharge minimum (FCFA)</label>
+                  <Input className="mt-1" type="number" value={sf.depositMinAmount ?? 1000}
+                    onChange={e => set("depositMinAmount", parseInt(e.target.value) || 0)}
+                    data-testid="admin-setting-depositMinAmount" />
+                </div>
+                <SaveBtn fields={["depositMinAmount"]} />
+              </Card>
+
               {/* Retraits */}
               <Card className="p-4 space-y-3">
                 <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600"><Clock className="w-4 h-4" /> Configuration des retraits</h3>

@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { BKAPAY_KEY, COUNTRIES } from "@/lib/constants";
+import { BKAPAY_KEY, COUNTRIES, formatCFA } from "@/lib/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, X, Link2, Zap } from "lucide-react";
+import { ArrowLeft, ChevronRight, X, Zap, Link2 } from "lucide-react";
 import { useLocation } from "wouter";
-
-const QUICK_AMOUNTS = [2000, 3000, 5000, 8000, 10000, 20000, 30000, 50000];
 
 export default function DepositPage() {
   const { user, refreshUser } = useAuth();
@@ -16,6 +14,8 @@ export default function DepositPage() {
 
   const [amount, setAmount] = useState("");
   const [selectedChannelId, setSelectedChannelId] = useState<string>("");
+  const [showMethodSheet, setShowMethodSheet] = useState(false);
+  const [tempChannelId, setTempChannelId] = useState<string>("");
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [linkFormData, setLinkFormData] = useState({
     accountName: "",
@@ -24,9 +24,10 @@ export default function DepositPage() {
     country: user?.country || "",
   });
 
-  const { data: channels = [] } = useQuery<any[]>({
-    queryKey: ["/api/channels"],
-  });
+  const { data: channels = [] } = useQuery<any[]>({ queryKey: ["/api/channels"] });
+  const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
+
+  const depositMinAmount = settings?.depositMinAmount || 1000;
 
   const depositMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -46,25 +47,22 @@ export default function DepositPage() {
 
   const selectedChannel = (channels as any[]).find((c: any) => c.id === selectedChannelId);
 
-  const handleProceed = () => {
+  const handleRecharge = () => {
     const amt = parseInt(amount);
-    if (!amt || amt < 100) {
-      toast({ title: "Erreur", description: "Montant minimum: 100 FCFA", variant: "destructive" });
+    if (!amt || amt < depositMinAmount) {
+      toast({ title: "Erreur", description: `Montant minimum: ${formatCFA(depositMinAmount)}`, variant: "destructive" });
       return;
     }
-
     if (!selectedChannelId && (channels as any[]).length > 0) {
-      toast({ title: "Erreur", description: "Veuillez sélectionner un canal de recharge", variant: "destructive" });
+      toast({ title: "Erreur", description: "Veuillez choisir une méthode de recharge", variant: "destructive" });
       return;
     }
 
     if (!selectedChannel || selectedChannel.type === "leekpay") {
-      // LeekPay automatic or fallback
       if (user?.country === "cameroun") {
         const callbackUrl = encodeURIComponent(`${window.location.origin}/api/payment/callback`);
         const desc = encodeURIComponent(`Dépôt - ${user?.phone}`);
-        const url = `https://bkapay.com/api-pay/${BKAPAY_KEY}?amount=${amt}&description=${desc}&callback=${callbackUrl}`;
-        window.location.href = url;
+        window.location.href = `https://bkapay.com/api-pay/${BKAPAY_KEY}?amount=${amt}&description=${desc}&callback=${callbackUrl}`;
         return;
       }
       depositMutation.mutate({
@@ -78,7 +76,6 @@ export default function DepositPage() {
       return;
     }
 
-    // Link channel — show the form
     setShowLinkForm(true);
   };
 
@@ -88,8 +85,6 @@ export default function DepositPage() {
       toast({ title: "Erreur", description: "Veuillez remplir tous les champs", variant: "destructive" });
       return;
     }
-
-    // Record the transaction first
     depositMutation.mutate({
       amount: amt,
       country: linkFormData.country,
@@ -99,137 +94,170 @@ export default function DepositPage() {
       channelId: selectedChannel?.id,
       channelName: selectedChannel?.name,
     });
-
-    // Then redirect to the payment link
     if (selectedChannel?.redirectUrl) {
-      setTimeout(() => {
-        window.open(selectedChannel.redirectUrl, "_blank");
-      }, 500);
+      setTimeout(() => window.open(selectedChannel.redirectUrl, "_blank"), 500);
     }
   };
 
+  const handleConfirmMethod = () => {
+    setSelectedChannelId(tempChannelId);
+    setShowMethodSheet(false);
+  };
+
   return (
-    <div className="min-h-screen bg-[#f0f0e4]">
-      <div className="bg-[#22c55e] px-4 pt-5 pb-8 relative">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => navigate("/")} data-testid="button-back-deposit">
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <div className="bg-[#22c55e] px-4 pt-5 pb-10 relative">
+        <div className="flex items-center justify-between mb-2">
+          <button onClick={() => navigate("/")} data-testid="button-back-deposit" className="p-1">
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-white font-bold text-lg">Recharge</h1>
+          <h1 className="text-white font-bold text-lg">Recharger</h1>
           <button
             onClick={() => navigate("/deposit-history")}
-            className="bg-white/20 text-white text-sm px-3 py-1 rounded-full"
+            className="text-white text-sm"
             data-testid="button-deposit-history"
           >
             Historique &gt;
           </button>
         </div>
-
-        <div className="bg-white rounded-xl px-4 py-3 mb-4">
-          <div className="flex items-center gap-1">
-            <span className="text-gray-500 text-sm font-medium">FCFA</span>
-            <input
-              data-testid="input-deposit-amount"
-              type="number"
-              placeholder="0000"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className="flex-1 outline-none text-gray-800 text-base bg-transparent"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2">
-          {QUICK_AMOUNTS.map(amt => (
-            <button
-              key={amt}
-              data-testid={`button-amount-${amt}`}
-              onClick={() => setAmount(String(amt))}
-              className={`py-2 rounded-full text-sm font-medium transition-colors ${
-                amount === String(amt)
-                  ? "bg-white text-[#22c55e]"
-                  : "bg-[#22c55e]/40 text-white border border-white/40"
-              }`}
-            >
-              {amt.toLocaleString()}
-            </button>
-          ))}
-        </div>
       </div>
 
-      <div className="px-4 py-4 space-y-4">
-        {/* Channel selection */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <div className="mb-4">
-            <h2 className="text-gray-900 font-bold text-base">Canal de recharge</h2>
-            <div className="w-10 h-1 bg-[#22c55e] rounded-full mt-1" />
-          </div>
-
-          {(channels as any[]).length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-2">Aucun canal disponible pour le moment</p>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {(channels as any[]).map((ch: any) => (
-                <label
-                  key={ch.id}
-                  className="flex items-center justify-between py-4 cursor-pointer"
-                  data-testid={`channel-${ch.id}`}
-                >
-                  <div className="flex items-center gap-2">
-                    {ch.type === "leekpay" ? (
-                      <Zap className="w-4 h-4 text-yellow-500" />
-                    ) : (
-                      <Link2 className="w-4 h-4 text-blue-500" />
-                    )}
-                    <div>
-                      <span className="text-gray-700 text-sm font-medium">{ch.name}</span>
-                      <p className="text-[10px] text-gray-400">{ch.type === "leekpay" ? "Paiement automatique" : "Paiement par lien"}</p>
-                    </div>
-                  </div>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    selectedChannelId === ch.id ? "border-blue-500" : "border-gray-300"
-                  }`}>
-                    {selectedChannelId === ch.id && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                    )}
-                  </div>
-                  <input
-                    type="radio"
-                    name="channel"
-                    value={ch.id}
-                    checked={selectedChannelId === ch.id}
-                    onChange={() => setSelectedChannelId(ch.id)}
-                    className="hidden"
-                  />
-                </label>
-              ))}
-            </div>
-          )}
+      <div className="px-4 -mt-6 space-y-3 pb-10">
+        {/* Amount card */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <p className="font-bold text-gray-900 text-base mb-4">Montant de la recharge</p>
+          <input
+            data-testid="input-deposit-amount"
+            type="number"
+            placeholder="Entrez le montant"
+            value={amount}
+            onChange={e => setAmount(e.target.value)}
+            className="w-full text-gray-400 text-lg outline-none border-b border-gray-200 pb-2 mb-3 bg-transparent"
+          />
+          <p className="text-gray-500 text-sm">Montant minimum de recharge: <span className="font-medium">{depositMinAmount.toFixed(2)}</span></p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
-          <h3 className="text-[#22c55e] font-bold text-base mb-3">Instructions</h3>
-          <div className="space-y-3 text-gray-600 text-sm leading-relaxed">
-            <p>1. Entrez le montant et sélectionnez votre canal de recharge</p>
-            <p>2. Pour les canaux par lien, remplissez vos informations de paiement puis procédez au paiement</p>
+        {/* Method selection row */}
+        <div
+          className="bg-white rounded-2xl shadow-sm cursor-pointer"
+          onClick={() => { setTempChannelId(selectedChannelId); setShowMethodSheet(true); }}
+          data-testid="button-choose-method"
+        >
+          <div className="flex items-center justify-between px-5 py-4">
+            <p className="text-gray-700 font-medium text-sm">Méthode de recharge</p>
+            <div className="flex items-center gap-1 text-gray-400 text-sm">
+              {selectedChannel ? (
+                <span className="text-gray-800 font-medium">{selectedChannel.name}</span>
+              ) : (
+                <span>Veuillez choisir une méthode de recharge</span>
+              )}
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+
+        {/* Recharger button */}
+        <button
+          data-testid="button-deposit-now"
+          onClick={handleRecharge}
+          disabled={depositMutation.isPending}
+          className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-2xl text-base shadow-md disabled:opacity-60"
+        >
+          {depositMutation.isPending ? "En cours..." : "Recharger"}
+        </button>
+
+        {/* Instructions */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <p className="font-bold text-gray-900 text-base mb-3">Instructions de recharge</p>
+          <div className="space-y-2 text-gray-500 text-sm leading-relaxed">
+            <p>1. Entrez le montant et choisissez votre méthode de recharge</p>
+            <p>2. Remplissez vos informations de paiement si demandé</p>
             <p>3. Dépôt traité sous 5 minutes, contactez le service client si nécessaire</p>
             <p>4. Ne modifiez pas le montant une fois le paiement initié</p>
           </div>
         </div>
-
-        <div className="pb-6">
-          <button
-            data-testid="button-deposit-now"
-            onClick={handleProceed}
-            disabled={depositMutation.isPending}
-            className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-full text-base shadow-md disabled:opacity-60"
-          >
-            {depositMutation.isPending ? "En cours..." : "Procéder au paiement"}
-          </button>
-        </div>
       </div>
 
-      {/* Link Payment Form Modal */}
+      {/* Method selection bottom sheet */}
+      {showMethodSheet && (
+        <div className="fixed inset-0 z-50" onClick={() => setShowMethodSheet(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[70vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Sheet header */}
+            <div className="px-5 pt-4 pb-2 border-b border-gray-100">
+              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-3" />
+              <p className="font-bold text-gray-900 text-base">Méthode de recharge</p>
+            </div>
+
+            {/* Channel list */}
+            <div className="divide-y divide-gray-100 px-2">
+              {(channels as any[]).length === 0 ? (
+                <p className="text-center text-gray-400 text-sm py-8">Aucune méthode disponible</p>
+              ) : (
+                (channels as any[]).map((ch: any) => (
+                  <label
+                    key={ch.id}
+                    className="flex items-center justify-between py-4 px-3 cursor-pointer"
+                    data-testid={`sheet-channel-${ch.id}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-green-50 rounded-full flex items-center justify-center">
+                        {ch.type === "leekpay" ? (
+                          <Zap className="w-4 h-4 text-yellow-500" />
+                        ) : (
+                          <Link2 className="w-4 h-4 text-green-600" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-gray-800 font-medium text-sm">{ch.name}</p>
+                        <p className="text-xs text-gray-400">{ch.type === "leekpay" ? "Paiement automatique" : "Paiement par lien"}</p>
+                      </div>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      tempChannelId === ch.id ? "border-[#22c55e]" : "border-gray-300"
+                    }`}>
+                      {tempChannelId === ch.id && <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />}
+                    </div>
+                    <input
+                      type="radio"
+                      name="temp-channel"
+                      value={ch.id}
+                      checked={tempChannelId === ch.id}
+                      onChange={() => setTempChannelId(ch.id)}
+                      className="hidden"
+                    />
+                  </label>
+                ))
+              )}
+            </div>
+
+            {/* Annuler / Confirmer */}
+            <div className="flex items-center justify-between px-6 py-5 border-t border-gray-100">
+              <button
+                onClick={() => setShowMethodSheet(false)}
+                className="text-gray-600 font-medium text-base"
+                data-testid="button-cancel-method"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirmMethod}
+                disabled={!tempChannelId}
+                className="text-[#22c55e] font-bold text-base disabled:text-gray-300"
+                data-testid="button-confirm-method"
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Link Payment Form bottom sheet */}
       {showLinkForm && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end justify-center">
           <div className="bg-white w-full max-w-lg rounded-t-2xl p-5 max-h-[90vh] overflow-y-auto">
@@ -239,7 +267,9 @@ export default function DepositPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">Canal: <strong>{selectedChannel?.name}</strong> | Montant: <strong>{parseInt(amount).toLocaleString()} FCFA</strong></p>
+            <p className="text-sm text-gray-500 mb-4">
+              Canal: <strong>{selectedChannel?.name}</strong> | Montant: <strong>{parseInt(amount).toLocaleString()} FCFA</strong>
+            </p>
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-medium text-gray-600">Nom du compte de paiement</label>
