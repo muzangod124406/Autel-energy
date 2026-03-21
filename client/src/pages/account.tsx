@@ -13,7 +13,6 @@ export default function AccountPage() {
   if (!user) return null;
 
   const maskedPhone = user.phone.slice(0, 3) + "****" + user.phone.slice(-3);
-  const totalPoints = Math.floor((user.depositBalance || 0) + (user.withdrawBalance || 0));
 
   const handleLogout = async () => { await logout(); };
 
@@ -171,9 +170,6 @@ export default function AccountPage() {
             <div>
               <p className="font-bold text-gray-800 text-base">{user.nickname || maskedPhone}</p>
               <p className="text-gray-500 text-xs mt-0.5">ID: {user.referralCode}</p>
-              {(user as any).isPromoter && (
-                <span className="inline-block bg-yellow-400 text-yellow-900 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">Promoteur</span>
-              )}
             </div>
           </div>
 
@@ -203,11 +199,11 @@ export default function AccountPage() {
             style={{ backgroundImage: "repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)", backgroundSize: "12px 12px" }}
           />
           <div className="relative">
-            <p className="text-white/80 text-xs font-medium">Points totaux</p>
-            <p className="text-white font-extrabold text-2xl">{totalPoints}</p>
+            <p className="text-white/80 text-xs font-medium">Solde de recharge</p>
+            <p className="text-white font-extrabold text-2xl">{user.depositBalance.toFixed(2)}</p>
           </div>
           <button
-            onClick={() => navigate("/balance")}
+            onClick={() => navigate("/transactions")}
             className="relative bg-white/20 border border-white/40 text-white font-semibold text-sm px-4 py-1.5 rounded-full"
             data-testid="button-consulter-points"
           >
