@@ -14,7 +14,7 @@ export default function TeamRevenuePage() {
   const { data: referrals } = useQuery<any>({ queryKey: ["/api/user/referrals"] });
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
 
-  const c1 = settings?.referralCommission1 ?? 30;
+  const c1 = settings?.referralCommission1 ?? 20;
   const c2 = settings?.referralCommission2 ?? 3;
   const c3 = settings?.referralCommission3 ?? 2;
 

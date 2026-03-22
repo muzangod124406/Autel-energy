@@ -244,7 +244,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Handle referral commissions (configurable via settings)
       if (user.referredBy) {
         const cfg = await storage.getSettings();
-        const rate1 = (cfg.referralCommission1 ?? 30) / 100;
+        const rate1 = (cfg.referralCommission1 ?? 20) / 100;
         const rate2 = (cfg.referralCommission2 ?? 3) / 100;
         const rate3 = (cfg.referralCommission3 ?? 2) / 100;
 

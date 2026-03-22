@@ -1720,7 +1720,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <label className="text-xs font-medium text-gray-700">Niveau 1 (%)</label>
-                    <Input className="mt-1" type="number" min={0} max={100} value={sf.referralCommission1 ?? 30}
+                    <Input className="mt-1" type="number" min={0} max={100} value={sf.referralCommission1 ?? 20}
                       onChange={e => set("referralCommission1", parseInt(e.target.value) || 0)}
                       data-testid="admin-setting-commission1" />
                   </div>

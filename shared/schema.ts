@@ -115,7 +115,7 @@ export const settings = pgTable("settings", {
   withdrawEndHour: integer("withdraw_end_hour").notNull().default(15),
   soleaspayEnabled: boolean("soleaspay_enabled").notNull().default(false),
   soleaspayChannelName: text("soleaspay_channel_name").notNull().default(""),
-  referralCommission1: integer("referral_commission1").notNull().default(30),
+  referralCommission1: integer("referral_commission1").notNull().default(20),
   referralCommission2: integer("referral_commission2").notNull().default(3),
   referralCommission3: integer("referral_commission3").notNull().default(2),
   statsResetDate: timestamp("stats_reset_date"),

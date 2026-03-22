@@ -33,7 +33,7 @@ export default function InvitePage() {
     }
   };
 
-  const c1 = settings?.referralCommission1 ?? 30;
+  const c1 = settings?.referralCommission1 ?? 20;
   const c2 = settings?.referralCommission2 ?? 3;
   const c3 = settings?.referralCommission3 ?? 2;
 
