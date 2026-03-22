@@ -183,7 +183,7 @@ export default function WithdrawPage() {
           <div className="space-y-2 text-gray-500 text-sm leading-relaxed">
             <p>1. Horaires de retrait : {settings?.withdrawStartHour || 10}h00 – {settings?.withdrawEndHour || 15}h00</p>
             <p>2. Montant minimum : {formatCFA(withdrawMinAmount)}, maximum : 4 500 000 FCFA</p>
-            <p>3. Un seul retrait autorisé par jour</p>
+            <p>3. 2 retraits autorisés par jour</p>
             <p>4. En cas de problème, contactez le service client</p>
           </div>
         </div>
