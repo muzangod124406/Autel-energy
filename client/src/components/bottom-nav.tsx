@@ -45,7 +45,7 @@ export default function BottomNav() {
                 <img
                   src={tab.imgIcon}
                   alt={tab.label}
-                  className={`w-7 h-7 object-contain ${isActive ? "opacity-100" : "opacity-40"}`}
+                  className={`w-9 h-9 object-contain ${isActive ? "opacity-100" : "opacity-40"}`}
                 />
               ) : (
                 <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
