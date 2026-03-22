@@ -5,7 +5,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { ChevronLeft, ChevronDown } from "lucide-react";
-import serviceClientIcon from "@assets/service-clients_1774171700016.png";
 
 const FALLBACK_METHODS = ["Orange Money", "MTN Mobile Money", "Moov Money", "Wave", "Celtis"];
 
@@ -107,11 +106,6 @@ export default function BankCardPage() {
 
       {/* Formulaire */}
       <div className="flex-1 px-5 pt-8 pb-10 relative">
-
-        {/* Avatar service client flottant */}
-        <div className="absolute right-5 top-4 w-14 h-14 rounded-full border-2 border-[#22c55e] overflow-hidden shadow-md">
-          <img src={serviceClientIcon} alt="Service client" className="w-full h-full object-cover" />
-        </div>
 
         {/* Votre nom */}
         <div className="mb-5">
