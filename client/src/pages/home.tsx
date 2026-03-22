@@ -1,5 +1,6 @@
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import autelLogo from "@assets/images_(11)_1774131992392.png";
 import rechargeIcon from "@assets/recharge_(1)_1773608231085.png";
 import withdrawIcon from "@assets/withdraw_1773608230743.png";
@@ -11,14 +12,24 @@ import rewardIcon from "@assets/reward_icon_1773608863536.png";
 export default function HomePage() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
 
   if (!user) return null;
 
+  const handleServiceClient = () => {
+    const url = settings?.telegramGroup;
+    if (url) {
+      window.open(url, "_blank");
+    } else {
+      navigate("/service-client");
+    }
+  };
+
   const ACTION_BUTTONS = [
-    { label: "Recharger", icon: rechargeIcon, path: "/deposit", testId: "button-recharge" },
-    { label: "Retrait", icon: withdrawIcon, path: "/withdraw", testId: "button-withdraw" },
-    { label: "Billet", icon: blogIcon, path: "/billet", testId: "button-billet" },
-    { label: "Service client", icon: telegramIcon, path: "/service-client", testId: "button-service-client" },
+    { label: "Recharger", icon: rechargeIcon, onClick: () => navigate("/deposit"), testId: "button-recharge" },
+    { label: "Retrait", icon: withdrawIcon, onClick: () => navigate("/withdraw"), testId: "button-withdraw" },
+    { label: "Billet", icon: blogIcon, onClick: () => navigate("/billet"), testId: "button-billet" },
+    { label: "Service client", icon: telegramIcon, onClick: handleServiceClient, testId: "button-service-client" },
   ];
 
   return (
@@ -58,7 +69,7 @@ export default function HomePage() {
             <button
               key={btn.label}
               data-testid={btn.testId}
-              onClick={() => navigate(btn.path)}
+              onClick={btn.onClick}
               className="flex flex-col items-center gap-2"
             >
               <img src={btn.icon} alt={btn.label} className="w-14 h-14 object-contain" />
