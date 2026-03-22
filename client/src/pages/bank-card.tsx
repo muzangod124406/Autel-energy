@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -25,7 +25,10 @@ export default function BankCardPage() {
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [showMethodMenu, setShowMethodMenu] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const otpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   const sendOtpMutation = useMutation({
     mutationFn: async () => {
@@ -34,11 +37,24 @@ export default function BankCardPage() {
     },
     onSuccess: (data) => {
       setOtpSent(true);
-      toast({ title: "Code envoyé !", description: "Un code OTP a été envoyé sur votre téléphone" });
+      toast({ title: "Code envoyé !" });
       if (data?.code) {
         if (otpTimerRef.current) clearTimeout(otpTimerRef.current);
         otpTimerRef.current = setTimeout(() => setOtpCode(data.code), 10000);
       }
+      // Start 60s countdown
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      setCountdown(60);
+      intervalRef.current = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(intervalRef.current!);
+            intervalRef.current = null;
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     },
     onError: (e: any) => {
       toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur", variant: "destructive" });
@@ -192,10 +208,10 @@ export default function BankCardPage() {
               data-testid="button-send-otp"
               type="button"
               onClick={() => sendOtpMutation.mutate()}
-              disabled={sendOtpMutation.isPending}
-              className="px-5 py-3 bg-[#f87171] text-white font-semibold text-sm rounded disabled:opacity-60 whitespace-nowrap"
+              disabled={sendOtpMutation.isPending || countdown > 0}
+              className="px-5 py-3 bg-[#f87171] text-white font-semibold text-sm rounded disabled:opacity-60 whitespace-nowrap min-w-[80px]"
             >
-              {sendOtpMutation.isPending ? "..." : "Obtenir"}
+              {sendOtpMutation.isPending ? "..." : countdown > 0 ? `${countdown}s` : "Obtenir"}
             </button>
           </div>
         </div>
