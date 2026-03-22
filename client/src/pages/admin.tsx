@@ -1509,25 +1509,39 @@ export default function AdminPage() {
                 {(chatConversations as any[]).length === 0 && (
                   <p className="text-gray-400 text-sm text-center py-8">Aucune conversation</p>
                 )}
-                {(chatConversations as any[]).map((conv: any) => (
-                  <button
-                    key={conv.userId}
-                    onClick={() => { setChatUserId(conv.userId); queryClient.invalidateQueries({ queryKey: ["/api/admin/chat", conv.userId, "messages"] }); }}
-                    className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 flex items-center gap-3 ${chatUserId === conv.userId ? "bg-green-50" : ""}`}
-                    data-testid={`admin-chat-conv-${conv.userId}`}
-                  >
-                    <div className="w-9 h-9 rounded-full bg-[#22c55e] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                      {(conv.user?.phone || "?").slice(-2)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-xs text-gray-800 truncate">{conv.user?.phone || conv.userId}</p>
-                      <p className="text-gray-400 text-xs truncate">{conv.lastMessage?.content || (conv.lastMessage?.imageUrl ? "📷 Image" : "")}</p>
-                    </div>
-                    {conv.unreadCount > 0 && (
-                      <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0">{conv.unreadCount}</span>
-                    )}
-                  </button>
-                ))}
+                {[...(chatConversations as any[])].sort((a, b) => (b.unreadCount || 0) - (a.unreadCount || 0)).map((conv: any) => {
+                  const hasUnread = conv.unreadCount > 0;
+                  const isSelected = chatUserId === conv.userId;
+                  return (
+                    <button
+                      key={conv.userId}
+                      onClick={() => { setChatUserId(conv.userId); queryClient.invalidateQueries({ queryKey: ["/api/admin/chat", conv.userId, "messages"] }); }}
+                      className={`w-full text-left px-4 py-3 border-b flex items-center gap-3 transition-colors relative
+                        ${isSelected ? "bg-green-50 border-gray-100" : hasUnread ? "bg-red-50 border-red-100 hover:bg-red-100" : "border-gray-50 hover:bg-gray-50"}`}
+                      data-testid={`admin-chat-conv-${conv.userId}`}
+                    >
+                      {hasUnread && !isSelected && (
+                        <span className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 rounded-r" />
+                      )}
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${hasUnread ? "bg-red-500" : "bg-[#22c55e]"}`}>
+                        {(conv.user?.phone || "?").slice(-2)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs truncate ${hasUnread ? "font-bold text-gray-900" : "font-semibold text-gray-700"}`}>
+                          {conv.user?.phone || conv.userId}
+                        </p>
+                        <p className={`text-xs truncate ${hasUnread ? "text-gray-700 font-medium" : "text-gray-400"}`}>
+                          {conv.lastMessage?.content || (conv.lastMessage?.imageUrl ? "📷 Image" : "")}
+                        </p>
+                      </div>
+                      {hasUnread && (
+                        <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full flex-shrink-0 animate-pulse">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
