@@ -382,8 +382,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!bankCard) return res.status(400).json({ message: "Vous devez d'abord enregistrer une carte bancaire" });
 
       const activeInvestments = await storage.getUserInvestments(userId);
-      const hasActive = activeInvestments.some(i => i.status === "active");
-      if (!hasActive) return res.status(400).json({ message: "Vous devez avoir au moins un produit actif" });
+      const hasFixedPlan = activeInvestments.some(i => i.status === "active" && i.planType === "fix");
+      if (!hasFixedPlan) return res.status(400).json({ message: "Vous devez avoir acheté un plan Fixé 120J pour pouvoir retirer" });
 
       const cfg = await storage.getSettings();
       const { amount, country, paymentMethod, phoneNumber, accountName, transactionPassword } = req.body;
@@ -405,8 +405,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const todayTxs = await storage.getUserTransactions(userId, "withdrawal");
-      const todayWithdrawal = todayTxs.find(t => new Date(t.createdAt) >= today);
-      if (todayWithdrawal) return res.status(400).json({ message: "1 retrait par jour maximum" });
+      const todayWithdrawals = todayTxs.filter(t => new Date(t.createdAt) >= today);
+      if (todayWithdrawals.length >= 2) return res.status(400).json({ message: "2 retraits par jour maximum" });
 
       const feePercent = cfg.withdrawFeePercent ?? 10;
       const fees = Math.floor(amount * (feePercent / 100));
