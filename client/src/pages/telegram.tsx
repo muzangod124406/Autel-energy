@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 import redirectIcon from "@assets/17496245_1774133420846.png";
+import claraImg from "@assets/561c62c4e80617ebf5313bc562f02542_1774182788114.jpg";
 import { SiTelegram } from "react-icons/si";
 import EmptyState from "@/components/empty-state";
 
@@ -13,17 +14,11 @@ export default function TelegramPage() {
   const serviceClient1 = settings?.serviceClient1 || "";
   const serviceClient2 = settings?.serviceClient2 || "";
   const telegramGroup = settings?.telegramGroup || "";
-  const telegramService = settings?.telegramService || "";
 
   const links = [
     ...(serviceClient1 ? [{ label: "Services en ligne", url: serviceClient1 }] : []),
     ...(serviceClient2 ? [{ label: "Service client 2", url: serviceClient2 }] : []),
     ...(telegramGroup ? [{ label: "Groupe officiel", url: telegramGroup }] : []),
-    ...(telegramService && telegramService.startsWith("http")
-      ? [{ label: "Service Telegram", url: telegramService }]
-      : telegramService
-      ? [{ label: "Service Telegram", url: `https://t.me/${telegramService.replace("@", "")}` }]
-      : []),
   ];
 
   return (
@@ -59,36 +54,62 @@ export default function TelegramPage() {
 
       {/* Service links */}
       <div className="px-4 mt-4 space-y-3">
-        {links.length === 0 ? (
-          <EmptyState text="Aucun lien configuré" subtext="L'administrateur n'a pas encore configuré de lien de service." />
-        ) : (
-          links.map((item, i) => (
-            <a
-              key={i}
-              href={item.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid={`link-service-${i}`}
-              className="flex items-center justify-between bg-white rounded-2xl px-4 py-4 shadow-sm active:bg-gray-50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-[#22c55e] flex items-center justify-center flex-shrink-0">
-                  <SiTelegram className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
-                  <p className="text-gray-400 text-xs mt-0.5 max-w-[200px] truncate">{item.url}</p>
-                </div>
-              </div>
+
+        {/* Clara card — toujours visible */}
+        <button
+          data-testid="button-clara-chat"
+          onClick={() => navigate("/service-client")}
+          className="w-full flex items-center justify-between bg-white rounded-2xl px-4 py-4 shadow-sm active:bg-gray-50 text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="relative flex-shrink-0">
               <img
-                src={redirectIcon}
-                alt="Ouvrir"
-                className="w-6 h-6 object-contain"
-                style={{ mixBlendMode: "multiply" }}
+                src={claraImg}
+                alt="Clara"
+                className="w-11 h-11 rounded-full object-cover"
               />
-            </a>
-          ))
-        )}
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900 text-sm">Clara autel service</p>
+              <p className="text-[#22c55e] text-xs mt-0.5">En ligne</p>
+            </div>
+          </div>
+          <img
+            src={redirectIcon}
+            alt="Ouvrir"
+            className="w-6 h-6 object-contain"
+            style={{ mixBlendMode: "multiply" }}
+          />
+        </button>
+
+        {/* Other links */}
+        {links.map((item, i) => (
+          <a
+            key={i}
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid={`link-service-${i}`}
+            className="flex items-center justify-between bg-white rounded-2xl px-4 py-4 shadow-sm active:bg-gray-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-full bg-[#22c55e] flex items-center justify-center flex-shrink-0">
+                <SiTelegram className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
+                <p className="text-gray-400 text-xs mt-0.5 max-w-[200px] truncate">{item.url}</p>
+              </div>
+            </div>
+            <img
+              src={redirectIcon}
+              alt="Ouvrir"
+              className="w-6 h-6 object-contain"
+              style={{ mixBlendMode: "multiply" }}
+            />
+          </a>
+        ))}
       </div>
     </div>
   );
