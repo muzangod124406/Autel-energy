@@ -4,7 +4,10 @@ import { useLocation } from "wouter";
 import { LogOut, Shield, ChevronRight } from "lucide-react";
 import autelLogo from "@assets/images_(11)_1774131992392.png";
 import headsetIcon from "@assets/icon_3-1_1774133434969.png";
-import lv0Img from "@assets/lv0_1773607669331.png";
+import lockIcon from "@assets/19118881-verrouiller-l-etude-de-l-ecole-plat-couleur-icone-vec_1774169768536.jpg";
+import envelopeIcon from "@assets/4627452_1774169768599.png";
+import loginIcon from "@assets/8984546_1774169768623.png";
+import walletIcon from "@assets/withdraw_record_(1)_1774169798074.png";
 
 export default function AccountPage() {
   const { user, logout } = useAuth();
@@ -31,15 +34,9 @@ export default function AccountPage() {
     },
     {
       label: "Inviter",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-          <rect x="2" y="4" width="20" height="16" rx="3" fill="#f97316" opacity=".15" />
-          <rect x="2" y="4" width="20" height="16" rx="3" stroke="#f97316" strokeWidth="1.5" />
-          <path d="M2 8l10 7 10-7" stroke="#f97316" strokeWidth="1.5" />
-        </svg>
-      ),
+      icon: <img src={envelopeIcon} alt="Inviter" className="w-8 h-8 object-contain" />,
       bg: "bg-orange-50",
-      route: "/referral",
+      route: "/invite",
       testId: "button-inviter",
     },
     {
@@ -59,28 +56,14 @@ export default function AccountPage() {
     },
     {
       label: "Mot de passe",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-          <rect x="5" y="10" width="14" height="11" rx="2" fill="#f97316" opacity=".15" />
-          <rect x="5" y="10" width="14" height="11" rx="2" stroke="#f97316" strokeWidth="1.5" />
-          <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" />
-          <circle cx="12" cy="15" r="1.5" fill="#f97316" />
-        </svg>
-      ),
+      icon: <img src={lockIcon} alt="Mot de passe" className="w-8 h-8 object-contain" />,
       bg: "bg-orange-50",
       route: "/trade-password",
       testId: "button-mot-de-passe",
     },
     {
       label: "Compte retrait",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-          <rect x="2" y="6" width="20" height="14" rx="3" fill="#22c55e" opacity=".15" />
-          <rect x="2" y="6" width="20" height="14" rx="3" stroke="#22c55e" strokeWidth="1.5" />
-          <circle cx="8" cy="13" r="2" fill="#22c55e" />
-          <path d="M14 11h4M14 15h2" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      ),
+      icon: <img src={walletIcon} alt="Compte retrait" className="w-8 h-8 object-contain" />,
       bg: "bg-green-50",
       route: "/bank-card",
       testId: "button-compte-retrait",
@@ -128,13 +111,8 @@ export default function AccountPage() {
     },
     {
       label: "Paramètres",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-          <circle cx="12" cy="12" r="3" stroke="#6366f1" strokeWidth="1.5" />
-          <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      ),
-      bg: "bg-indigo-50",
+      icon: <img src={loginIcon} alt="Paramètres" className="w-8 h-8 object-contain" />,
+      bg: "bg-blue-50",
       route: "/settings",
       testId: "button-parametres",
     },
