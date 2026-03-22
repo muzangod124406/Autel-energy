@@ -45,7 +45,7 @@ export default function DepositPage() {
       setShowLinkForm(false);
     },
     onError: (e: any) => {
-      toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur", variant: "destructive" });
+      toast({ title: e.message || "Erreur", variant: "destructive" });
     }
   });
 
@@ -61,7 +61,7 @@ export default function DepositPage() {
       }
     },
     onError: (e: any) => {
-      toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur WestPay", variant: "destructive" });
+      toast({ title: e.message || "Erreur WestPay", variant: "destructive" });
     }
   });
 

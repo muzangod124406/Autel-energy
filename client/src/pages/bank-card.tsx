@@ -57,7 +57,7 @@ export default function BankCardPage() {
       }, 1000);
     },
     onError: (e: any) => {
-      toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur", variant: "destructive" });
+      toast({ title: e.message || "Erreur", variant: "destructive" });
     }
   });
 
@@ -72,7 +72,7 @@ export default function BankCardPage() {
       navigate("/withdraw");
     },
     onError: (e: any) => {
-      toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur", variant: "destructive" });
+      toast({ title: e.message || "Erreur", variant: "destructive" });
     }
   });
 

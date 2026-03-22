@@ -153,17 +153,17 @@ export default function AdminPage() {
   const createCountryMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/admin/countries", data).then(r => r.json()),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/countries"] }); queryClient.invalidateQueries({ queryKey: ["/api/countries"] }); setShowCountryForm(false); setEditingCountry(null); setCountryForm({ name: "", flag: "", code: "", operators: "", isActive: true }); toast({ title: "Pays créé" }); },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" }),
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" }),
   });
   const updateCountryMutation = useMutation({
     mutationFn: ({ id, ...data }: any) => apiRequest("PATCH", `/api/admin/countries/${id}`, data).then(r => r.json()),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/countries"] }); queryClient.invalidateQueries({ queryKey: ["/api/countries"] }); setShowCountryForm(false); setEditingCountry(null); toast({ title: "Pays mis à jour" }); },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" }),
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" }),
   });
   const deleteCountryMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/admin/countries/${id}`).then(r => r.json()),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/countries"] }); queryClient.invalidateQueries({ queryKey: ["/api/countries"] }); toast({ title: "Pays supprimé" }); },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" }),
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" }),
   });
   const { data: deposits = [], refetch: refetchDeposits } = useQuery({
     queryKey: ["/api/admin/transactions", "deposit", txSearch, depositStatus],
@@ -213,7 +213,7 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setSelectedUser(null);
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" })
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
   });
 
   const updateTxMutation = useMutation({
@@ -266,7 +266,7 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/gift-codes"] });
       setNewCode({ code: "", recipientPhone: "", amount: "", expiresAt: "" });
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" })
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
   });
 
   const deleteGiftCodeMutation = useMutation({
@@ -290,7 +290,7 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
       if (saved && saved.id) setSettingsForm(saved);
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" })
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
   });
 
   const assignProductMutation = useMutation({
@@ -337,7 +337,7 @@ export default function AdminPage() {
       return res.json();
     },
     onSuccess: () => { toast({ title: "Produit créé" }); refetchProducts(); setShowProductForm(false); resetProductForm(); },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" })
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
   });
 
   const updateProductMutation = useMutation({
@@ -347,7 +347,7 @@ export default function AdminPage() {
       return res.json();
     },
     onSuccess: () => { toast({ title: "Produit mis à jour" }); refetchProducts(); setEditingProduct(null); resetProductForm(); },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" })
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
   });
 
   const deleteProductMutation = useMutation({

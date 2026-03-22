@@ -35,7 +35,7 @@ export default function BalancePage() {
       setGiftCode("");
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, ""), variant: "destructive" })
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
   });
 
   return (

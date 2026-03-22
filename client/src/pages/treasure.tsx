@@ -15,10 +15,6 @@ export default function TreasurePage() {
   const redeemMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/user/redeem-gift-code", { code });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Erreur");
-      }
       return res.json();
     },
     onSuccess: (data) => {
@@ -28,7 +24,7 @@ export default function TreasurePage() {
       setCode("");
     },
     onError: (e: any) => {
-      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+      toast({ title: e.message || "Code cadeau invalide", variant: "destructive" });
     },
   });
 

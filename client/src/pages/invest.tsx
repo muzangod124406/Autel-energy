@@ -55,7 +55,7 @@ export default function InvestPage() {
       setConfirmItem(null);
     },
     onError: (e: any) => {
-      toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur", variant: "destructive" });
+      toast({ title: e.message || "Erreur", variant: "destructive" });
       setBuyingProductId(null);
       setConfirmItem(null);
     }
