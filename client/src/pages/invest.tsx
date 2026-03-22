@@ -122,6 +122,20 @@ export default function InvestPage() {
 
   return (
     <div className="bg-white min-h-screen pb-24">
+
+      {/* ── Bannière titre ─────────────────────── */}
+      <div className="mx-4 mt-4 mb-1 rounded-2xl overflow-hidden relative" style={{ background: "linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%)", minHeight: 86 }}>
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 8px)", backgroundSize: "12px 12px" }} />
+        <div className="absolute top-2 right-3 w-10 h-10 rounded-lg bg-green-300 opacity-50 rotate-12" />
+        <div className="absolute bottom-2 right-8 w-6 h-6 rounded bg-emerald-200 opacity-60 -rotate-6" />
+        <div className="absolute top-4 right-14 w-5 h-5 rounded bg-white opacity-20 rotate-3" />
+        <div className="relative px-5 py-4">
+          <p className="text-white/80 font-semibold text-sm italic leading-tight drop-shadow">Autel Energy</p>
+          <p className="text-white font-extrabold text-2xl italic leading-tight drop-shadow tracking-wide">Liste des produits</p>
+          <p className="text-white/90 font-bold text-lg italic leading-tight drop-shadow">d'investissement</p>
+        </div>
+      </div>
+
       {/* Tab switcher */}
       <div className="flex px-4 gap-3 pt-5 mb-4">
         <button
