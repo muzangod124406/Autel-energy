@@ -12,7 +12,7 @@ const tabs = [
 export default function BottomNav() {
   const [location, navigate] = useLocation();
 
-  const hideOn = ["/game", "/bank-card"];
+  const hideOn = ["/game", "/bank-card", "/service-client"];
   if (hideOn.some(p => location.startsWith(p))) return null;
 
   return (
