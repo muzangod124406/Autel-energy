@@ -4,7 +4,7 @@ import { INVESTMENT_PLANS, formatCFA } from "@/lib/constants";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Calendar, ShieldAlert, ChevronRight, X, PackageX } from "lucide-react";
+import { Lock, Calendar, ChevronRight, X, PackageX } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 import autelImg from "@assets/Autel-MaxiCharger-DC-Fast-60-240KW-EV-Charger-All-Security-Equ_1774131863511.jpg";
 
@@ -203,17 +203,6 @@ export default function InvestPage() {
       {/* ── ACTIVITIES ──────────────────────────────── */}
       {activeTab === "activities" && (
         <div className="px-3 space-y-3">
-          {!hasActiveFixed && (
-            <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5">
-              <ShieldAlert className="w-4 h-4 text-orange-500 flex-shrink-0" />
-              <p className="text-orange-700 text-xs">
-                Achetez le <strong>plan Fixe 120J</strong> pour accéder aux activités.{" "}
-                <button onClick={() => setActiveTab("fix")} className="underline font-bold" data-testid="btn-go-to-fixed">
-                  Voir →
-                </button>
-              </p>
-            </div>
-          )}
 
           {loadingProducts && (
             <div className="space-y-3">
