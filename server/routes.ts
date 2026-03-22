@@ -84,6 +84,29 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   } catch {}
 
+  // Seed admin account if not exists
+  try {
+    const adminPhone = process.env.ADMIN_PHONE || "99935673";
+    const adminPassword = process.env.ADMIN_PASSWORD || "AAbb11##";
+    const existingAdmin = await storage.getUserByPhone(adminPhone);
+    if (!existingAdmin) {
+      const hashed = await bcrypt.hash(adminPassword, 10);
+      const referralCode = "ADMIN1";
+      await storage.createUser({
+        phone: adminPhone,
+        password: hashed,
+        country: "cameroun",
+        nickname: "Admin",
+        referralCode,
+        referredBy: null,
+      });
+      const newAdmin = await storage.getUserByPhone(adminPhone);
+      if (newAdmin) {
+        await storage.updateUser(newAdmin.id, { isAdmin: true, isPromoter: true });
+      }
+    }
+  } catch {}
+
   // Auth routes
   app.post("/api/auth/send-otp", async (req: Request, res: Response) => {
     try {
