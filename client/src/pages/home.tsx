@@ -16,20 +16,16 @@ export default function HomePage() {
 
   if (!user) return null;
 
-  const handleServiceClient = () => {
+  const handleTelegramGroup = () => {
     const url = settings?.telegramGroup;
-    if (url) {
-      window.open(url, "_blank");
-    } else {
-      navigate("/service-client");
-    }
+    if (url) window.open(url, "_blank");
   };
 
   const ACTION_BUTTONS = [
     { label: "Recharger", icon: rechargeIcon, onClick: () => navigate("/deposit"), testId: "button-recharge" },
     { label: "Retrait", icon: withdrawIcon, onClick: () => navigate("/withdraw"), testId: "button-withdraw" },
     { label: "Billet", icon: blogIcon, onClick: () => navigate("/billet"), testId: "button-billet" },
-    { label: "Service client", icon: telegramIcon, onClick: handleServiceClient, testId: "button-service-client" },
+    { label: "Service client", icon: telegramIcon, onClick: () => navigate("/service-client"), testId: "button-service-client" },
   ];
 
   return (
@@ -57,7 +53,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="flex items-center shrink-0">
-            <button data-testid="button-wallet" onClick={() => navigate("/balance")}
+            <button data-testid="button-wallet" onClick={handleTelegramGroup}
               className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
               <img src={walletIcon} alt="wallet" className="w-7 h-7 object-contain brightness-0 invert" />
             </button>
