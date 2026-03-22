@@ -18,7 +18,7 @@ export default function HomePage() {
     { label: "Recharger", icon: rechargeIcon, path: "/deposit", testId: "button-recharge" },
     { label: "Retrait", icon: withdrawIcon, path: "/withdraw", testId: "button-withdraw" },
     { label: "Billet", icon: blogIcon, path: "/billet", testId: "button-billet" },
-    { label: "Telegram", icon: telegramIcon, path: "/telegram", testId: "button-telegram" },
+    { label: "Service client", icon: telegramIcon, path: "/service-client", testId: "button-service-client" },
   ];
 
   return (
