@@ -1,10 +1,12 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import BottomNav from "@/components/bottom-nav";
+import serviceClientImg from "@assets/Img_2026_03_22_11_16_53_1774178912559.jpeg";
+import gameWheelImg from "@assets/20260322_111525_1774178920867.png";
 import AuthPage from "@/pages/auth";
 import TradePasswordPage from "@/pages/trade-password";
 import HomePage from "@/pages/home";
@@ -28,6 +30,31 @@ import AboutPage from "@/pages/about";
 import AdminPage from "@/pages/admin";
 import TreasurePage from "@/pages/treasure";
 import NotFound from "@/pages/not-found";
+
+function FloatingButtons() {
+  const [location, navigate] = useLocation();
+  const hideOn = ["/game", "/bank-card", "/deposit", "/withdraw", "/admin"];
+  if (hideOn.some(p => location.startsWith(p))) return null;
+
+  return (
+    <div className="fixed right-3 bottom-24 z-40 flex flex-col gap-2">
+      <button
+        data-testid="float-btn-game"
+        onClick={() => navigate("/game")}
+        className="w-14 h-14 rounded-full overflow-hidden shadow-lg border-2 border-white active:scale-95 transition-transform"
+      >
+        <img src={gameWheelImg} alt="Jeu" className="w-full h-full object-cover" />
+      </button>
+      <button
+        data-testid="float-btn-service"
+        onClick={() => navigate("/telegram")}
+        className="w-14 h-14 rounded-full overflow-hidden shadow-lg border-2 border-white active:scale-95 transition-transform"
+      >
+        <img src={serviceClientImg} alt="Service client" className="w-full h-full object-cover" />
+      </button>
+    </div>
+  );
+}
 
 function AppContent() {
   const { user, isLoading } = useAuth();
@@ -76,6 +103,7 @@ function AppContent() {
         <Route path="/treasure" component={TreasurePage} />
         <Route component={NotFound} />
       </Switch>
+      <FloatingButtons />
       <BottomNav />
     </div>
   );
