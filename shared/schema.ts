@@ -240,6 +240,16 @@ export const insertCountrySchema = createInsertSchema(countries).pick({
   isActive: true,
 });
 
+export const chatMessages = pgTable("chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  senderType: text("sender_type").notNull(), // "user" | "admin"
+  content: text("content"),
+  imageUrl: text("image_url"),
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type BankCard = typeof bankCards.$inferSelect;
@@ -253,3 +263,4 @@ export type PaymentChannel = typeof paymentChannels.$inferSelect;
 export type Product = typeof products.$inferSelect;
 export type GiftCode = typeof giftCodes.$inferSelect;
 export type Country = typeof countries.$inferSelect;
+export type ChatMessage = typeof chatMessages.$inferSelect;

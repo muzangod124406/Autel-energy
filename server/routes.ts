@@ -1062,6 +1062,50 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ─── Chat Service Client ─────────────────────────────────────────────────
+  app.get("/api/chat/messages", requireAuth, async (req: Request, res: Response) => {
+    const userId = (req.session as any).userId;
+    const msgs = await storage.getChatMessages(userId);
+    await storage.markChatMessagesRead(userId, "admin");
+    res.json(msgs);
+  });
+
+  app.post("/api/chat/messages", requireAuth, upload.single("image"), async (req: Request, res: Response) => {
+    try {
+      const userId = (req.session as any).userId;
+      const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+      const content = req.body.content || undefined;
+      if (!content && !imageUrl) return res.status(400).json({ message: "Message vide" });
+      const msg = await storage.createChatMessage({ userId, senderType: "user", content, imageUrl });
+      res.json(msg);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.get("/api/admin/chat/conversations", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    const convs = await storage.getAllChatConversations();
+    res.json(convs);
+  });
+
+  app.get("/api/admin/chat/:userId/messages", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    const msgs = await storage.getChatMessages(req.params.userId);
+    await storage.markChatMessagesRead(req.params.userId, "admin");
+    res.json(msgs);
+  });
+
+  app.post("/api/admin/chat/:userId/messages", requireAuth, requireAdmin, upload.single("image"), async (req: Request, res: Response) => {
+    try {
+      const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+      const content = req.body.content || undefined;
+      if (!content && !imageUrl) return res.status(400).json({ message: "Message vide" });
+      const msg = await storage.createChatMessage({ userId: req.params.userId, senderType: "admin", content, imageUrl });
+      res.json(msg);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
   // ─── Job automatique : crédit des gains à la fin du cycle ───────────────
   async function processCompletedInvestments() {
     try {

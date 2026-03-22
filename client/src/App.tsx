@@ -29,11 +29,12 @@ import BalancePage from "@/pages/balance";
 import AboutPage from "@/pages/about";
 import AdminPage from "@/pages/admin";
 import TreasurePage from "@/pages/treasure";
+import ServiceClientPage from "@/pages/service-client";
 import NotFound from "@/pages/not-found";
 
 function FloatingButtons() {
   const [location, navigate] = useLocation();
-  const hideOn = ["/game", "/bank-card", "/deposit", "/withdraw", "/admin"];
+  const hideOn = ["/game", "/bank-card", "/deposit", "/withdraw", "/admin", "/service-client"];
   if (hideOn.some(p => location.startsWith(p))) return null;
 
   return (
@@ -47,7 +48,7 @@ function FloatingButtons() {
       </button>
       <button
         data-testid="float-btn-service"
-        onClick={() => navigate("/telegram")}
+        onClick={() => navigate("/service-client")}
         className="w-14 h-14 rounded-full overflow-hidden shadow-lg border-2 border-white active:scale-95 transition-transform"
       >
         <img src={serviceClientImg} alt="Service client" className="w-full h-full object-cover" />
@@ -101,6 +102,7 @@ function AppContent() {
         <Route path="/about" component={AboutPage} />
         <Route path="/admin" component={AdminPage} />
         <Route path="/treasure" component={TreasurePage} />
+        <Route path="/service-client" component={ServiceClientPage} />
         <Route component={NotFound} />
       </Switch>
       <FloatingButtons />

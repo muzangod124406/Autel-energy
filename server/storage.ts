@@ -1,8 +1,8 @@
 import { db } from "./db";
 import { eq, and, desc, sql, or, ilike, count, gte } from "drizzle-orm";
 import {
-  users, bankCards, investments, transactions, referrals, spinResults, tickets, settings, paymentChannels, products, giftCodes, countries,
-  type User, type InsertUser, type BankCard, type Investment, type Transaction, type Referral, type SpinResult, type Ticket, type Settings, type PaymentChannel, type Product, type GiftCode, type Country
+  users, bankCards, investments, transactions, referrals, spinResults, tickets, settings, paymentChannels, products, giftCodes, countries, chatMessages,
+  type User, type InsertUser, type BankCard, type Investment, type Transaction, type Referral, type SpinResult, type Ticket, type Settings, type PaymentChannel, type Product, type GiftCode, type Country, type ChatMessage
 } from "@shared/schema";
 import bcrypt from "bcryptjs";
 
@@ -86,6 +86,11 @@ export interface IStorage {
   createCountry(data: any): Promise<Country>;
   updateCountry(id: string, data: Partial<Country>): Promise<Country | undefined>;
   deleteCountry(id: string): Promise<void>;
+
+  getChatMessages(userId: string): Promise<ChatMessage[]>;
+  createChatMessage(data: { userId: string; senderType: string; content?: string; imageUrl?: string }): Promise<ChatMessage>;
+  markChatMessagesRead(userId: string, readBy: "admin" | "user"): Promise<void>;
+  getAllChatConversations(): Promise<{ userId: string; user?: User; lastMessage?: ChatMessage; unreadCount: number }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -539,6 +544,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCountry(id: string): Promise<void> {
     await db.delete(countries).where(eq(countries.id, id));
+  }
+
+  async getChatMessages(userId: string): Promise<ChatMessage[]> {
+    return await db.select().from(chatMessages)
+      .where(eq(chatMessages.userId, userId))
+      .orderBy(chatMessages.createdAt);
+  }
+
+  async createChatMessage(data: { userId: string; senderType: string; content?: string; imageUrl?: string }): Promise<ChatMessage> {
+    const [msg] = await db.insert(chatMessages).values(data).returning();
+    return msg;
+  }
+
+  async markChatMessagesRead(userId: string, readBy: "admin" | "user"): Promise<void> {
+    const senderType = readBy === "admin" ? "user" : "admin";
+    await db.update(chatMessages)
+      .set({ isRead: true })
+      .where(and(eq(chatMessages.userId, userId), eq(chatMessages.senderType, senderType)));
+  }
+
+  async getAllChatConversations(): Promise<{ userId: string; user?: User; lastMessage?: ChatMessage; unreadCount: number }[]> {
+    const allMsgs = await db.select().from(chatMessages).orderBy(desc(chatMessages.createdAt));
+    const byUser = new Map<string, { msgs: ChatMessage[]; unread: number }>();
+    for (const msg of allMsgs) {
+      if (!byUser.has(msg.userId)) byUser.set(msg.userId, { msgs: [], unread: 0 });
+      const entry = byUser.get(msg.userId)!;
+      entry.msgs.push(msg);
+      if (!msg.isRead && msg.senderType === "user") entry.unread++;
+    }
+    const result = [];
+    for (const [userId, { msgs, unread }] of byUser) {
+      const user = await this.getUser(userId);
+      result.push({ userId, user, lastMessage: msgs[0], unreadCount: unread });
+    }
+    return result.sort((a, b) => (b.lastMessage?.createdAt?.getTime() || 0) - (a.lastMessage?.createdAt?.getTime() || 0));
   }
 }
 

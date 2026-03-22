@@ -14,7 +14,7 @@ import {
   Check, X, DollarSign, Settings, Shield, Eye, Trash2, Plus,
   Link2, Package, Edit2, ToggleLeft, ToggleRight,
   Upload, Calendar, UserCheck, Globe, Wallet, Award, RotateCcw, CreditCard,
-  AlertTriangle, Zap, Clock, ShoppingCart
+  AlertTriangle, Zap, Clock, ShoppingCart, MessageCircle, Send, Image, ChevronLeft
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -82,6 +82,12 @@ export default function AdminPage() {
   const [userInvestments, setUserInvestments] = useState<any[]>([]);
   const [teamModalUser, setTeamModalUser] = useState<any>(null);
   const [ticketBonuses, setTicketBonuses] = useState<Record<string, string>>({});
+
+  // Chat state
+  const [chatUserId, setChatUserId] = useState<string | null>(null);
+  const [chatText, setChatText] = useState("");
+  const chatFileRef = useRef<HTMLInputElement>(null);
+  const chatBottomRef = useRef<HTMLDivElement>(null);
 
   // Channel form state
   const [channelForm, setChannelForm] = useState({ name: "", type: "link", redirectUrl: "", isActive: true });
@@ -187,6 +193,12 @@ export default function AdminPage() {
   }, [settingsData]);
   const { data: channels = [], refetch: refetchChannels } = useQuery({ queryKey: ["/api/admin/channels"] });
   const { data: adminProducts = [], refetch: refetchProducts } = useQuery({ queryKey: ["/api/admin/products"] });
+  const { data: chatConversations = [] } = useQuery<any[]>({ queryKey: ["/api/admin/chat/conversations"], enabled: activeTab === "chat", refetchInterval: activeTab === "chat" ? 5000 : false });
+  const { data: chatMessages = [] } = useQuery<any[]>({ queryKey: ["/api/admin/chat", chatUserId, "messages"], enabled: !!chatUserId && activeTab === "chat", refetchInterval: chatUserId ? 4000 : false });
+
+  useEffect(() => {
+    if (chatBottomRef.current) chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
 
   const s = stats as any;
 
@@ -439,6 +451,21 @@ export default function AdminPage() {
 
   const currentSettings = settingsForm || settingsData as any || {};
 
+  const totalUnread = (chatConversations as any[]).reduce((sum: number, c: any) => sum + (c.unreadCount || 0), 0);
+
+  const sendAdminChatMutation = useMutation({
+    mutationFn: async ({ userId, formData }: { userId: string; formData: FormData }) => {
+      const res = await fetch(`/api/admin/chat/${userId}/messages`, { method: "POST", credentials: "include", body: formData });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      setChatText("");
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/chat", chatUserId, "messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/chat/conversations"] });
+    },
+  });
+
   const tabs = [
     { key: "dashboard", label: "Tableau de bord" },
     { key: "deposits", label: "Dépôts" },
@@ -450,6 +477,7 @@ export default function AdminPage() {
     { key: "tickets", label: "Codes Cadeaux" },
     { key: "pays", label: "Pays" },
     { key: "westpay", label: "WestPay" },
+    { key: "chat", label: totalUnread > 0 ? `Chat (${totalUnread})` : "Chat" },
     { key: "settings", label: "Paramètres" },
   ];
 
@@ -1456,6 +1484,136 @@ export default function AdminPage() {
             </div>
           );
         })()}
+
+        {/* ══════════ CHAT ══════════ */}
+        {activeTab === "chat" && (
+          <div className="flex gap-3" style={{ height: "calc(100vh - 130px)" }}>
+            {/* Liste conversations */}
+            <div className={`${chatUserId ? "hidden md:flex" : "flex"} flex-col w-full md:w-72 bg-white rounded-xl shadow overflow-hidden`}>
+              <div className="px-4 py-3 border-b border-gray-100 font-bold text-sm text-gray-700">
+                Conversations {totalUnread > 0 && <span className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{totalUnread}</span>}
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {(chatConversations as any[]).length === 0 && (
+                  <p className="text-gray-400 text-sm text-center py-8">Aucune conversation</p>
+                )}
+                {(chatConversations as any[]).map((conv: any) => (
+                  <button
+                    key={conv.userId}
+                    onClick={() => { setChatUserId(conv.userId); queryClient.invalidateQueries({ queryKey: ["/api/admin/chat", conv.userId, "messages"] }); }}
+                    className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 flex items-center gap-3 ${chatUserId === conv.userId ? "bg-green-50" : ""}`}
+                    data-testid={`admin-chat-conv-${conv.userId}`}
+                  >
+                    <div className="w-9 h-9 rounded-full bg-[#22c55e] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                      {(conv.user?.phone || "?").slice(-2)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-xs text-gray-800 truncate">{conv.user?.phone || conv.userId}</p>
+                      <p className="text-gray-400 text-xs truncate">{conv.lastMessage?.content || (conv.lastMessage?.imageUrl ? "📷 Image" : "")}</p>
+                    </div>
+                    {conv.unreadCount > 0 && (
+                      <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0">{conv.unreadCount}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Zone messages */}
+            {chatUserId ? (
+              <div className="flex-1 flex flex-col bg-white rounded-xl shadow overflow-hidden">
+                {/* Header */}
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
+                  <button onClick={() => setChatUserId(null)} className="md:hidden">
+                    <ChevronLeft className="w-5 h-5 text-gray-500" />
+                  </button>
+                  <div className="w-8 h-8 rounded-full bg-[#22c55e] flex items-center justify-center text-white font-bold text-xs">
+                    {((chatConversations as any[]).find((c: any) => c.userId === chatUserId)?.user?.phone || "?").slice(-2)}
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">{(chatConversations as any[]).find((c: any) => c.userId === chatUserId)?.user?.phone || chatUserId}</p>
+                    <p className="text-xs text-gray-400">Utilisateur</p>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-gray-50">
+                  {(chatMessages as any[]).map((msg: any) => {
+                    const isAdmin = msg.senderType === "admin";
+                    return (
+                      <div key={msg.id} className={`flex ${isAdmin ? "flex-row-reverse" : "flex-row"} gap-2`}>
+                        <div className={`max-w-[70%] flex flex-col gap-0.5 ${isAdmin ? "items-end" : "items-start"}`}>
+                          {msg.imageUrl && (
+                            <a href={msg.imageUrl} target="_blank" rel="noreferrer">
+                              <img src={msg.imageUrl} alt="img" className="rounded-xl max-h-40 object-cover shadow" />
+                            </a>
+                          )}
+                          {msg.content && (
+                            <div className={`px-3 py-2 rounded-2xl text-xs shadow-sm ${isAdmin ? "bg-[#22c55e] text-white rounded-tr-sm" : "bg-white text-gray-800 rounded-tl-sm"}`}>
+                              {msg.content}
+                            </div>
+                          )}
+                          <span className="text-gray-400 text-[10px]">{new Date(msg.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={chatBottomRef} />
+                </div>
+
+                {/* Input */}
+                <div className="px-3 py-2 border-t border-gray-100 flex items-center gap-2 bg-white">
+                  <button onClick={() => chatFileRef.current?.click()} className="text-gray-400 hover:text-[#22c55e]">
+                    <Image className="w-5 h-5" />
+                  </button>
+                  <input ref={chatFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !chatUserId) return;
+                    const fd = new FormData();
+                    fd.append("image", file);
+                    sendAdminChatMutation.mutate({ userId: chatUserId, formData: fd });
+                    e.target.value = "";
+                  }} />
+                  <input
+                    type="text"
+                    value={chatText}
+                    onChange={e => setChatText(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && chatText.trim() && chatUserId) {
+                        const fd = new FormData();
+                        fd.append("content", chatText.trim());
+                        sendAdminChatMutation.mutate({ userId: chatUserId, formData: fd });
+                      }
+                    }}
+                    placeholder="Répondre..."
+                    data-testid="admin-chat-input"
+                    className="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none"
+                  />
+                  <button
+                    onClick={() => {
+                      if (!chatText.trim() || !chatUserId) return;
+                      const fd = new FormData();
+                      fd.append("content", chatText.trim());
+                      sendAdminChatMutation.mutate({ userId: chatUserId, formData: fd });
+                    }}
+                    disabled={!chatText.trim() || sendAdminChatMutation.isPending}
+                    data-testid="admin-chat-send"
+                    className="w-8 h-8 bg-[#22c55e] rounded-full flex items-center justify-center disabled:opacity-50"
+                  >
+                    <Send className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="hidden md:flex flex-1 bg-white rounded-xl shadow items-center justify-center">
+                <div className="text-center text-gray-400">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Sélectionnez une conversation</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {activeTab === "settings" && (() => {
           const sf = settingsForm || {};
