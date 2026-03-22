@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
-import { Home, Users, Newspaper, User } from "lucide-react";
+import { Users, Newspaper, User } from "lucide-react";
 import produitsIcon from "@assets/20260322_131838_1774186541685.png";
+import accueilIcon from "@assets/téléchargement_(37)_1774187714341.png";
 
 type Tab = {
   path: string;
@@ -10,7 +11,7 @@ type Tab = {
 };
 
 const tabs: Tab[] = [
-  { path: "/", label: "Accueil", icon: Home },
+  { path: "/", label: "Accueil", imgIcon: accueilIcon },
   { path: "/invest", label: "Produits", imgIcon: produitsIcon },
   { path: "/invite", label: "Invité", icon: Users },
   { path: "/billet", label: "Billet", icon: Newspaper },
