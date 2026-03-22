@@ -399,7 +399,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const cfg = await storage.getSettings();
       const { amount, country, paymentMethod, phoneNumber, accountName, transactionPassword } = req.body;
-      const minAmount = cfg.withdrawMinAmount || 2000;
+      const minAmount = cfg.withdrawMinAmount || 1000;
       if (!amount || amount < minAmount) return res.status(400).json({ message: `Retrait minimum: ${minAmount.toLocaleString()} FCFA` });
       if (amount > 4500000) return res.status(400).json({ message: "Retrait maximum: 4 500 000 FCFA" });
       if (user.withdrawBalance < amount) return res.status(400).json({ message: "Solde de retrait insuffisant" });
@@ -420,7 +420,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const todayWithdrawals = todayTxs.filter(t => new Date(t.createdAt) >= today);
       if (todayWithdrawals.length >= 2) return res.status(400).json({ message: "2 retraits par jour maximum" });
 
-      const feePercent = cfg.withdrawFeePercent ?? 10;
+      const feePercent = cfg.withdrawFeePercent ?? 15;
       const fees = Math.floor(amount * (feePercent / 100));
       const netAmount = amount - fees;
 

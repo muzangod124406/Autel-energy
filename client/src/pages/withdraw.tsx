@@ -21,8 +21,8 @@ export default function WithdrawPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showNoCardDialog, setShowNoCardDialog] = useState(false);
 
-  const withdrawMinAmount = settings?.withdrawMinAmount || 3500;
-  const withdrawFeePercent = settings?.withdrawFeePercent || 10;
+  const withdrawMinAmount = settings?.withdrawMinAmount ?? 1000;
+  const withdrawFeePercent = settings?.withdrawFeePercent ?? 15;
   const startH = settings?.withdrawStartHour || 10;
   const endH = settings?.withdrawEndHour || 15;
 
