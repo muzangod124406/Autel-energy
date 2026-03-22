@@ -24,7 +24,7 @@ export default function HomePage() {
     onSuccess: async () => {
       await refreshUser();
       qc.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      toast({ title: "Bonus de 50 FCFA crédité sur votre solde de retrait !" });
+      toast({ title: "Bonus de connexion : 50 FCFA crédité sur votre solde de retrait !" });
     },
     onError: (err: any) => {
       try {
@@ -40,11 +40,8 @@ export default function HomePage() {
 
   const todayClaimed = (() => {
     if (!user?.lastDailyBonus) return false;
-    const last = new Date(user.lastDailyBonus);
-    const now = new Date();
-    return last.getFullYear() === now.getFullYear() &&
-      last.getMonth() === now.getMonth() &&
-      last.getDate() === now.getDate();
+    const diffMs = Date.now() - new Date(user.lastDailyBonus).getTime();
+    return diffMs < 24 * 60 * 60 * 1000;
   })();
 
   if (!user) return null;
@@ -123,7 +120,7 @@ export default function HomePage() {
           }}
         >
           <span className="text-white font-bold text-base">
-            {todayClaimed ? "Bonus déjà réclamé ✓" : "S'identifier  50 FCFA"}
+            {todayClaimed ? "Bonus de connexion réclamé ✓" : "Bonus de connexion  50 FCFA"}
           </span>
           <img src={goBtn} alt="GO" className="w-14 h-14 object-contain -my-1" />
         </button>

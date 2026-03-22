@@ -471,11 +471,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const now = new Date();
     if (user.lastDailyBonus) {
       const last = new Date(user.lastDailyBonus);
-      const sameDay = last.getFullYear() === now.getFullYear() &&
-        last.getMonth() === now.getMonth() &&
-        last.getDate() === now.getDate();
-      if (sameDay) {
-        return res.status(400).json({ message: "Vous avez déjà réclamé le bonus aujourd'hui" });
+      const diffMs = now.getTime() - last.getTime();
+      if (diffMs < 24 * 60 * 60 * 1000) {
+        return res.status(400).json({ message: "Bonus disponible dans moins de 24h" });
       }
     }
 
