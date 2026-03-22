@@ -63,10 +63,6 @@ export default function InvestPage() {
 
   const openConfirmFixed = (plan: any) => {
     if (!user) return;
-    if (user.depositBalance < plan.amount) {
-      toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
-      return;
-    }
     setConfirmItem({
       type: "fix",
       name: plan.name,
@@ -88,10 +84,6 @@ export default function InvestPage() {
 
   const openConfirmProduct = (product: any) => {
     if (!user) return;
-    if (user.depositBalance < product.price) {
-      toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
-      return;
-    }
     setConfirmItem({
       type: "activity",
       name: product.name,
@@ -114,7 +106,11 @@ export default function InvestPage() {
   };
 
   const handleConfirm = () => {
-    if (!confirmItem) return;
+    if (!confirmItem || !user) return;
+    if (user.depositBalance < confirmItem.price) {
+      toast({ title: "Solde insuffisant", description: "Rechargez votre compte pour acheter ce produit", variant: "destructive" });
+      return;
+    }
     investMutation.mutate(confirmItem.payload);
   };
 
