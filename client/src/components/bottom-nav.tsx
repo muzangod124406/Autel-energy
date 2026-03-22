@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import inviteIcon from "@assets/20260322_131635_1774189399662.png";
 import produitsIcon from "@assets/20260322_131838_1774186541685.png";
@@ -73,6 +73,12 @@ function NotificationPopup({ onClose }: { onClose: () => void }) {
 export default function BottomNav() {
   const [location, navigate] = useLocation();
   const [showNotif, setShowNotif] = useState(false);
+
+  useEffect(() => {
+    if (location === "/") {
+      setShowNotif(true);
+    }
+  }, []);
 
   const hideOn = ["/game", "/bank-card", "/service-client"];
   if (hideOn.some(p => location.startsWith(p))) return null;
