@@ -57,9 +57,9 @@ export default function OrdersPage() {
         ) : (
           list.map((inv: any) => {
             const isActive = inv.status !== "completed" && new Date(inv.endDate) > new Date();
-            const planName = inv.planType === "fix"
-              ? `Autel Energy S${inv.vipLevel}`
-              : (inv.productName || `Activité ${inv.vipLevel}`);
+            const planName = inv.planType === "activity"
+              ? (inv.productName || `Activité`)
+              : `Autel Energy S${inv.vipLevel}`;
 
             return (
               <div key={inv.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
