@@ -294,6 +294,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       );
       const isFirstFixInvestment = planType === "fix" && fixInvestmentsBefore.length === 0;
 
+      // Spin ticket for direct referrer on every investment by their filleul
+      if (user.referredBy) {
+        const directReferrer = await storage.getUser(user.referredBy);
+        if (directReferrer) {
+          await storage.updateUser(directReferrer.id, {
+            spinTickets: (directReferrer.spinTickets || 0) + 1
+          });
+        }
+      }
+
       if (user.referredBy && isFirstFixInvestment) {
         const cfg = await storage.getSettings();
         const rate1 = (cfg.referralCommission1 ?? 20) / 100;
