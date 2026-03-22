@@ -59,7 +59,7 @@ export default function AccountPage() {
       label: "Mot de passe",
       icon: <img src={lockIcon} alt="Mot de passe" className="w-8 h-8 object-contain" />,
       bg: "bg-orange-50",
-      route: "/trade-password",
+      route: "/settings",
       testId: "button-mot-de-passe",
     },
     {
