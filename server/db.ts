@@ -14,11 +14,9 @@ function buildPoolConfig(url: string): pg.PoolConfig {
     const lastAt = withoutProto.lastIndexOf("@");
     const credsPart = withoutProto.substring(0, lastAt);
     const hostPart = withoutProto.substring(lastAt + 1);
-
-    const colonIdx = credsPart.indexOf(":");
-    const user = credsPart.substring(0, colonIdx);
-    const password = credsPart.substring(colonIdx + 1);
-
+    const firstColon = credsPart.indexOf(":");
+    const user = credsPart.substring(0, firstColon);
+    const password = credsPart.substring(firstColon + 1);
     const slashIdx = hostPart.indexOf("/");
     const hostPortStr = hostPart.substring(0, slashIdx);
     const database = hostPart.substring(slashIdx + 1);
@@ -26,10 +24,10 @@ function buildPoolConfig(url: string): pg.PoolConfig {
     const host = hostPortStr.substring(0, lastColon);
     const port = parseInt(hostPortStr.substring(lastColon + 1), 10);
 
-    console.log("[DB] Connecting to Supabase:", { user, host, port, database });
+    console.log("[DB] Supabase config:", { user, host, port, database, passwordLen: password.length, passwordStart: password.substring(0, 3) });
     return { user, password, host, port, database, ssl: { rejectUnauthorized: false } };
   } catch (e) {
-    console.log("[DB] URL parse failed, using raw connection string:", e);
+    console.error("[DB] URL parse failed:", e);
     return { connectionString: url, ssl: { rejectUnauthorized: false } };
   }
 }
