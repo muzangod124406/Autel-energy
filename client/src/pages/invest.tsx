@@ -324,8 +324,8 @@ export default function InvestPage() {
 
       {/* ── MODAL DE CONFIRMATION ────────────────────── */}
       {confirmItem && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 px-4 pb-6">
-          <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 px-4 pb-20">
+          <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl max-h-[80vh] overflow-y-auto">
             {/* Image produit */}
             <div className="relative w-full h-44">
               {confirmItem.imageUrl ? (
@@ -352,13 +352,6 @@ export default function InvestPage() {
 
             {/* Bloc vert */}
             <div className="bg-[#22c55e] mx-0 px-5 pt-3 pb-5">
-              <p className="text-white text-center text-sm font-semibold mb-0.5">
-                Revenus crédités toutes les 24 h
-              </p>
-              <p className="text-white/80 text-center text-xs mb-4">
-                Vous pouvez acheter plusieurs appareils pour augmenter vos revenus
-              </p>
-
               <div className="space-y-2 mb-5">
                 <div className="flex justify-between">
                   <span className="text-white/90 text-sm">Durée :</span>
