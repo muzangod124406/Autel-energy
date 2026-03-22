@@ -95,6 +95,7 @@ function AppContent() {
         <Route path="/withdraw" component={WithdrawPage} />
         <Route path="/bank-card" component={BankCardPage} />
         <Route path="/settings" component={SettingsPage} />
+        <Route path="/trade-password" component={TradePasswordPage} />
         <Route path="/telegram" component={TelegramPage} />
         <Route path="/orders" component={OrdersPage} />
         <Route path="/transactions" component={TransactionsPage} />
