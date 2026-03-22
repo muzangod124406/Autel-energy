@@ -1,6 +1,9 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import session from "express-session";
 import bcrypt from "bcryptjs";
 import multer from "multer";
@@ -90,10 +93,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const adminPassword = process.env.ADMIN_PASSWORD || "AAbb11##";
     const existingAdmin = await storage.getUserByPhone(adminPhone);
     if (!existingAdmin) {
-      const hashed = await bcrypt.hash(adminPassword, 10);
+      // createUser hashes password internally — pass plain text
       await storage.createUser({
         phone: adminPhone,
-        password: hashed,
+        password: adminPassword,
         country: "cameroun",
         nickname: "Admin",
         referralCode: "ADMIN1",
@@ -105,11 +108,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
     } else {
       const updates: any = {};
-      // Fix password if not properly bcrypt-hashed
-      if (!existingAdmin.password?.startsWith("$2")) {
-        updates.password = await bcrypt.hash(adminPassword, 10);
+      // Fix password: always force-update to known good hash directly in DB
+      // updateUser hashes password internally — pass plain text
+      const validHash = await bcrypt.compare(adminPassword, existingAdmin.password || "");
+      if (!validHash) {
+        // Bypass updateUser hashing by updating DB directly
+        const newHash = await bcrypt.hash(adminPassword, 10);
+        await db.update(users).set({ password: newHash }).where(eq(users.id, existingAdmin.id));
       }
-      // Ensure admin flags are set
       if (!existingAdmin.isAdmin) updates.isAdmin = true;
       if (!existingAdmin.isPromoter) updates.isPromoter = true;
       if (Object.keys(updates).length > 0) {
