@@ -615,8 +615,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.put("/api/admin/users/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const user = await storage.updateUser(req.params.id, req.body);
-      res.json({ ...user, password: undefined });
+      const updates = { ...req.body };
+      if (updates.password) updates.password = await bcrypt.hash(updates.password, 10);
+      if (updates.transactionPassword) updates.transactionPassword = await bcrypt.hash(updates.transactionPassword, 10);
+      const user = await storage.updateUser(req.params.id, updates);
+      res.json({ ...user, password: undefined, transactionPassword: undefined });
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }

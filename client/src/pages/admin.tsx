@@ -73,6 +73,7 @@ export default function AdminPage() {
   const [editBalance, setEditBalance] = useState("");
   const [editWithdrawBalance, setEditWithdrawBalance] = useState("");
   const [editPassword, setEditPassword] = useState("");
+  const [editTxPassword, setEditTxPassword] = useState("");
   const [assignPlan, setAssignPlan] = useState("");
   const [txSearch, setTxSearch] = useState("");
   const [depositStatus, setDepositStatus] = useState("all");
@@ -833,10 +834,17 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-xs font-medium">Réinitialiser mot de passe</label>
+                      <label className="text-xs font-medium">Réinitialiser mot de passe de connexion</label>
                       <div className="flex gap-2 mt-1">
                         <Input type="text" placeholder="Nouveau mot de passe" value={editPassword} onChange={e => setEditPassword(e.target.value)} data-testid="admin-edit-password" />
                         <Button size="sm" onClick={() => { updateUserMutation.mutate({ id: selectedUser.id, data: { password: editPassword } }); setEditPassword(""); }}>OK</Button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium">Modifier mot de passe de retrait</label>
+                      <div className="flex gap-2 mt-1">
+                        <Input type="text" placeholder="Nouveau mot de passe retrait" value={editTxPassword} onChange={e => setEditTxPassword(e.target.value)} data-testid="admin-edit-tx-password" />
+                        <Button size="sm" onClick={() => { updateUserMutation.mutate({ id: selectedUser.id, data: { transactionPassword: editTxPassword } }); setEditTxPassword(""); }}>OK</Button>
                       </div>
                     </div>
                     <div>
