@@ -137,6 +137,12 @@ export default function AdminPage() {
   const { data: teamOverview = [] } = useQuery({ queryKey: ["/api/admin/team-overview"] });
   const { data: adminCountries = [] } = useQuery({ queryKey: ["/api/admin/countries"] });
 
+  // WestPay — toujours appelé (règle des hooks), activé uniquement sur l'onglet
+  const { data: wpStatus } = useQuery<any>({ queryKey: ["/api/admin/westpay/status"], enabled: activeTab === "westpay" });
+  const { data: wpBalances, refetch: refetchBalances, isFetching: balFetching } = useQuery<any[]>({
+    queryKey: ["/api/admin/westpay/balances"], enabled: false,
+  });
+
   const createCountryMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/admin/countries", data).then(r => r.json()),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/countries"] }); queryClient.invalidateQueries({ queryKey: ["/api/countries"] }); setShowCountryForm(false); setEditingCountry(null); setCountryForm({ name: "", flag: "", code: "", operators: "", isActive: true }); toast({ title: "Pays créé" }); },
@@ -1347,11 +1353,6 @@ export default function AdminPage() {
         )}
 
         {activeTab === "westpay" && (() => {
-          const { data: wpStatus } = useQuery<any>({ queryKey: ["/api/admin/westpay/status"], enabled: activeTab === "westpay" });
-          const { data: wpBalances, refetch: refetchBalances, isFetching: balFetching } = useQuery<any[]>({
-            queryKey: ["/api/admin/westpay/balances"], enabled: false,
-          });
-
           const COUNTRY_KEYS = [
             { slug: "CAMEROUN", label: "🇨🇲 Cameroun", envVar: "WESTPAY_API_KEY_CAMEROUN" },
             { slug: "BENIN", label: "🇧🇯 Bénin", envVar: "WESTPAY_API_KEY_BENIN" },
