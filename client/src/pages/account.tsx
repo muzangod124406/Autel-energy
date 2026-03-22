@@ -5,11 +5,12 @@ import { Shield, ChevronRight } from "lucide-react";
 import autelLogo from "@assets/images_(11)_1774131992392.png";
 import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 import lockIcon from "@assets/19118881-verrouiller-l-etude-de-l-ecole-plat-couleur-icone-vec_1774169768536.jpg";
-import walletIcon from "@assets/withdraw_record_(1)_1774169798074.png";
 import serviceClientIcon from "@assets/service-clients_1774171700016.png";
 import giftIcon from "@assets/—Pngtree—vector_gift_icon_3988959_1774170175431.png";
 import commandesIcon from "@assets/20260322_131838_1774185548264.png";
 import aproposIcon from "@assets/20260322_131155_1774185548351.png";
+import investirIcon from "@assets/20260322_131635_1774185657730.png";
+import compteRetraitIcon from "@assets/20260322_131237_1774185657823.png";
 import logoutIcon from "@assets/8984546_1774171682810.png";
 
 export default function AccountPage() {
@@ -26,11 +27,7 @@ export default function AccountPage() {
   const menuItems = [
     {
       label: "Investir",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-          <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#22c55e" />
-        </svg>
-      ),
+      icon: <img src={investirIcon} alt="Investir" className="w-8 h-8 object-contain" />,
       bg: "bg-green-50",
       route: "/invest",
       testId: "button-investir",
@@ -67,7 +64,7 @@ export default function AccountPage() {
     },
     {
       label: "Compte retrait",
-      icon: <img src={walletIcon} alt="Compte retrait" className="w-8 h-8 object-contain" />,
+      icon: <img src={compteRetraitIcon} alt="Compte retrait" className="w-8 h-8 object-contain" />,
       bg: "bg-green-50",
       route: "/bank-card",
       testId: "button-compte-retrait",
