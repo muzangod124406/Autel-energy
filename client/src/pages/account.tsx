@@ -179,7 +179,6 @@ export default function AccountPage() {
             className="bg-white rounded-2xl px-4 py-4 flex items-center justify-between shadow-sm"
           >
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🐣</span>
               <span className="font-bold text-gray-800 text-sm">Recharger</span>
             </div>
             <div className="w-7 h-7 rounded-full bg-[#22c55e] flex items-center justify-center">
@@ -193,7 +192,6 @@ export default function AccountPage() {
             className="bg-white rounded-2xl px-4 py-4 flex items-center justify-between shadow-sm"
           >
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🐥</span>
               <span className="font-bold text-gray-800 text-sm">Retirer</span>
             </div>
             <div className="w-7 h-7 rounded-full bg-[#22c55e] flex items-center justify-center">
