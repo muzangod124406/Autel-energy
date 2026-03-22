@@ -323,7 +323,7 @@ export default function InvestPage() {
 
       {/* ── MODAL DE CONFIRMATION ────────────────────── */}
       {confirmItem && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 px-4 pb-20">
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 px-4 pb-44">
           <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl max-h-[80vh] overflow-y-auto">
             {/* Image produit */}
             <div className="relative w-full h-44">

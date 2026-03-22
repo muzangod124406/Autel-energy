@@ -399,13 +399,8 @@
 }
 
 /* ── Global button press feel ──────────────────── */
-button, [role="button"] {
-  transition: opacity 0.12s ease, filter 0.12s ease;
-}
-
-button:active:not(:disabled), [role="button"]:active {
-  opacity: 0.75;
-  filter: brightness(0.9);
+button:active:not(:disabled) {
+  opacity: 0.7;
 }
 
 /* ── Input focus glow ──────────────────────────── */

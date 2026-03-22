@@ -28,7 +28,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-50 safe-area-bottom" data-testid="bottom-nav">
-      <div className="flex items-center justify-around max-w-lg mx-auto h-16">
+      <div className="flex items-center justify-around max-w-lg mx-auto h-20">
         {tabs.map(tab => {
           const isActive = location === tab.path || (tab.path !== "/" && location.startsWith(tab.path));
           const Icon = tab.icon;
@@ -43,14 +43,19 @@ export default function BottomNav() {
             >
               {tab.imgIcon ? (
                 <img
+                  key={isActive ? `${tab.path}-active` : tab.path}
                   src={tab.imgIcon}
                   alt={tab.label}
-                  className={`w-9 h-9 object-contain transition-all duration-200 ${isActive ? "opacity-100 animate-tab-pop" : "opacity-40"}`}
+                  className={`w-9 h-9 object-contain ${isActive ? "opacity-100 animate-tab-pop" : "opacity-40 transition-opacity duration-200"}`}
                 />
               ) : (
-                <Icon className={`w-6 h-6 transition-all duration-200 ${isActive ? "animate-tab-pop" : ""}`} strokeWidth={isActive ? 2.5 : 2} />
+                <Icon
+                  key={isActive ? `${tab.path}-active` : tab.path}
+                  className={`w-6 h-6 ${isActive ? "animate-tab-pop" : "transition-all duration-200"}`}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
               )}
-              <span className={`text-[10px] transition-all duration-200 ${isActive ? "font-semibold text-[#22c55e] scale-105" : "font-medium"}`}>{tab.label}</span>
+              <span className={`text-[10px] ${isActive ? "font-semibold text-[#22c55e]" : "font-medium text-gray-500"}`}>{tab.label}</span>
             </button>
           );
         })}
