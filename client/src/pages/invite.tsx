@@ -87,7 +87,7 @@ export default function InvitePage() {
         <div className="flex gap-3">
           <button
             data-testid="button-liste-revenus"
-            onClick={() => navigate("/transactions")}
+            onClick={() => navigate("/team-revenue")}
             className="flex-1 bg-[#22c55e] text-white font-semibold text-sm py-3 rounded-2xl shadow-sm"
           >
             Liste des revenus
