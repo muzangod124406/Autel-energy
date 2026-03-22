@@ -36,6 +36,8 @@ export interface IStorage {
   getInvestment(id: string): Promise<Investment | undefined>;
   deleteInvestment(id: string): Promise<void>;
   getActiveInvestmentCount(): Promise<number>;
+  getExpiredActiveInvestments(): Promise<Investment[]>;
+  completeInvestment(id: string): Promise<void>;
 
   createTransaction(userId: string, data: any): Promise<Transaction>;
   getUserTransactions(userId: string, type?: string): Promise<Transaction[]>;
@@ -293,6 +295,16 @@ export class DatabaseStorage implements IStorage {
   async getActiveInvestmentCount(): Promise<number> {
     const [result] = await db.select({ count: count() }).from(investments).where(eq(investments.status, "active"));
     return result.count;
+  }
+
+  async getExpiredActiveInvestments(): Promise<Investment[]> {
+    const now = new Date();
+    return await db.select().from(investments)
+      .where(and(eq(investments.status, "active"), sql`${investments.endDate} <= ${now}`));
+  }
+
+  async completeInvestment(id: string): Promise<void> {
+    await db.update(investments).set({ status: "completed" }).where(eq(investments.id, id));
   }
 
   async createTransaction(userId: string, data: any): Promise<Transaction> {

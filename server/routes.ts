@@ -1062,5 +1062,34 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  // ─── Job automatique : crédit des gains à la fin du cycle ───────────────
+  async function processCompletedInvestments() {
+    try {
+      const expired = await storage.getExpiredActiveInvestments();
+      for (const inv of expired) {
+        const user = await storage.getUser(inv.userId);
+        if (!user) continue;
+        await storage.updateUser(user.id, {
+          withdrawBalance: user.withdrawBalance + inv.totalGain,
+          productRevenue: user.productRevenue + inv.totalGain,
+        });
+        await storage.completeInvestment(inv.id);
+        await storage.createTransaction(user.id, {
+          type: "gain",
+          amount: inv.totalGain,
+          status: "approved",
+          description: `Gain fin de cycle — ${inv.planType === "fix" ? "Plan Fixe 120J" : "Activité"} — ${inv.duration} jours`,
+        });
+        console.log(`[Gains] Investissement ${inv.id} complété : +${inv.totalGain} FCFA crédités à l'utilisateur ${user.id}`);
+      }
+    } catch (e: any) {
+      console.error("[Gains] Erreur traitement investissements:", e.message);
+    }
+  }
+
+  // Lancer immédiatement au démarrage puis toutes les heures
+  processCompletedInvestments();
+  setInterval(processCompletedInvestments, 60 * 60 * 1000);
+
   return httpServer;
 }

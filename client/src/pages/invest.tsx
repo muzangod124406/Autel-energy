@@ -187,7 +187,7 @@ export default function InvestPage() {
               </div>
               <div className="border-t border-gray-100 mx-3" />
               <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
-                Un produit qui vous permet de faire travailler votre argent et de générer <span className="font-semibold text-[#22c55e] not-italic">{plan.dailyGain.toLocaleString("fr-FR")} FCFA</span> par jour pendant 120 jours.
+                Gains bloqués pendant 120 jours. À la fin du cycle, <span className="font-semibold text-[#22c55e] not-italic">{plan.totalGain.toLocaleString("fr-FR")} FCFA</span> sont crédités sur votre solde retirable.
               </p>
               <div className="px-3 pb-3">
                 <button
@@ -293,7 +293,7 @@ export default function InvestPage() {
                 <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
                   {product.description
                     ? product.description
-                    : <>Un produit d'activité qui génère <span className="font-semibold text-[#22c55e] not-italic">{product.dailyGain.toLocaleString("fr-FR")} FCFA</span> par jour pendant {product.duration} jours.</>}
+                    : <>Gains crédités à la fin du cycle de {product.cycleDays} jours. Gain total : <span className="font-semibold text-[#22c55e] not-italic">{product.totalGain.toLocaleString("fr-FR")} FCFA</span> sur votre solde retirable.</>}
                 </p>
                 <div className="px-3 pb-3">
                   {!isLaunched ? (
@@ -354,16 +354,21 @@ export default function InvestPage() {
             <div className="bg-[#22c55e] mx-0 px-5 pt-3 pb-5">
               <div className="space-y-2 mb-5">
                 <div className="flex justify-between">
-                  <span className="text-white/90 text-sm">Durée :</span>
+                  <span className="text-white/90 text-sm">Durée du cycle :</span>
                   <span className="text-white font-bold text-sm">{confirmItem.duration} jours</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/90 text-sm">Revenu quotidien :</span>
+                  <span className="text-white/90 text-sm">Gain/jour (indicatif) :</span>
                   <span className="text-white font-bold text-sm">FCFA {confirmItem.dailyGain.toLocaleString("fr-FR")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/90 text-sm">Revenu total :</span>
+                  <span className="text-white/90 text-sm">Gain total à recevoir :</span>
                   <span className="text-white font-bold text-sm">FCFA {confirmItem.totalGain.toLocaleString("fr-FR")}</span>
+                </div>
+                <div className="border-t border-white/30 pt-2">
+                  <p className="text-white/80 text-xs text-center">
+                    ⏳ Gains crédités à la fin du cycle sur votre solde retirable
+                  </p>
                 </div>
               </div>
 
