@@ -1,76 +1,113 @@
 import { useQuery } from "@tanstack/react-query";
 import { formatCFA } from "@/lib/constants";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ShoppingBag, Clock, Calendar } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import EmptyState from "@/components/empty-state";
+import autelImg from "@assets/Autel-MaxiCharger-DC-Fast-60-240KW-EV-Charger-All-Security-Equ_1774131863511.jpg";
 
 export default function OrdersPage() {
   const [, navigate] = useLocation();
   const { data: investments = [], isLoading } = useQuery({ queryKey: ["/api/user/investments"] });
 
+  const list = investments as any[];
+  const active = list.filter(inv => inv.status !== "completed" && new Date(inv.endDate) > new Date());
+  const totalDaily = active.reduce((sum: number, inv: any) => sum + inv.dailyGain, 0);
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 pt-6">
-        <div className="max-w-lg mx-auto">
-          <button onClick={() => navigate("/account")} className="flex items-center gap-2 text-white mb-2" data-testid="button-back-orders">
-            <ArrowLeft className="w-5 h-5" /> Retour
+    <div className="min-h-screen bg-gray-100 pb-10">
+
+      {/* ── Header vert ─────────────────────────── */}
+      <div className="bg-[#22c55e] px-4 pt-8 pb-6">
+
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => navigate("/account")}
+            data-testid="button-back-orders"
+            className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0"
+          >
+            <ArrowLeft className="w-5 h-5 text-white" />
           </button>
-          <h1 className="text-white text-xl font-bold">Mes Commandes</h1>
-          <p className="text-white/70 text-sm mt-1">Historique de vos investissements</p>
+          <h1 className="text-white font-bold text-xl">Mes Produits</h1>
+        </div>
+
+        {/* Stats */}
+        <div className="flex items-center">
+          <div className="flex-1">
+            <p className="text-white/70 text-xs mb-0.5">Sortie quotidienne</p>
+            <p className="text-white font-extrabold text-2xl">{formatCFA(totalDaily)}</p>
+          </div>
+          <div className="w-px bg-white/30 h-10 mx-4" />
+          <div className="flex-1">
+            <p className="text-white/70 text-xs mb-0.5">Produits actifs</p>
+            <p className="text-white font-extrabold text-2xl">{active.length}</p>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 mt-4 space-y-3">
+      {/* ── Cartes produits ─────────────────────── */}
+      <div className="px-4 mt-4 space-y-3">
         {isLoading ? (
-          <div className="space-y-3">
+          <>
             {[1, 2].map(i => (
-              <Card key={i} className="p-4 animate-pulse">
-                <div className="h-20 bg-gray-200 dark:bg-gray-800 rounded" />
-              </Card>
+              <div key={i} className="bg-white rounded-2xl h-44 animate-pulse shadow-sm" />
             ))}
-          </div>
-        ) : investments.length === 0 ? (
-          <EmptyState text="Aucune commande" subtext="Vous n'avez pas encore souscrit à un produit." />
+          </>
+        ) : list.length === 0 ? (
+          <EmptyState text="Aucun produit" subtext="Vous n'avez pas encore souscrit à un produit." />
         ) : (
-          (investments as any[]).map((inv: any) => {
-            const daysLeft = Math.max(0, Math.ceil((new Date(inv.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-            const isCompleted = inv.status === "completed" || daysLeft === 0;
+          list.map((inv: any) => {
+            const isActive = inv.status !== "completed" && new Date(inv.endDate) > new Date();
+            const planName = inv.planType === "fix"
+              ? `Autel Energy S${inv.vipLevel}`
+              : (inv.productName || `Activité ${inv.vipLevel}`);
+
             return (
-              <Card key={inv.id} className="p-4">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                      <ShoppingBag className="w-5 h-5 text-blue-600" />
+              <div key={inv.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                <div className="flex gap-3 p-3">
+                  {/* Image */}
+                  <img
+                    src={autelImg}
+                    alt={planName}
+                    className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
+                  />
+
+                  {/* Infos */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <p className="font-bold text-gray-900 text-sm">{planName}</p>
+                      <span className={`text-xs font-bold ${isActive ? "text-[#22c55e]" : "text-gray-400"}`}>
+                        {isActive ? "Actif" : "Terminé"}
+                      </span>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-sm">VIP {inv.vipLevel} {inv.planType}</h3>
-                      <p className="text-[10px] text-muted-foreground">{new Date(inv.startDate).toLocaleDateString("fr-FR")}</p>
+                    <p className="text-gray-400 text-xs mb-3">Prix: {formatCFA(inv.amount)}</p>
+
+                    {/* 3 stats */}
+                    <div className="flex text-center">
+                      <div className="flex-1">
+                        <p className="text-gray-400 text-[10px]">Cycle</p>
+                        <p className="text-gray-900 font-bold text-sm">{inv.duration}</p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-gray-400 text-[10px]">Gain/jour</p>
+                        <p className="text-gray-900 font-bold text-sm">{inv.dailyGain}</p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-gray-400 text-[10px]">Revenu total</p>
+                        <p className="text-gray-900 font-bold text-sm">{inv.totalGain}</p>
+                      </div>
                     </div>
                   </div>
-                  <Badge variant={isCompleted ? "default" : "secondary"} className={isCompleted ? "bg-green-500 text-white" : "bg-blue-100 text-blue-700"}>
-                    {isCompleted ? "Terminé" : "En cours"}
-                  </Badge>
                 </div>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                    <p className="text-[10px] text-muted-foreground">Montant investi</p>
-                    <p className="text-sm font-bold text-blue-600">{formatCFA(inv.amount)}</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                    <p className="text-[10px] text-muted-foreground">Gain total</p>
-                    <p className="text-sm font-bold text-green-600">{formatCFA(inv.totalGain)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Fin: {new Date(inv.endDate).toLocaleDateString("fr-FR")}</span>
-                  <span className="flex items-center gap-1 text-blue-600"><Clock className="w-3 h-3" /> {daysLeft} jours restants</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                  <span>Gain journalier: {formatCFA(inv.dailyGain)}</span>
-                </p>
-              </Card>
+
+                {/* Bouton */}
+                <button
+                  onClick={() => navigate("/invest")}
+                  data-testid={`button-investir-plus-${inv.id}`}
+                  className="w-full bg-[#22c55e] text-white font-bold text-sm py-3 text-center"
+                >
+                  Investir plus
+                </button>
+              </div>
             );
           })
         )}
