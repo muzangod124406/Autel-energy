@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import inviteIcon from "@assets/20260322_131635_1774189399662.png";
 import produitsIcon from "@assets/20260322_131838_1774186541685.png";
@@ -33,13 +33,11 @@ function NotificationPopup({ onClose }: { onClose: () => void }) {
         style={{ background: "linear-gradient(160deg, #1a3a6e 0%, #0f2040 100%)" }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Icône megaphone + titre */}
         <div className="flex flex-col items-center pt-7 pb-4 px-5">
           <div className="text-6xl mb-2">📢</div>
           <h2 className="text-[#60a5fa] font-bold text-lg text-center">Dernière annonce</h2>
         </div>
 
-        {/* Corps */}
         <div className="px-5 pb-5 text-[#93c5fd] text-sm leading-relaxed space-y-2">
           <p>
             Bienvenue sur <span className="font-bold text-white">Autel Energy</span>, la plateforme d'investissement mobile pour l'Afrique francophone !
@@ -50,7 +48,6 @@ function NotificationPopup({ onClose }: { onClose: () => void }) {
           <p className="text-white font-semibold">Rejoignez notre communauté officielle pour rester informé des dernières offres et annonces.</p>
         </div>
 
-        {/* Boutons */}
         <div className="px-5 pb-6 flex flex-col gap-3">
           <button
             data-testid="button-join-channel"
@@ -77,22 +74,23 @@ export default function BottomNav() {
   const [location, navigate] = useLocation();
   const [showNotif, setShowNotif] = useState(false);
 
-  useEffect(() => {
-    setShowNotif(true);
-  }, []);
-
-  const hideNav = ["/game", "/bank-card", "/service-client"].some(p => location.startsWith(p));
+  const hideOn = ["/game", "/bank-card", "/service-client"];
+  if (hideOn.some(p => location.startsWith(p))) return null;
 
   const handleTabClick = (path: string) => {
+    if (path === "/") {
+      setShowNotif(true);
+    }
     navigate(path);
   };
 
   return (
     <>
       {showNotif && <NotificationPopup onClose={() => setShowNotif(false)} />}
-      {hideNav ? null : (
-
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-50 safe-area-bottom" data-testid="bottom-nav">
+      <nav
+        className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-50 safe-area-bottom"
+        data-testid="bottom-nav"
+      >
         <div className="flex items-center justify-around max-w-lg mx-auto h-20">
           {tabs.map(tab => {
             const isActive = location === tab.path || (tab.path !== "/" && location.startsWith(tab.path));
@@ -126,7 +124,6 @@ export default function BottomNav() {
           })}
         </div>
       </nav>
-      )}
     </>
   );
 }
