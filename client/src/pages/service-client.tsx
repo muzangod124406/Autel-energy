@@ -128,7 +128,7 @@ export default function ServiceClientPage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-white font-bold text-sm leading-tight">Clara autel serve</p>
+            <p className="text-white font-bold text-sm leading-tight">Clara autel service</p>
             <p className="text-white/80 text-xs">En ligne</p>
           </div>
 
