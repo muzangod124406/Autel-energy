@@ -33,6 +33,7 @@ export default function TradePasswordPage() {
       const res = await apiRequest("POST", "/api/auth/send-otp", { phone: user.phone });
       const data = await res.json();
       setOtpCountdown(70);
+      toast({ title: "Code envoyé !", description: "Un code OTP a été envoyé sur votre numéro de téléphone." });
       setTimeout(() => setOtp(data.code), 10000);
     } catch {
       toast({ title: "Erreur", description: "Impossible d'envoyer le code OTP", variant: "destructive" });

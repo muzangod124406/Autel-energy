@@ -54,6 +54,7 @@ export default function AuthPage() {
       const res = await apiRequest("POST", "/api/auth/send-otp", { phone });
       const data = await res.json();
       setOtpCountdown(70);
+      toast({ title: "Code envoyé !", description: "Un code OTP a été envoyé sur votre numéro de téléphone." });
       setTimeout(() => setRegData(d => ({ ...d, otp: data.code })), 10000);
     } catch {
       toast({ title: "Erreur", description: "Impossible d'envoyer le code OTP", variant: "destructive" });
