@@ -125,7 +125,7 @@ export default function AuthPage() {
           <div className="absolute top-4 right-14 w-5 h-5 rounded bg-red-300 opacity-60 rotate-3" />
           <div className="relative px-5 py-4">
             <p className="text-white font-bold text-base italic leading-tight drop-shadow">Inscrivez-vous pour gagner</p>
-            <p className="text-white font-extrabold text-3xl italic leading-tight drop-shadow tracking-wide">250XOF+</p>
+            <p className="text-white font-extrabold text-3xl italic leading-tight drop-shadow tracking-wide">36 000XOF+</p>
           </div>
         </div>
       )}
