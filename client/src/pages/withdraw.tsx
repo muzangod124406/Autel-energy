@@ -107,9 +107,18 @@ export default function WithdrawPage() {
           <div className="absolute -top-6 -left-6 w-28 h-28 rounded-full bg-white/10" />
 
           <div className="relative z-10 flex flex-col items-center justify-center py-8 px-5 text-center">
-            <p className="text-white font-bold text-xl mb-1">
-              {card ? `${card.paymentMethod} +` : "Carte bancaire +"}
-            </p>
+            {card ? (
+              <p className="text-white font-bold text-xl mb-1">{card.paymentMethod} +</p>
+            ) : (
+              <button
+                data-testid="button-add-bank-card"
+                onClick={() => navigate("/bank-card")}
+                className="mb-2 flex items-center gap-2 bg-white/20 border border-white/50 rounded-full px-5 py-2 text-white font-semibold text-sm"
+              >
+                <span className="text-lg font-bold">+</span>
+                Ajouter un compte de retrait
+              </button>
+            )}
             <p className="text-white font-black text-5xl mb-1 tracking-tight">
               {(user?.withdrawBalance || 0).toFixed(2)}
             </p>
