@@ -26,9 +26,8 @@ export default function HomePage() {
       <div className="px-4 pt-6 pb-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-14 h-14 rounded-full border-2 border-white bg-white flex items-center justify-center overflow-hidden shrink-0">
-            <span className="text-2xl">🦁</span>
+            <img src={autelLogo} alt="logo" className="w-full h-full object-cover" />
           </div>
-          <img src={autelLogo} alt="Autel" className="h-10 w-10 object-cover rounded-xl" />
         </div>
 
         <div className="flex items-center justify-between mb-6">
