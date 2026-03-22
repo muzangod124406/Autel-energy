@@ -175,7 +175,7 @@ export default function AccountPage() {
             <p className="text-white font-extrabold text-2xl">{user.depositBalance.toFixed(2)}</p>
           </div>
           <button
-            onClick={() => navigate("/deposit-history")}
+            onClick={() => navigate("/transactions")}
             className="relative bg-white/20 border border-white/40 text-white font-semibold text-sm px-4 py-1.5 rounded-full"
             data-testid="button-consulter-points"
           >
