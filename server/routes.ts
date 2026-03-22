@@ -74,10 +74,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   const PgStore = connectPgSimple(session);
   app.use(
     session({
-      store: new PgStore({
-        pool,
-        createTableIfMissing: true,
-      }),
+      store: new PgStore({ pool }),
       secret: process.env.SESSION_SECRET || "redbull-invest-secret-key-2024",
       resave: false,
       saveUninitialized: false,
