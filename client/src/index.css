@@ -313,18 +313,12 @@
 
 /* ── Page entrance ─────────────────────────────── */
 @keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .animate-page-enter {
-  animation: page-enter 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: page-enter 0.25s ease forwards;
 }
 
 /* ── Card stagger fade-up ──────────────────────── */
@@ -406,13 +400,12 @@
 
 /* ── Global button press feel ──────────────────── */
 button, [role="button"] {
-  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
-              opacity 0.12s ease;
+  transition: opacity 0.12s ease, filter 0.12s ease;
 }
 
 button:active:not(:disabled), [role="button"]:active {
-  transform: scale(0.94);
-  opacity: 0.85;
+  opacity: 0.75;
+  filter: brightness(0.9);
 }
 
 /* ── Input focus glow ──────────────────────────── */
