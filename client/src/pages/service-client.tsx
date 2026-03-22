@@ -78,7 +78,7 @@ export default function ServiceClientPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col bg-gray-50" style={{ height: "100dvh" }}>
       {/* Header vert */}
       <div className="bg-[#22c55e] pt-10 pb-0 flex-shrink-0">
         <div className="flex items-center px-4 pb-3 gap-3">

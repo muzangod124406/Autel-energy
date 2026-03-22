@@ -193,7 +193,7 @@ export default function AdminPage() {
   }, [settingsData]);
   const { data: channels = [], refetch: refetchChannels } = useQuery({ queryKey: ["/api/admin/channels"] });
   const { data: adminProducts = [], refetch: refetchProducts } = useQuery({ queryKey: ["/api/admin/products"] });
-  const { data: chatConversations = [] } = useQuery<any[]>({ queryKey: ["/api/admin/chat/conversations"], enabled: activeTab === "chat", refetchInterval: activeTab === "chat" ? 5000 : false });
+  const { data: chatConversations = [] } = useQuery<any[]>({ queryKey: ["/api/admin/chat/conversations"], refetchInterval: 10000 });
   const { data: chatMessages = [] } = useQuery<any[]>({ queryKey: ["/api/admin/chat", chatUserId, "messages"], enabled: !!chatUserId && activeTab === "chat", refetchInterval: chatUserId ? 4000 : false });
 
   useEffect(() => {
@@ -496,9 +496,21 @@ export default function AdminPage() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 pt-6 pb-0">
         <div className="max-w-2xl mx-auto">
-          <button onClick={() => navigate("/")} className="flex items-center gap-1 text-gray-700 mb-3" data-testid="button-back-admin">
-            <ArrowLeft className="w-5 h-5" /> <span className="font-medium">Administration</span>
-          </button>
+          <div className="flex items-center justify-between mb-3">
+            <button onClick={() => navigate("/")} className="flex items-center gap-1 text-gray-700" data-testid="button-back-admin">
+              <ArrowLeft className="w-5 h-5" /> <span className="font-medium">Administration</span>
+            </button>
+            {totalUnread > 0 && (
+              <button
+                onClick={() => setActiveTab("chat")}
+                data-testid="admin-notif-chat"
+                className="relative flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-600 rounded-full px-3 py-1.5 text-xs font-semibold hover:bg-red-100 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>{totalUnread} message{totalUnread > 1 ? "s" : ""} non lu{totalUnread > 1 ? "s" : ""}</span>
+              </button>
+            )}
+          </div>
           {/* Tabs */}
           <div className="flex gap-0 overflow-x-auto">
             {tabs.map(tab => (
