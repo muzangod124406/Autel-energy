@@ -1,9 +1,17 @@
 import { useLocation } from "wouter";
-import { Home, TrendingUp, Users, Newspaper, User } from "lucide-react";
+import { Home, Users, Newspaper, User } from "lucide-react";
+import produitsIcon from "@assets/20260322_131838_1774186541685.png";
 
-const tabs = [
+type Tab = {
+  path: string;
+  label: string;
+  icon?: any;
+  imgIcon?: string;
+};
+
+const tabs: Tab[] = [
   { path: "/", label: "Accueil", icon: Home },
-  { path: "/invest", label: "Investir", icon: TrendingUp },
+  { path: "/invest", label: "Produits", imgIcon: produitsIcon },
   { path: "/invite", label: "Invité", icon: Users },
   { path: "/billet", label: "Billet", icon: Newspaper },
   { path: "/account", label: "Compte", icon: User },
@@ -27,11 +35,19 @@ export default function BottomNav() {
               data-testid={`nav-${tab.label.toLowerCase()}`}
               onClick={() => navigate(tab.path)}
               className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors ${
-                isActive ? "text-blue-600" : "text-gray-500"
+                isActive ? "text-[#22c55e]" : "text-gray-500"
               }`}
             >
-              <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
-              <span className={`text-[10px] ${isActive ? "font-semibold" : "font-medium"}`}>{tab.label}</span>
+              {tab.imgIcon ? (
+                <img
+                  src={tab.imgIcon}
+                  alt={tab.label}
+                  className={`w-5 h-5 object-contain ${isActive ? "opacity-100" : "opacity-40"}`}
+                />
+              ) : (
+                <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+              )}
+              <span className={`text-[10px] ${isActive ? "font-semibold text-[#22c55e]" : "font-medium"}`}>{tab.label}</span>
             </button>
           );
         })}
