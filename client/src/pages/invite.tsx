@@ -1,121 +1,179 @@
 import { useAuth } from "@/lib/auth";
-import { formatCFA } from "@/lib/constants";
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Copy, Share2, Users, Crown, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { Copy, Share2 } from "lucide-react";
 
+const LEVEL_LABELS = ["Premier", "Deuxième", "Troisième"];
 
 export default function InvitePage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
-  const { data: referrals } = useQuery({ queryKey: ["/api/user/referrals"] });
+  const { data: referrals } = useQuery<any>({ queryKey: ["/api/user/referrals"] });
+  const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
 
   const inviteLink = `${window.location.origin}/auth?reg=${user?.referralCode}`;
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyLink = () => {
+    navigator.clipboard.writeText(inviteLink);
     toast({ title: "Copié", description: "Lien copié dans le presse-papier" });
   };
 
-  const shareLink = () => {
+  const shareInvite = () => {
     if (navigator.share) {
-      navigator.share({ title: "Red Bull Invest", text: "Rejoignez Red Bull Invest!", url: inviteLink });
+      navigator.share({ title: "Autel Invest", text: "Rejoignez Autel Invest!", url: inviteLink });
     } else {
-      copyToClipboard(inviteLink);
+      copyLink();
     }
   };
 
-  const levels = [
-    { level: 1, percent: "30%", data: referrals?.level1 || [] },
-    { level: 2, percent: "3%", data: referrals?.level2 || [] },
-    { level: 3, percent: "2%", data: referrals?.level3 || [] },
+  const commissions = [
+    settings?.referralCommission1 ?? 30,
+    settings?.referralCommission2 ?? 3,
+    settings?.referralCommission3 ?? 2,
   ];
 
+  const levels = [
+    { label: LEVEL_LABELS[0], percent: commissions[0], data: referrals?.level1 || [] },
+    { label: LEVEL_LABELS[1], percent: commissions[1], data: referrals?.level2 || [] },
+    { label: LEVEL_LABELS[2], percent: commissions[2], data: referrals?.level3 || [] },
+  ];
+
+  const totalFriends = levels.reduce((acc, l) => acc + l.data.length, 0);
+  const totalRevenue = referrals?.commissionTotal || 0;
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 p-4 pt-6 pb-8">
-        <div className="max-w-lg mx-auto flex items-center gap-3">
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-            <Users className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-[#f5f5f5] pb-24">
+
+      {/* ── En-tête vert ────────────────────────── */}
+      <div className="bg-[#22c55e] px-4 pt-8 pb-6">
+        <h1 className="text-white font-bold text-lg text-center mb-5">Mon équipe</h1>
+
+        {/* Stats */}
+        <div className="flex divide-x divide-white/30">
+          <div className="flex-1 text-center">
+            <p className="text-white/70 text-xs mb-1">Revenu accumulé()</p>
+            <p className="text-white font-bold text-2xl">{totalRevenue.toFixed(2)}</p>
           </div>
-          <div>
-            <p className="text-white/70 text-sm">Commission totale</p>
-            <p className="text-white text-2xl font-bold">{formatCFA(referrals?.commissionTotal || 0)}</p>
+          <div className="flex-1 text-center">
+            <p className="text-white/70 text-xs mb-1">Nombre d'amis</p>
+            <p className="text-white font-bold text-2xl">{totalFriends}</p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 -mt-4">
-        <Card className="p-4 mb-4">
-          <p className="font-semibold text-sm mb-2 flex items-center gap-2">
-            <Users className="w-4 h-4 text-blue-500" />
-            Lien d'invitation
-          </p>
-          <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg p-2 mb-3">
-            <p className="text-xs text-muted-foreground flex-1 truncate">{inviteLink}</p>
-            <Button size="sm" variant="ghost" onClick={() => copyToClipboard(inviteLink)} data-testid="button-copy-link">
-              <Copy className="w-4 h-4 mr-1" /> Copier
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg px-3 py-2 flex-1">
-              <Crown className="w-4 h-4 text-yellow-500" />
-              <span className="text-sm font-mono">Code: {user?.referralCode}</span>
-            </div>
-            <Button onClick={shareLink} className="bg-gradient-to-r from-blue-500 to-purple-500 text-white" data-testid="button-share">
-              <Share2 className="w-4 h-4 mr-1" /> Partager
-            </Button>
-          </div>
-        </Card>
+      <div className="px-4 py-4 space-y-3">
 
-        <Card className="p-4">
-          <div className="flex items-center justify-between gap-2 mb-4">
-            <h2 className="font-bold">Niveau de l'équipe</h2>
-            <button className="flex items-center gap-1 text-sm text-muted-foreground" data-testid="button-team-details">
-              Détails de l'équipe <ChevronRight className="w-4 h-4" />
+        {/* ── Lien d'invitation ───────────────────── */}
+        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm">
+          <p className="text-gray-500 text-xs mb-2">Lien d'invitation:</p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 min-w-0">
+              <p className="text-gray-600 text-xs truncate">{inviteLink}</p>
+            </div>
+            <button
+              data-testid="button-copy-link"
+              onClick={copyLink}
+              className="bg-[#22c55e] text-white text-sm font-semibold px-4 py-2 rounded-xl shrink-0"
+            >
+              Copiez le lien
             </button>
           </div>
+        </div>
 
-          <div className="space-y-3">
-            {levels.map(l => {
-              const activeCount = l.data.filter((r: any) => {
-                const ref = r.referred;
-                return ref && ref.depositBalance > 0;
-              }).length;
-              return (
-                <div key={l.level} className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4">
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${l.level === 1 ? 'bg-amber-400' : l.level === 2 ? 'bg-gray-300' : 'bg-amber-700'}`}>
-                        <Crown className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="font-bold">Niveau {l.level}</span>
-                    </div>
-                    <Badge variant="secondary">{l.percent}</Badge>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <p className="text-lg font-bold">{l.percent}</p>
-                      <p className="text-[10px] text-muted-foreground">Remise</p>
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold">{l.data.length}</p>
-                      <p className="text-[10px] text-muted-foreground">Total invités</p>
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-green-600">{activeCount}</p>
-                      <p className="text-[10px] text-muted-foreground">Actifs</p>
-                    </div>
+        {/* ── Boutons d'action ────────────────────── */}
+        <div className="flex gap-3">
+          <button
+            data-testid="button-liste-revenus"
+            onClick={() => navigate("/transactions")}
+            className="flex-1 bg-[#22c55e] text-white font-semibold text-sm py-3 rounded-2xl shadow-sm"
+          >
+            Liste des revenus
+          </button>
+          <button
+            data-testid="button-inviter"
+            onClick={shareInvite}
+            className="flex-1 bg-[#22c55e] text-white font-semibold text-sm py-3 rounded-2xl shadow-sm flex items-center justify-center gap-2"
+          >
+            <Share2 className="w-4 h-4" />
+            Inviter maintenant
+          </button>
+        </div>
+
+        {/* ── Mon équipe ──────────────────────────── */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          {/* Titre section */}
+          <div className="flex items-center justify-center gap-2 py-3 border-b border-gray-100">
+            <div className="flex gap-0.5">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className={`w-1 rounded-full bg-[#22c55e] ${i === 0 || i === 3 ? "h-3" : i === 1 || i === 2 ? "h-4" : "h-3"}`} />
+              ))}
+            </div>
+            <p className="text-gray-800 font-bold text-sm">Mon équipe</p>
+            <div className="flex gap-0.5">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className={`w-1 rounded-full bg-[#22c55e] ${i === 0 || i === 3 ? "h-3" : i === 1 || i === 2 ? "h-4" : "h-3"}`} />
+              ))}
+            </div>
+          </div>
+
+          {/* Header colonnes */}
+          <div className="grid grid-cols-3 px-4 py-2 text-xs text-gray-400">
+            <div></div>
+            <div className="text-center">Revenu total()</div>
+            <div className="text-right">Amis</div>
+          </div>
+
+          {/* Lignes par niveau */}
+          {levels.map((l, i) => (
+            <div key={i} className="border-t border-gray-100 px-4 py-4">
+              {/* En-tête ligne */}
+              <div className="grid grid-cols-3 items-center text-xs text-gray-400 mb-2">
+                <div></div>
+                <div className="text-center">Revenu total()</div>
+                <div className="text-right">Amis</div>
+              </div>
+              <div className="grid grid-cols-3 items-center">
+                {/* Badge niveau */}
+                <div className="flex items-center">
+                  <div className="bg-[#22c55e]/10 border border-[#22c55e]/30 rounded-xl px-2 py-2 text-center min-w-[56px]">
+                    <p className="text-[#22c55e] font-extrabold text-sm">{l.percent}%</p>
+                    <p className="text-[#22c55e] text-[10px] font-medium">{l.label}</p>
                   </div>
                 </div>
-              );
-            })}
+                {/* Revenu */}
+                <div className="text-center">
+                  <p className="text-gray-800 font-bold text-xl">0</p>
+                </div>
+                {/* Amis */}
+                <div className="text-right">
+                  <p className="text-gray-800 font-bold text-xl">{l.data.length}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Code parrain ────────────────────────── */}
+        <div className="bg-white rounded-2xl px-4 py-4 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-gray-500 text-xs">Code de parrainage</p>
+            <p className="text-gray-900 font-bold text-lg mt-0.5">{user?.referralCode}</p>
           </div>
-        </Card>
+          <button
+            data-testid="button-copy-code"
+            onClick={() => {
+              navigator.clipboard.writeText(user?.referralCode || "");
+              toast({ title: "Copié", description: "Code copié" });
+            }}
+            className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center"
+          >
+            <Copy className="w-5 h-5 text-[#22c55e]" />
+          </button>
+        </div>
+
       </div>
     </div>
   );
