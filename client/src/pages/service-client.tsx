@@ -4,7 +4,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeft, Phone, MoreVertical, Smile, Paperclip, Image, Send, Check, CheckCheck } from "lucide-react";
 import autelLogo from "@assets/images_(11)_1774131992392.png";
-import serviceImg from "@assets/Img_2026_03_22_11_16_53_1774178912559.jpeg";
+import serviceImg from "@assets/561c62c4e80617ebf5313bc562f02542_1774182788114.jpg";
 
 type ChatMsg = {
   id: string;
@@ -128,7 +128,7 @@ export default function ServiceClientPage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-white font-bold text-sm leading-tight">Service Autel Invest</p>
+            <p className="text-white font-bold text-sm leading-tight">Clara autel serve</p>
             <p className="text-white/80 text-xs">En ligne</p>
           </div>
 
@@ -200,7 +200,7 @@ export default function ServiceClientPage() {
                   >
                     {showLabel && (
                       <span className="text-[10px] text-[#22c55e] font-semibold ml-1 mb-0.5">
-                        Service Autel
+                        Clara
                       </span>
                     )}
 
