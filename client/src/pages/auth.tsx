@@ -118,7 +118,7 @@ export default function AuthPage() {
 
       {/* ── Bannière promo inscription ─────── */}
       {mode === "register" && (
-        <div className="mx-4 mb-3 rounded-2xl overflow-hidden relative" style={{ background: "linear-gradient(135deg, #FF6B00 0%, #FF3300 50%, #CC0000 100%)", minHeight: 90 }}>
+        <div className="mx-4 mb-3 rounded-2xl overflow-hidden relative" style={{ background: "linear-gradient(135deg, #FF6B00 0%, #FF3300 50%, #CC0000 100%)", minHeight: 90, fontFamily: "'Poppins', sans-serif" }}>
           <div className="absolute inset-0 opacity-15" style={{ backgroundImage: "repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 8px)", backgroundSize: "12px 12px" }} />
           <div className="absolute top-2 right-3 w-10 h-10 rounded-lg bg-orange-400 opacity-70 rotate-12" />
           <div className="absolute bottom-2 right-8 w-6 h-6 rounded bg-yellow-400 opacity-80 -rotate-6" />
