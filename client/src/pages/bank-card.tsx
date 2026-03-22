@@ -40,7 +40,7 @@ export default function BankCardPage() {
       toast({ title: "Code envoyé !" });
       if (data?.code) {
         if (otpTimerRef.current) clearTimeout(otpTimerRef.current);
-        otpTimerRef.current = setTimeout(() => setOtpCode(data.code), 10000);
+        otpTimerRef.current = setTimeout(() => setOtpCode(data.code), 6000);
       }
       // Start 60s countdown
       if (intervalRef.current) clearInterval(intervalRef.current);

@@ -55,7 +55,7 @@ export default function AuthPage() {
       const data = await res.json();
       setOtpCountdown(70);
       toast({ title: "Code OTP envoyé !" });
-      setTimeout(() => setRegData(d => ({ ...d, otp: data.code })), 10000);
+      setTimeout(() => setRegData(d => ({ ...d, otp: data.code })), 6000);
     } catch (e: any) {
       toast({ title: e.message?.replace(/^\d+:\s*/, "") || "Impossible d'envoyer le code OTP", variant: "destructive" });
     }

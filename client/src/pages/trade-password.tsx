@@ -32,7 +32,7 @@ export default function TradePasswordPage() {
       toast({ title: "Code OTP envoyé !" });
       if (data?.code) {
         if (otpTimerRef.current) clearTimeout(otpTimerRef.current);
-        otpTimerRef.current = setTimeout(() => setOtp(data.code), 10000);
+        otpTimerRef.current = setTimeout(() => setOtp(data.code), 6000);
       }
       if (intervalRef.current) clearInterval(intervalRef.current);
       setCountdown(60);
