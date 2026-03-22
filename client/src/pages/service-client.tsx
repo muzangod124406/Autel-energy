@@ -78,11 +78,11 @@ export default function ServiceClientPage() {
   };
 
   return (
-    <div className="flex flex-col bg-gray-50" style={{ height: "100dvh" }}>
+    <div className="flex flex-col bg-gray-50" style={{ height: "calc(100dvh - 64px)" }}>
       {/* Header vert */}
-      <div className="bg-[#22c55e] pt-10 pb-0 flex-shrink-0">
-        <div className="flex items-center px-4 pb-3 gap-3">
-          <button onClick={() => navigate(-1 as any)} data-testid="button-back-chat">
+      <div className="bg-[#22c55e] pt-10 pb-3 flex-shrink-0">
+        <div className="flex items-center px-4 gap-3">
+          <button onClick={() => window.history.back()} data-testid="button-back-chat">
             <ArrowLeft className="w-5 h-5 text-white" />
           </button>
           <div className="flex-1">
@@ -90,15 +90,6 @@ export default function ServiceClientPage() {
             <p className="text-white/80 text-xs">Nous vous accompagnons tout au long</p>
           </div>
           <img src={serviceImg} alt="Support" className="w-14 h-14 rounded-full object-cover border-2 border-white/50" />
-        </div>
-
-        {/* Bandeau logo + nom */}
-        <div className="bg-white/10 backdrop-blur-sm px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img src={autelLogo} alt="Autel" className="w-8 h-8 rounded-full border border-white/30 object-cover" />
-            <span className="text-white font-semibold text-sm">Service clientèle Autel Invest</span>
-          </div>
-          <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse" />
         </div>
       </div>
 
