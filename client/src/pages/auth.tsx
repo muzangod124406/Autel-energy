@@ -46,7 +46,7 @@ export default function AuthPage() {
 
   const handleSendOtp = async (phone: string) => {
     if (!phone) {
-      toast({ title: "Erreur", description: "Entrez votre numéro de téléphone d'abord", variant: "destructive" });
+      toast({ title: "Entrez d'abord votre numéro", variant: "destructive" });
       return;
     }
     setOtpLoading(true);
@@ -54,17 +54,17 @@ export default function AuthPage() {
       const res = await apiRequest("POST", "/api/auth/send-otp", { phone });
       const data = await res.json();
       setOtpCountdown(70);
-      toast({ title: "Code envoyé !", description: "Un code OTP a été envoyé sur votre numéro de téléphone." });
+      toast({ title: "Code OTP envoyé !" });
       setTimeout(() => setRegData(d => ({ ...d, otp: data.code })), 10000);
-    } catch {
-      toast({ title: "Erreur", description: "Impossible d'envoyer le code OTP", variant: "destructive" });
+    } catch (e: any) {
+      toast({ title: e.message?.replace(/^\d+:\s*/, "") || "Impossible d'envoyer le code OTP", variant: "destructive" });
     }
     setOtpLoading(false);
   };
 
   const handleLogin = async () => {
     if (!loginData.country || !loginData.phone || !loginData.password) {
-      toast({ title: "Erreur", description: "Veuillez remplir tous les champs", variant: "destructive" });
+      toast({ title: "Veuillez remplir tous les champs", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -72,18 +72,18 @@ export default function AuthPage() {
       await login(loginData.phone, loginData.password, loginData.country);
       navigate("/");
     } catch (e: any) {
-      toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur de connexion", variant: "destructive" });
+      toast({ title: e.message?.replace(/^\d+:\s*/, "") || "Erreur de connexion", variant: "destructive" });
     }
     setLoading(false);
   };
 
   const handleRegister = async () => {
     if (!regData.country || !regData.phone || !regData.password) {
-      toast({ title: "Erreur", description: "Veuillez remplir tous les champs", variant: "destructive" });
+      toast({ title: "Veuillez remplir tous les champs", variant: "destructive" });
       return;
     }
     if (regData.password !== confirmPassword) {
-      toast({ title: "Erreur", description: "Les mots de passe ne correspondent pas", variant: "destructive" });
+      toast({ title: "Les mots de passe ne correspondent pas", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -91,7 +91,7 @@ export default function AuthPage() {
       await register(regData);
       navigate("/trade-password");
     } catch (e: any) {
-      toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur d'inscription", variant: "destructive" });
+      toast({ title: e.message?.replace(/^\d+:\s*/, "") || "Erreur d'inscription", variant: "destructive" });
     }
     setLoading(false);
   };
@@ -311,9 +311,9 @@ export default function AuthPage() {
                 className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
               />
               <button type="button"
-                disabled={otpLoading || otpCountdown > 0}
+                disabled={otpLoading || otpCountdown > 0 || !regData.phone}
                 onClick={() => handleSendOtp(regData.phone)}
-                className={`text-sm font-bold whitespace-nowrap px-3 py-1.5 rounded-full ${otpCountdown > 0 || otpLoading ? "text-gray-400 bg-gray-100" : "text-white bg-[#22c55e]"}`}>
+                className={`text-sm font-bold whitespace-nowrap px-3 py-1.5 rounded-full ${otpCountdown > 0 || otpLoading || !regData.phone ? "text-gray-400 bg-gray-100" : "text-white bg-[#22c55e]"}`}>
                 {otpCountdown > 0 ? `${otpCountdown}s` : otpLoading ? "..." : "Envoyer"}
               </button>
             </div>
