@@ -143,7 +143,7 @@ export default function DepositPage() {
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-white font-bold text-lg">Recharger</h1>
-          <button onClick={() => navigate("/deposit-history")} className="text-white text-sm" data-testid="button-deposit-history">
+          <button onClick={() => navigate("/transactions")} className="text-white text-sm" data-testid="button-deposit-history">
             Historique &gt;
           </button>
         </div>
