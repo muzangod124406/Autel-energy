@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, desc, sql, or, ilike, count, gte } from "drizzle-orm";
+import { eq, and, desc, sql, or, ilike, count, gte, isNull, lte } from "drizzle-orm";
 import {
   users, bankCards, investments, transactions, referrals, spinResults, tickets, settings, paymentChannels, products, giftCodes, countries, chatMessages,
   type User, type InsertUser, type BankCard, type Investment, type Transaction, type Referral, type SpinResult, type Ticket, type Settings, type PaymentChannel, type Product, type GiftCode, type Country, type ChatMessage
@@ -473,8 +473,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProducts(activeOnly = false): Promise<Product[]> {
+    const now = new Date();
     if (activeOnly) {
-      return await db.select().from(products).where(eq(products.isActive, true)).orderBy(desc(products.createdAt));
+      return await db.select().from(products).where(
+        and(
+          eq(products.isActive, true),
+          or(isNull(products.launchDate), lte(products.launchDate, now))
+        )
+      ).orderBy(desc(products.createdAt));
     }
     return await db.select().from(products).orderBy(desc(products.createdAt));
   }
