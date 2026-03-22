@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { ArrowLeft, Users } from "lucide-react";
+import { ArrowLeft, Star } from "lucide-react";
 
-const LEVELS = [
-  { label: "Niveau 1", color: "#22c55e",   medal: "🥇" },
-  { label: "Niveau 2", color: "#9333ea",   medal: "🥈" },
-  { label: "Niveau 3", color: "#0ea5e9",   medal: "🥉" },
+const LEVEL_GRADIENTS = [
+  "linear-gradient(135deg, #14532d 0%, #166534 40%, #22c55e 100%)",
+  "linear-gradient(135deg, #052e16 0%, #14532d 40%, #166534 100%)",
+  "linear-gradient(135deg, #0f2d1d 0%, #064e3b 40%, #065f46 100%)",
 ];
 
 export default function TeamRevenuePage() {
@@ -14,105 +14,137 @@ export default function TeamRevenuePage() {
   const { data: referrals } = useQuery<any>({ queryKey: ["/api/user/referrals"] });
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
 
-  const commissions = [
-    settings?.referralCommission1 ?? 30,
-    settings?.referralCommission2 ?? 3,
-    settings?.referralCommission3 ?? 2,
-  ];
+  const c1 = settings?.referralCommission1 ?? 30;
+  const c2 = settings?.referralCommission2 ?? 3;
+  const c3 = settings?.referralCommission3 ?? 2;
 
-  const l1 = referrals?.level1 || [];
-  const l2 = referrals?.level2 || [];
-  const l3 = referrals?.level3 || [];
+  const l1: any[] = referrals?.level1 || [];
+  const l2: any[] = referrals?.level2 || [];
+  const l3: any[] = referrals?.level3 || [];
   const totalMembers = l1.length + l2.length + l3.length;
   const totalRevenue = referrals?.commissionTotal || 0;
 
   const levels = [
-    { ...LEVELS[0], percent: commissions[0], members: l1 },
-    { ...LEVELS[1], percent: commissions[1], members: l2 },
-    { ...LEVELS[2], percent: commissions[2], members: l3 },
+    { num: 1, members: l1, percent: c1, gradient: LEVEL_GRADIENTS[0] },
+    { num: 2, members: l2, percent: c2, gradient: LEVEL_GRADIENTS[1] },
+    { num: 3, members: l3, percent: c3, gradient: LEVEL_GRADIENTS[2] },
+  ];
+
+  const statsTop = [
+    { label: "Taille de l'équipe", value: totalMembers },
+    { label: "Recharge d'équipe", value: "0 CFA" },
+    { label: "Retrait de l'équipe", value: "0 CFA" },
+  ];
+
+  const statsBottom = [
+    { label: "Nouvelle équipe", value: totalMembers },
+    { label: "Première recharge", value: l1.length },
+    { label: "Premier retrait", value: 0 },
   ];
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] pb-28">
+    <div className="min-h-screen pb-28" style={{ background: "#f0fdf4" }}>
 
-      {/* ── Header vert ─────────────────────────── */}
-      <div className="bg-[#22c55e] px-4 pt-8 pb-16 relative overflow-hidden">
-        <div className="absolute -bottom-8 left-0 right-0 h-16 bg-[#f5f5f5] rounded-t-[2rem]" />
-        <div className="absolute top-4 right-4 opacity-20">
-          <Users className="w-24 h-24 text-white" />
-        </div>
-
-        {/* Retour */}
+      {/* ── Header vert ────────────────────────────── */}
+      <div className="bg-[#22c55e] px-4 pt-10 pb-6 relative">
         <button
           onClick={() => navigate("/invite")}
           data-testid="button-back-team-revenue"
-          className="flex items-center gap-2 text-white mb-4"
+          className="flex items-center gap-2 text-white mb-1"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span className="font-semibold text-base">Mon équipe</span>
+          <span className="font-bold text-lg">Mon équipe</span>
         </button>
-
-        <p className="text-white/80 text-sm">Revenu Total</p>
-        <div className="flex items-baseline gap-2 mt-1">
-          <p className="text-white font-black text-4xl">{totalRevenue.toLocaleString("fr-FR")}</p>
-          <p className="text-white/80 font-semibold text-lg">CFA</p>
-        </div>
-        <p className="text-white/80 text-sm mt-3">
-          Taille l'équipe <span className="text-white font-bold">{totalMembers}</span>
-        </p>
       </div>
 
-      {/* ── Cartes par niveau ───────────────────── */}
-      <div className="px-4 -mt-4 space-y-4 relative z-10">
+      <div className="px-4 space-y-4 -mt-1">
+
+        {/* ── Carte statistiques ─────────────────────── */}
+        <div className="rounded-2xl overflow-hidden shadow-sm" style={{ background: "linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)" }}>
+          {/* Ligne 1 */}
+          <div className="grid grid-cols-3 divide-x divide-yellow-200 border-b border-yellow-200">
+            {statsTop.map((s, i) => (
+              <div key={i} className="flex flex-col items-center py-4 px-2">
+                <p className="text-gray-500 text-[10px] text-center leading-tight mb-1">{s.label}</p>
+                <p className="text-gray-900 font-extrabold text-xl">{s.value}</p>
+              </div>
+            ))}
+          </div>
+          {/* Ligne 2 */}
+          <div className="grid grid-cols-3 divide-x divide-yellow-200">
+            {statsBottom.map((s, i) => (
+              <div key={i} className="flex flex-col items-center py-4 px-2">
+                <p className="text-gray-500 text-[10px] text-center leading-tight mb-1">{s.label}</p>
+                <p className="text-gray-900 font-extrabold text-xl">{s.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Cartes niveau ─────────────────────────── */}
         {levels.map((level, i) => (
-          <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm animate-card-in" style={{ animationDelay: `${i * 0.08}s` }}>
-            {/* En-tête coloré */}
-            <div
-              className="flex items-center justify-between px-5 py-3"
-              style={{ backgroundColor: level.color }}
-            >
-              <p className="text-white font-bold text-base">{level.label}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-white/80 text-xs">Commission {level.percent}%</span>
-                <span className="text-xl">{level.medal}</span>
+          <div
+            key={i}
+            className="rounded-2xl overflow-hidden shadow-md relative animate-card-in"
+            style={{ background: level.gradient, minHeight: 120, animationDelay: `${i * 0.1}s` }}
+          >
+            {/* Ruban diagonal NIVEAU X */}
+            <div className="absolute top-0 left-0 w-24 h-24 overflow-hidden">
+              <div
+                className="absolute"
+                style={{
+                  top: 18,
+                  left: -22,
+                  width: 88,
+                  background: "linear-gradient(135deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%)",
+                  textAlign: "center",
+                  transform: "rotate(-45deg)",
+                  padding: "3px 0",
+                  fontSize: 9,
+                  fontWeight: 800,
+                  color: "white",
+                  letterSpacing: "0.05em",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+                }}
+              >
+                NIVEAU {level.num}
               </div>
             </div>
 
-            {/* Données */}
-            <div className="px-5 py-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-gray-500 text-sm">Revenu</p>
-                <div className="flex items-baseline gap-1">
-                  <p className="text-gray-900 font-bold text-xl">0</p>
-                  <p className="text-gray-400 text-xs font-semibold">CFA</p>
+            {/* Étoile décorative fond */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-10">
+              <Star className="w-20 h-20 text-white fill-white" />
+            </div>
+
+            {/* Contenu */}
+            <div className="relative z-10 flex items-stretch px-4 py-5 pl-10">
+              {/* Gauche */}
+              <div className="flex-1 space-y-3">
+                <div>
+                  <p className="text-white/70 text-xs">Registre/Valide</p>
+                  <p className="text-white font-extrabold text-xl">{level.members.length}/{level.members.length}</p>
                 </div>
-              </div>
-              <div className="h-px bg-gray-100" />
-              <div className="flex items-center justify-between">
-                <p className="text-gray-500 text-sm">Taille</p>
-                <p className="text-gray-900 font-bold text-xl">{level.members.length}</p>
+                <div>
+                  <p className="text-white/70 text-xs">Revenu total</p>
+                  <p className="text-white font-extrabold text-xl">{totalRevenue > 0 && i === 0 ? totalRevenue.toLocaleString("fr-FR") : 0}</p>
+                </div>
               </div>
 
-              {/* Liste des membres si non vide */}
-              {level.members.length > 0 && (
-                <div className="pt-1 space-y-2">
-                  <div className="h-px bg-gray-100" />
-                  {level.members.slice(0, 5).map((m: any, j: number) => (
-                    <div key={j} className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px]" style={{ backgroundColor: level.color }}>
-                          {(m.referred?.phone || "?").slice(-2)}
-                        </div>
-                        <span className="text-gray-600">{m.referred?.phone ? `****${m.referred.phone.slice(-4)}` : "—"}</span>
-                      </div>
-                      <span className="text-gray-400">{m.referred?.nickname || ""}</span>
-                    </div>
-                  ))}
-                  {level.members.length > 5 && (
-                    <p className="text-xs text-gray-400 text-center">+{level.members.length - 5} autres membres</p>
-                  )}
+              {/* Droite */}
+              <div className="flex flex-col items-center justify-center gap-3 pl-4">
+                <div className="text-center">
+                  <p className="text-white/70 text-xs">Pourcentage de</p>
+                  <p className="text-white/70 text-xs">commission</p>
+                  <p className="text-white font-extrabold text-2xl">{level.percent}%</p>
                 </div>
-              )}
+                <button
+                  data-testid={`button-details-level-${level.num}`}
+                  onClick={() => navigate("/invite")}
+                  className="bg-gray-900 text-white text-sm font-bold px-5 py-2 rounded-xl shadow"
+                >
+                  Détails
+                </button>
+              </div>
             </div>
           </div>
         ))}
