@@ -8,7 +8,8 @@ import lockIcon from "@assets/19118881-verrouiller-l-etude-de-l-ecole-plat-coule
 import walletIcon from "@assets/withdraw_record_(1)_1774169798074.png";
 import serviceClientIcon from "@assets/service-clients_1774171700016.png";
 import giftIcon from "@assets/—Pngtree—vector_gift_icon_3988959_1774170175431.png";
-import settingsIcon from "@assets/apps.48434.14455387483127854.031a6d9c-9877-466c-8a76-4127fc639_1774170175386.png";
+import commandesIcon from "@assets/20260322_131838_1774185548264.png";
+import aproposIcon from "@assets/20260322_131155_1774185548351.png";
 import logoutIcon from "@assets/8984546_1774171682810.png";
 
 export default function AccountPage() {
@@ -36,16 +37,8 @@ export default function AccountPage() {
     },
     {
       label: "Commandes",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-          <rect x="4" y="2" width="16" height="20" rx="2" fill="#3b82f6" opacity=".15" />
-          <rect x="4" y="2" width="16" height="20" rx="2" stroke="#3b82f6" strokeWidth="1.5" />
-          <line x1="8" y1="8" x2="16" y2="8" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="8" y1="12" x2="16" y2="12" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="8" y1="16" x2="12" y2="16" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      ),
-      bg: "bg-blue-50",
+      icon: <img src={commandesIcon} alt="Commandes" className="w-8 h-8 object-contain" />,
+      bg: "bg-green-50",
       route: "/orders",
       testId: "button-commandes",
     },
@@ -95,8 +88,8 @@ export default function AccountPage() {
     },
     {
       label: "À propos",
-      icon: <img src={settingsIcon} alt="À propos" className="w-8 h-8 object-contain rounded-xl" />,
-      bg: "bg-blue-50",
+      icon: <img src={aproposIcon} alt="À propos" className="w-8 h-8 object-contain" />,
+      bg: "bg-green-50",
       route: "/about",
       testId: "button-apropos",
     },
