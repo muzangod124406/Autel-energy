@@ -1,7 +1,9 @@
 import { useLocation } from "wouter";
-import { Users, Newspaper, User } from "lucide-react";
+import { Users } from "lucide-react"; 
 import produitsIcon from "@assets/20260322_131838_1774186541685.png";
 import accueilIcon from "@assets/téléchargement_(37)_1774187714341.png";
+import billetIcon from "@assets/bloguer_1774189352527.png";
+import compteIcon from "@assets/utilisateur_1774189352602.png";
 
 type Tab = {
   path: string;
@@ -14,8 +16,8 @@ const tabs: Tab[] = [
   { path: "/", label: "Accueil", imgIcon: accueilIcon },
   { path: "/invest", label: "Produits", imgIcon: produitsIcon },
   { path: "/invite", label: "Invité", icon: Users },
-  { path: "/billet", label: "Billet", icon: Newspaper },
-  { path: "/account", label: "Compte", icon: User },
+  { path: "/billet", label: "Billet", imgIcon: billetIcon },
+  { path: "/account", label: "Compte", imgIcon: compteIcon },
 ];
 
 export default function BottomNav() {
