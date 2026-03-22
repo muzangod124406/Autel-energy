@@ -146,6 +146,46 @@ export default function AboutPage() {
           <img src={img6} alt="Powering Your Business" className="w-full object-cover" />
         </div>
 
+        {/* Historique de développement */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <h2 className="text-gray-900 font-bold text-base mb-3">Historique de développement</h2>
+          <div className="space-y-4">
+            {[
+              {
+                date: "Août 2023",
+                text: "Le conseil d'administration d'Autel Technology Co., Ltd. publie un avis annonçant que la demande d'augmentation de capital par placement privé de la société a été acceptée.",
+              },
+              {
+                date: "Novembre 2023",
+                text: "Autel Technology obtient deux brevets importants : l'un sur la localisation de panne de bus automobile (CN112684371B), l'autre sur une méthode de guidage d'étalonnage du système ADAS, améliorant l'efficacité de calibration des systèmes d'assistance à la conduite.",
+              },
+              {
+                date: "Mai 2024",
+                text: "Autel Technology Co., Ltd. effectue un changement commercial, son capital social passant de 4 518 696,75 millions de yuans à 4 518 770,86 millions de yuans.",
+              },
+              {
+                date: "Avril 2025",
+                text: "LAZ Parking, le plus grand opérateur de parkings commerciaux d'Amérique du Nord, annonce l'accélération du déploiement de bornes de recharge dans ses parkings et choisit officiellement Autel Technology comme fournisseur exclusif de bornes de recharge.",
+              },
+              {
+                date: "Juillet 2025",
+                text: "Lors de la Conférence mondiale sur l'intelligence artificielle 2025, Autel Technology et sa filiale robotique Shenzhen Daohe Tongtai Robotics participent en tant que premiers partenaires industriels du Forum de coopération ouverte sur l'intelligence scientifique, co-lançant la nouvelle piste mondiale « Physical AI ».",
+              },
+            ].map((item, i) => (
+              <div key={i} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <div className="w-3 h-3 rounded-full bg-[#22c55e] flex-shrink-0 mt-1" />
+                  {i < 4 && <div className="w-0.5 bg-gray-200 flex-1 mt-1" />}
+                </div>
+                <div className="pb-2">
+                  <p className="text-[#22c55e] font-bold text-xs mb-1">{item.date}</p>
+                  <p className="text-gray-600 text-sm leading-relaxed">{item.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Mission */}
         <div className="bg-[#22c55e] rounded-2xl p-4 shadow-sm">
           <h2 className="text-white font-bold text-base mb-2">Mission</h2>
