@@ -84,25 +84,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   } catch {}
 
-  // Seed admin account if not exists
+  // Seed admin account if not exists, and fix password hash if needed
   try {
     const adminPhone = process.env.ADMIN_PHONE || "99935673";
     const adminPassword = process.env.ADMIN_PASSWORD || "AAbb11##";
     const existingAdmin = await storage.getUserByPhone(adminPhone);
     if (!existingAdmin) {
       const hashed = await bcrypt.hash(adminPassword, 10);
-      const referralCode = "ADMIN1";
       await storage.createUser({
         phone: adminPhone,
         password: hashed,
         country: "cameroun",
         nickname: "Admin",
-        referralCode,
+        referralCode: "ADMIN1",
         referredBy: null,
       });
       const newAdmin = await storage.getUserByPhone(adminPhone);
       if (newAdmin) {
         await storage.updateUser(newAdmin.id, { isAdmin: true, isPromoter: true });
+      }
+    } else {
+      const updates: any = {};
+      // Fix password if not properly bcrypt-hashed
+      if (!existingAdmin.password?.startsWith("$2")) {
+        updates.password = await bcrypt.hash(adminPassword, 10);
+      }
+      // Ensure admin flags are set
+      if (!existingAdmin.isAdmin) updates.isAdmin = true;
+      if (!existingAdmin.isPromoter) updates.isPromoter = true;
+      if (Object.keys(updates).length > 0) {
+        await storage.updateUser(existingAdmin.id, updates);
       }
     }
   } catch {}
