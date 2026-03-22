@@ -4,37 +4,53 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import backIcon from "@assets/back_1773610656109.png";
-import musicIcon from "@assets/music_1773610656200.png";
-import luckySignImg from "@assets/img_2_1773610656230.png";
-import myPrizesImg from "@assets/img_4_1773610656263.png";
-import startBtnImg from "@assets/img13_1773610656306.png";
+import { ChevronLeft, Volume2, VolumeX } from "lucide-react";
 
 const SEGMENTS = [
-  { value: 50,    label: "FCFA50" },
-  { value: 100,   label: "FCFA100" },
-  { value: 200,   label: "FCFA200" },
-  { value: 400,   label: "FCFA400" },
-  { value: 600,   label: "FCFA600" },
-  { value: 1000,  label: "FCFA1000" },
-  { value: 5000,  label: "FCFA5000" },
-  { value: 7000,  label: "FCFA7000" },
-  { value: 77000, label: "FCFA77000" },
+  { value: 50,    label: "Cash\nRewards",    color: "#e74c3c" },
+  { value: 100,   label: "Cash\nRewards",    color: "#3498db" },
+  { value: 200,   label: "Cash\nRewards",    color: "#e67e22" },
+  { value: 400,   label: "Cash\nRewards",    color: "#27ae60" },
+  { value: 600,   label: "Grand\nPrize",     color: "#9b59b6" },
+  { value: 1000,  label: "Cash\nRewards",    color: "#1abc9c" },
+  { value: 5000,  label: "Special\nBonus",   color: "#f39c12" },
+  { value: 7000,  label: "5 lucky\ndraws",   color: "#2980b9" },
+  { value: 77000, label: "2 lucky\ndraws",   color: "#16a085" },
 ];
 
-const PRIZE_LABELS: Record<number, string> = {
-  50: "Lucky Bonus-50",
-  100: "Lucky Bonus-100",
-  200: "Lucky Bonus-200",
-  400: "Lucky Bonus-400",
-  600: "Lucky Bonus-600",
-  1000: "Lucky Bonus-1000",
-  5000: "Lucky Bonus-5000",
-  7000: "Lucky Bonus-7000",
-  77000: "Lucky Bonus-77000",
-};
-
 const NUM_SEGS = SEGMENTS.length;
+
+const FAKE_PHONES = [
+  "22****73","77****09","90****81","65****34","96****47",
+  "07****12","55****98","78****54","66****01","44****73",
+  "81****70","33****12","70****41","98****23","62****54",
+  "51****90","87****63","74****02","43****95","69****10",
+];
+const FAKE_AMOUNTS = [50, 100, 200, 400, 600, 1000, 5000];
+
+function makeFakeHistory() {
+  const now = Date.now();
+  return Array.from({ length: 20 }, (_, i) => ({
+    phone: FAKE_PHONES[i % FAKE_PHONES.length],
+    amount: FAKE_AMOUNTS[Math.floor(Math.random() * FAKE_AMOUNTS.length)],
+  }));
+}
+
+function HorizontalTicker() {
+  const [items] = useState(() => makeFakeHistory());
+  const text = items.map(it => `📢 ${it.phone} a retiré avec succès ${it.amount.toLocaleString()} FCFA`).join("   ·   ");
+
+  return (
+    <div className="overflow-hidden flex items-center gap-2 py-2 px-3" style={{ background: "rgba(0,0,0,0.25)", borderRadius: 10 }}>
+      <Volume2 className="w-4 h-4 text-white shrink-0" />
+      <div className="overflow-hidden flex-1">
+        <div className="whitespace-nowrap text-white text-xs animate-marquee">
+          {text}&nbsp;&nbsp;&nbsp;&nbsp;{text}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function drawWheel(canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext("2d");
@@ -42,136 +58,105 @@ function drawWheel(canvas: HTMLCanvasElement) {
   const size = canvas.width;
   const cx = size / 2, cy = size / 2;
   const outerR = size / 2 - 2;
-  const segR = outerR - 28;
+  const ringR = outerR - 4;
+  const segR = ringR - 22;
   const segAngle = (2 * Math.PI) / NUM_SEGS;
 
   ctx.clearRect(0, 0, size, size);
 
+  // Outer gold ring
+  const grad = ctx.createRadialGradient(cx, cy, segR + 4, cx, cy, outerR);
+  grad.addColorStop(0, "#f5c842");
+  grad.addColorStop(0.5, "#d4a017");
+  grad.addColorStop(1, "#b8860b");
   ctx.beginPath();
   ctx.arc(cx, cy, outerR, 0, 2 * Math.PI);
-  ctx.fillStyle = "#1a3a8f";
+  ctx.fillStyle = grad;
   ctx.fill();
 
-  const numDots = 32;
+  // Gold studs
+  const numDots = 36;
   for (let i = 0; i < numDots; i++) {
     const angle = (i / numDots) * 2 * Math.PI - Math.PI / 2;
-    const dx = cx + (outerR - 12) * Math.cos(angle);
-    const dy = cy + (outerR - 12) * Math.sin(angle);
+    const r = outerR - 10;
+    const dx = cx + r * Math.cos(angle);
+    const dy = cy + r * Math.sin(angle);
     ctx.beginPath();
-    ctx.arc(dx, dy, 5, 0, 2 * Math.PI);
-    ctx.fillStyle = i % 2 === 0 ? "#f59e0b" : "#ffffff";
+    ctx.arc(dx, dy, 4.5, 0, 2 * Math.PI);
+    const dotGrad = ctx.createRadialGradient(dx - 1, dy - 1, 0.5, dx, dy, 4.5);
+    dotGrad.addColorStop(0, "#fff7d6");
+    dotGrad.addColorStop(1, "#d4a017");
+    ctx.fillStyle = dotGrad;
     ctx.fill();
   }
 
+  // Segments
   SEGMENTS.forEach((seg, i) => {
     const startAngle = i * segAngle - Math.PI / 2;
     const endAngle = startAngle + segAngle;
-    const isBlue = i % 2 === 0;
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, segR, startAngle, endAngle);
     ctx.closePath();
-    ctx.fillStyle = isBlue ? "#2563eb" : "#c9a46e";
+    ctx.fillStyle = seg.color;
     ctx.fill();
-    ctx.strokeStyle = "#1a3a8f";
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
+    // Coin icon on segment
+    const coinAngle = startAngle + segAngle / 2;
+    const coinR = segR * 0.75;
+    const cx2 = cx + coinR * Math.cos(coinAngle);
+    const cy2 = cy + coinR * Math.sin(coinAngle);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx2, cy2, 8, 0, 2 * Math.PI);
+    const coinG = ctx.createRadialGradient(cx2 - 2, cy2 - 2, 1, cx2, cy2, 8);
+    coinG.addColorStop(0, "#fff176");
+    coinG.addColorStop(1, "#f59e0b");
+    ctx.fillStyle = coinG;
+    ctx.fill();
+    ctx.strokeStyle = "#d97706";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = "#7c3a0a";
+    ctx.font = "bold 7px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("$", cx2, cy2);
+    ctx.restore();
+
+    // Text label
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(startAngle + segAngle / 2);
-    ctx.textAlign = "center";
-    ctx.fillStyle = isBlue ? "#ffffff" : "#7c3a0a";
-    ctx.font = "bold 9px Arial";
-    ctx.shadowColor = "rgba(0,0,0,0.4)";
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 8px Arial";
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
     ctx.shadowBlur = 2;
-    const textR = segR * 0.58;
-    const parts = seg.label.match(/([A-Z]+)(\d+)/) || [];
-    if (parts.length >= 3) {
-      ctx.fillText(parts[1], textR, -4);
-      ctx.fillText(parts[2], textR, 8);
-    } else {
-      ctx.fillText(seg.label, textR, 4);
-    }
+    const lines = seg.label.split("\n");
+    const textR = segR * 0.43;
+    lines.forEach((line, li) => {
+      ctx.fillText(line, textR, (li - (lines.length - 1) / 2) * 10);
+    });
     ctx.restore();
   });
-}
 
-const FAKE_PHONES = [
-  "22****7731","77****4509","90****2281","65****1834","96****0047",
-  "07****3312","55****6698","78****2254","66****9901","44****5573",
-  "81****3370","33****8812","70****6641","98****0023","62****7754",
-  "51****4490","87****1163","74****8802","43****2295","69****5510",
-];
-const FAKE_AMOUNTS = [50, 100, 200, 400, 600, 1000, 5000];
-
-function makeFakeHistory() {
-  const now = Date.now();
-  return Array.from({ length: 40 }, (_, i) => {
-    const d = new Date(now - i * 3 * 60000 - Math.floor(Math.random() * 60000));
-    return {
-      id: i,
-      phone: FAKE_PHONES[i % FAKE_PHONES.length],
-      amount: FAKE_AMOUNTS[Math.floor(Math.random() * FAKE_AMOUNTS.length)],
-      date: d.toLocaleString("fr-FR", {
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit",
-      }),
-    };
-  });
-}
-
-function ScrollingHistory() {
-  const [items] = useState(() => makeFakeHistory());
-  const listRef = useRef<HTMLDivElement>(null);
-  const posRef = useRef(0);
-  const frameRef = useRef(0);
-
-  useEffect(() => {
-    const el = listRef.current;
-    if (!el) return;
-    const ITEM_H = 56;
-    const total = items.length * ITEM_H;
-
-    function tick() {
-      posRef.current += 0.5;
-      if (posRef.current >= total / 2) posRef.current = 0;
-      if (el) el.style.transform = `translateY(-${posRef.current}px)`;
-      frameRef.current = requestAnimationFrame(tick);
-    }
-    frameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameRef.current);
-  }, [items.length]);
-
-  const doubled = [...items, ...items];
-
-  return (
-    <div className="overflow-hidden" style={{ height: 280 }}>
-      <div ref={listRef} style={{ willChange: "transform" }}>
-        {doubled.map((item, i) => (
-          <div
-            key={i}
-            style={{ height: 56 }}
-            className="flex items-center gap-3 px-1 border-b border-dashed border-green-600"
-          >
-            <div className="w-9 h-9 rounded-full bg-purple-500 flex items-center justify-center text-yellow-300 text-lg shrink-0">
-              👑
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-medium">{item.phone}</p>
-              <p className="text-red-400 text-xs">
-                {PRIZE_LABELS[item.amount]} FCFA{item.amount}.00
-              </p>
-            </div>
-            <p className="text-green-300 text-xs shrink-0 text-right leading-tight">
-              {item.date}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  // Inner white circle (center hub)
+  const hubR = segR * 0.22;
+  ctx.beginPath();
+  ctx.arc(cx, cy, hubR, 0, 2 * Math.PI);
+  const hubGrad = ctx.createRadialGradient(cx - hubR * 0.3, cy - hubR * 0.3, 2, cx, cy, hubR);
+  hubGrad.addColorStop(0, "#ffffff");
+  hubGrad.addColorStop(1, "#e0e0e0");
+  ctx.fillStyle = hubGrad;
+  ctx.fill();
+  ctx.strokeStyle = "#ccc";
+  ctx.lineWidth = 2;
+  ctx.stroke();
 }
 
 export default function GamePage() {
@@ -208,8 +193,8 @@ export default function GamePage() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.width = 280;
-    canvas.height = 280;
+    canvas.width = 300;
+    canvas.height = 300;
     drawWheel(canvas);
   }, []);
 
@@ -233,7 +218,7 @@ export default function GamePage() {
       setTimeout(() => {
         setSpinning(false);
         setResult(winAmount);
-        toast({ title: "Félicitations!", description: `Vous avez gagné FCFA${winAmount.toFixed(2)}` });
+        toast({ title: "🎉 Félicitations !", description: `Vous avez gagné FCFA ${winAmount.toLocaleString()}` });
         queryClient.invalidateQueries({ queryKey: ["/api/user/spin-tickets"] });
         queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
         refreshUser();
@@ -244,110 +229,131 @@ export default function GamePage() {
     }
   });
 
+  const handleSpin = () => {
+    if (!spinning && tickets > 0) {
+      setResult(null);
+      spinMutation.mutate();
+    }
+  };
+
   return (
-    <div className="min-h-screen pb-8" style={{ background: "#22c55e" }}>
-      <div className="relative flex items-center justify-between px-4 pt-6 pb-2">
+    <div className="min-h-screen pb-8" style={{ background: "linear-gradient(160deg, #16a34a 0%, #22c55e 40%, #4ade80 100%)" }}>
+
+      {/* ── Header ─────────────────────────── */}
+      <div className="flex items-center justify-between px-4 pt-8 pb-4">
         <button data-testid="button-back" onClick={() => navigate("/")}
-          className="w-10 h-10 rounded-full bg-gray-700/80 flex items-center justify-center z-10">
-          <img src={backIcon} alt="retour" className="w-6 h-6 object-contain" />
+          className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          <ChevronLeft className="w-5 h-5 text-white" />
         </button>
-        <div className="absolute left-1/2 -translate-x-1/2 top-1">
-          <img src={luckySignImg} alt="Lucky spinning" className="h-24 object-contain" />
-        </div>
+        <h1 className="text-white font-bold text-lg">Tirage Au Sort</h1>
         <button data-testid="button-music" onClick={toggleMusic}
-          className="w-10 h-10 rounded-full bg-[#1a6b3a] flex items-center justify-center z-10 relative">
-          <img src={musicIcon} alt="music"
-            className={`w-6 h-6 object-contain ${musicPlaying ? "animate-spin" : ""}`}
-            style={{ animationDuration: "3s" }}
-          />
-          {!musicPlaying && (
-            <div className="absolute inset-0 rounded-full overflow-hidden flex items-center justify-center">
-              <div className="w-[2px] h-8 bg-red-400 rotate-45" />
-            </div>
-          )}
+          className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          {musicPlaying
+            ? <Volume2 className="w-5 h-5 text-white" />
+            : <VolumeX className="w-5 h-5 text-white" />}
         </button>
       </div>
 
-      <div className="flex flex-col items-center px-4 mt-4">
-        <div className="relative">
+      {/* ── Ticker horizontal ─────────────── */}
+      <div className="mx-4 mb-4">
+        <HorizontalTicker />
+      </div>
+
+      {/* ── Badge tickets ─────────────────── */}
+      <div className="flex justify-center mb-3">
+        <div className="bg-red-500 rounded-full px-5 py-1.5 shadow-lg">
+          <p className="text-white font-bold text-sm">
+            Loterie : {tickets} &nbsp;·&nbsp; Tirez votre chance !
+          </p>
+        </div>
+      </div>
+
+      {/* ── Roue ──────────────────────────── */}
+      <div className="flex justify-center relative">
+        {/* Flèche pointeur */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-20">
           <div style={{
-            transform: `rotate(${rotation}deg)`,
-            transition: spinning ? "transform 4.5s cubic-bezier(0.17,0.67,0.12,0.99)" : "none",
-          }}>
-            <canvas ref={canvasRef} className="w-[280px] h-[280px]" />
-          </div>
-
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0"
-              style={{
-                borderLeft: "10px solid transparent",
-                borderRight: "10px solid transparent",
-                borderBottom: "22px solid #dc2626",
-              }}
-            />
-          </div>
-
-          <button data-testid="button-spin"
-            onClick={() => { if (!spinning && tickets > 0) { setResult(null); spinMutation.mutate(); } }}
-            disabled={spinning || tickets <= 0 || spinMutation.isPending}
-            className="absolute inset-0 flex items-center justify-center">
-            <img src={startBtnImg} alt="Start"
-              className={`w-16 h-16 object-contain transition-transform ${spinning ? "opacity-60" : "hover:scale-105"}`}
-            />
-          </button>
-
-          <button data-testid="button-my-prizes"
-            className="absolute -bottom-4 -right-4 pointer-events-auto">
-            <img src={myPrizesImg} alt="My prizes" className="w-16 h-16 object-contain" />
-          </button>
+            width: 0, height: 0,
+            borderLeft: "12px solid transparent",
+            borderRight: "12px solid transparent",
+            borderTop: "26px solid #ef4444",
+            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))"
+          }} />
         </div>
 
-        <p className="text-white mt-8 text-sm text-center">
-          Vous avez{" "}
-          <span className="font-bold text-yellow-300 text-base">{tickets}</span>{" "}
-          chance{tickets !== 1 ? "s" : ""} de participer à la loterie
-        </p>
+        {/* Canvas roue */}
+        <div style={{
+          transform: `rotate(${rotation}deg)`,
+          transition: spinning ? "transform 4.5s cubic-bezier(0.17,0.67,0.12,0.99)" : "none",
+        }}>
+          <canvas ref={canvasRef} style={{ width: 300, height: 300 }} />
+        </div>
 
+        {/* Bouton GO au centre */}
+        <button
+          data-testid="button-spin"
+          onClick={handleSpin}
+          disabled={spinning || tickets <= 0 || spinMutation.isPending}
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ pointerEvents: spinning ? "none" : "auto" }}
+        >
+          <div style={{
+            width: 68, height: 68,
+            borderRadius: "50%",
+            background: spinning
+              ? "radial-gradient(circle at 35% 35%, #f87171, #dc2626)"
+              : "radial-gradient(circle at 35% 35%, #ff8080, #ef4444)",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.35), inset 0 -4px 8px rgba(0,0,0,0.2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            border: "3px solid #fff",
+            transition: "transform 0.15s",
+            transform: spinning ? "scale(0.95)" : "scale(1)"
+          }}>
+            <span className="text-white font-extrabold text-xl tracking-wide"
+              style={{ textShadow: "0 2px 4px rgba(0,0,0,0.4)" }}>
+              GO
+            </span>
+          </div>
+        </button>
+      </div>
+
+      {/* ── Résultat ─────────────────────── */}
+      <div className="text-center mt-4 min-h-[40px]">
+        {spinning && (
+          <p className="text-white/80 text-sm animate-pulse">La roue tourne...</p>
+        )}
         {result !== null && !spinning && (
-          <p className="text-yellow-300 font-bold text-lg mt-1">
-            + FCFA{result.toFixed(2)}
-          </p>
+          <div className="inline-flex flex-col items-center bg-white/20 rounded-2xl px-6 py-2">
+            <p className="text-yellow-300 font-extrabold text-2xl">+ FCFA {result.toLocaleString()}</p>
+            <p className="text-white/80 text-xs mt-0.5">Ajouté à votre solde</p>
+          </div>
+        )}
+        {tickets <= 0 && result === null && !spinning && (
+          <p className="text-white/70 text-sm">Plus de tickets — achetez un produit pour en gagner</p>
         )}
       </div>
 
-      <div className="mx-4 mt-10">
-        <div className="rounded-2xl overflow-hidden" style={{ background: "#f5e6cc", border: "3px solid #d4944a" }}>
-          <div className="py-3 text-center border-b border-[#d4944a]">
-            <h2 className="text-red-600 font-bold text-xl">Prize Display</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-3 p-3">
-            {SEGMENTS.map(seg => (
-              <div key={seg.value} className="rounded-xl p-3 flex flex-col items-center gap-1"
-                style={{ background: "#f0d8b0", border: "2px solid #c9a46e" }}
-                data-testid={`prize-card-${seg.value}`}>
-                <div className="w-20 h-20 rounded-xl flex items-center justify-center text-5xl"
-                  style={{ background: "#fcebd0" }}>
-                  {seg.value >= 10000 ? "🏆" : seg.value >= 1000 ? "💎" : seg.value >= 400 ? "🎁" : "🎯"}
-                </div>
-                <p className="text-gray-800 font-bold text-sm text-center">{PRIZE_LABELS[seg.value]}</p>
-                <p className="text-red-600 font-bold text-sm">FCFA{seg.value.toLocaleString()}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* ── Règles ───────────────────────── */}
+      <div className="mx-4 mt-6 bg-white/15 rounded-2xl p-4">
+        <h2 className="text-white font-bold text-sm mb-2">Règles de la loterie</h2>
+        <p className="text-white/80 text-xs leading-relaxed">
+          Règle 1 : Chaque achat d'un produit donne droit à une participation au tirage au sort.
+        </p>
+        <p className="text-white/80 text-xs leading-relaxed mt-1">
+          Règle 2 : Chaque invitation d'un membre valide donne droit à une participation au tirage au sort.
+        </p>
       </div>
 
-      <div className="mx-4 mt-4 rounded-2xl p-4" style={{ background: "#1a6b3a" }}>
-        <h2 className="text-white font-bold text-base mb-3">Historique des tirages au sort</h2>
-        <ScrollingHistory />
-      </div>
-
-      <div className="mx-4 mt-4 bg-white rounded-2xl p-4">
-        <h2 className="font-bold text-base mb-2">Règles de la loterie</h2>
-        <p className="text-sm text-gray-500 mb-2">Sweepstakes Rules</p>
-        <p className="text-sm text-gray-700">Règle 1 : Chaque achat d'un produit donne droit à une participation au tirage au sort</p>
-        <p className="text-sm text-gray-700 mt-1">Règle 2 : Chaque invitation d'un membre valide donne droit à une participation au tirage au sort</p>
-      </div>
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          display: inline-block;
+          animation: marquee 28s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }
