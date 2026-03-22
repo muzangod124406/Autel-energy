@@ -644,32 +644,41 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ============ ADMIN ROUTES ============
   app.get("/api/admin/stats", requireAuth, requireAdmin, async (req: Request, res: Response) => {
-    const fromDate = req.query.from ? new Date(req.query.from as string) : undefined;
-    const [
-      totalUsers, todayRegistrations, todayDeposits, todayWithdrawals,
-      totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers,
-      usersWithProducts, pendingDeposits, pendingWithdrawals, todayDepositsAmount,
-      todayWithdrawalsAmount, totalPlatformBalance, totalDistributedGains,
-      totalCommissions, activeProductsCount
-    ] = await Promise.all([
-      storage.getUserCount(fromDate), storage.getTodayRegistrations(fromDate),
-      storage.getTodayDeposits(), storage.getTodayWithdrawals(),
-      storage.getTotalDeposits(fromDate), storage.getTotalWithdrawalsAmount(fromDate),
-      storage.getActiveInvestmentCount(), storage.getTodayDepositorsCount(),
-      storage.getTodayWithdrawersCount(), storage.getUsersWithProductsCount(),
-      storage.getPendingDepositsStats(), storage.getPendingWithdrawalsStats(),
-      storage.getTodayDepositsAmount(fromDate), storage.getTodayWithdrawalsAmount(fromDate),
-      storage.getTotalPlatformBalance(), storage.getTotalDistributedGains(),
-      storage.getTotalCommissions(), storage.getActiveProductsCount()
-    ]);
-    res.json({
-      totalUsers, todayRegistrations, todayDeposits, todayWithdrawals,
-      totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers,
-      usersWithProducts, pendingDeposits, pendingWithdrawals, todayDepositsAmount,
-      todayWithdrawalsAmount, totalPlatformBalance, totalDistributedGains,
-      totalCommissions, activeProductsCount,
-      statsFromDate: fromDate ? fromDate.toISOString() : null
-    });
+    try {
+      const cfg = await storage.getSettings();
+      const fromDate = req.query.from
+        ? new Date(req.query.from as string)
+        : cfg.statsResetDate
+          ? new Date(cfg.statsResetDate as unknown as string)
+          : undefined;
+      const [
+        totalUsers, todayRegistrations, todayDeposits, todayWithdrawals,
+        totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers,
+        usersWithProducts, pendingDeposits, pendingWithdrawals, todayDepositsAmount,
+        todayWithdrawalsAmount, totalPlatformBalance, totalDistributedGains,
+        totalCommissions, activeProductsCount
+      ] = await Promise.all([
+        storage.getUserCount(fromDate), storage.getTodayRegistrations(fromDate),
+        storage.getTodayDeposits(), storage.getTodayWithdrawals(),
+        storage.getTotalDeposits(fromDate), storage.getTotalWithdrawalsAmount(fromDate),
+        storage.getActiveInvestmentCount(), storage.getTodayDepositorsCount(),
+        storage.getTodayWithdrawersCount(), storage.getUsersWithProductsCount(),
+        storage.getPendingDepositsStats(), storage.getPendingWithdrawalsStats(),
+        storage.getTodayDepositsAmount(fromDate), storage.getTodayWithdrawalsAmount(fromDate),
+        storage.getTotalPlatformBalance(), storage.getTotalDistributedGains(),
+        storage.getTotalCommissions(), storage.getActiveProductsCount()
+      ]);
+      res.json({
+        totalUsers, todayRegistrations, todayDeposits, todayWithdrawals,
+        totalDeposits, totalWithdrawals, activeInvestments, todayDepositors, todayWithdrawers,
+        usersWithProducts, pendingDeposits, pendingWithdrawals, todayDepositsAmount,
+        todayWithdrawalsAmount, totalPlatformBalance, totalDistributedGains,
+        totalCommissions, activeProductsCount,
+        statsFromDate: fromDate ? fromDate.toISOString() : null
+      });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
   });
 
   app.get("/api/admin/team-overview", requireAuth, requireAdmin, async (req: Request, res: Response) => {

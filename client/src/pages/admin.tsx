@@ -245,10 +245,12 @@ export default function AdminPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Statistiques réinitialisées" });
+      toast({ title: "Statistiques réinitialisées avec succès" });
+      setStatsFrom("");
+      setAppliedStatsFrom("");
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
     },
-    onError: (e: any) => toast({ title: "Erreur", description: e.message, variant: "destructive" })
+    onError: (e: any) => toast({ title: e.message?.replace(/^\d+:\s*/, "") || "Erreur de réinitialisation", variant: "destructive" })
   });
 
   const { data: giftCodes = [] } = useQuery({ queryKey: ["/api/admin/gift-codes"] });
@@ -542,8 +544,10 @@ export default function AdminPage() {
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="w-4 h-4 text-blue-600" />
                 <span className="font-semibold text-sm">Filtrer les statistiques depuis</span>
-                {appliedStatsFrom && (
-                  <span className="ml-auto text-xs text-blue-600 font-medium">depuis {new Date(appliedStatsFrom).toLocaleDateString("fr-FR")}</span>
+                {s?.statsFromDate && (
+                  <span className="ml-auto text-xs text-orange-600 font-medium bg-orange-50 px-2 py-0.5 rounded-full">
+                    depuis {new Date(s.statsFromDate).toLocaleDateString("fr-FR")}
+                  </span>
                 )}
               </div>
               <Input type="date" value={statsFrom} onChange={e => setStatsFrom(e.target.value)}
