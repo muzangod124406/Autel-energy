@@ -4,17 +4,29 @@ import { INVESTMENT_PLANS, formatCFA } from "@/lib/constants";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Calendar, ShieldAlert, ChevronRight } from "lucide-react";
+import { Lock, Calendar, ShieldAlert, ChevronRight, X, PackageX } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 import autelImg from "@assets/Autel-MaxiCharger-DC-Fast-60-240KW-EV-Charger-All-Security-Equ_1774131863511.jpg";
 
 const fixedPlan = INVESTMENT_PLANS.fix;
+
+type ConfirmItem = {
+  type: "fix" | "activity";
+  name: string;
+  imageUrl?: string;
+  price: number;
+  dailyGain: number;
+  duration: number;
+  totalGain: number;
+  payload: any;
+};
 
 export default function InvestPage() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"fix" | "activities">("fix");
   const [buyingProductId, setBuyingProductId] = useState<string | null>(null);
+  const [confirmItem, setConfirmItem] = useState<ConfirmItem | null>(null);
 
   const { data: adminProducts = [], isLoading: loadingProducts } = useQuery<any[]>({
     queryKey: ["/api/products"],
@@ -40,45 +52,70 @@ export default function InvestPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       refreshUser();
       setBuyingProductId(null);
+      setConfirmItem(null);
     },
     onError: (e: any) => {
       toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur", variant: "destructive" });
       setBuyingProductId(null);
+      setConfirmItem(null);
     }
   });
 
-  const handleInvestFixed = (plan: any) => {
+  const openConfirmFixed = (plan: any) => {
     if (!user) return;
     if (user.depositBalance < plan.amount) {
       toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
       return;
     }
-    investMutation.mutate({
-      planType: "fix",
-      vipLevel: plan.vip,
-      amount: plan.amount,
+    setConfirmItem({
+      type: "fix",
+      name: plan.name,
+      imageUrl: undefined,
+      price: plan.amount,
       dailyGain: plan.dailyGain,
       duration: fixedPlan.duration,
       totalGain: plan.totalGain,
+      payload: {
+        planType: "fix",
+        vipLevel: plan.vip,
+        amount: plan.amount,
+        dailyGain: plan.dailyGain,
+        duration: fixedPlan.duration,
+        totalGain: plan.totalGain,
+      },
     });
   };
 
-  const handleBuyProduct = (product: any) => {
+  const openConfirmProduct = (product: any) => {
     if (!user) return;
     if (user.depositBalance < product.price) {
       toast({ title: "Solde insuffisant", description: "Rechargez votre compte", variant: "destructive" });
       return;
     }
-    setBuyingProductId(product.id);
-    investMutation.mutate({
-      planType: "activity",
-      vipLevel: 1,
-      amount: product.price,
+    setConfirmItem({
+      type: "activity",
+      name: product.name,
+      imageUrl: product.imageUrl,
+      price: product.price,
       dailyGain: product.dailyGain,
       duration: product.cycleDays,
       totalGain: product.totalGain,
-      productId: product.id,
+      payload: {
+        planType: "activity",
+        vipLevel: 1,
+        amount: product.price,
+        dailyGain: product.dailyGain,
+        duration: product.cycleDays,
+        totalGain: product.totalGain,
+        productId: product.id,
+      },
     });
+    setBuyingProductId(product.id);
+  };
+
+  const handleConfirm = () => {
+    if (!confirmItem) return;
+    investMutation.mutate(confirmItem.payload);
   };
 
   const availableProducts = (adminProducts as any[]).filter((p: any) => {
@@ -124,9 +161,7 @@ export default function InvestPage() {
               data-testid={`plan-card-${plan.vip}`}
               className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
             >
-              {/* Image + info row */}
               <div className="flex gap-3 p-3 pb-2">
-                {/* Image with badge */}
                 <div className="relative flex-shrink-0">
                   <img
                     src={autelImg}
@@ -137,8 +172,6 @@ export default function InvestPage() {
                     120jours
                   </span>
                 </div>
-
-                {/* Info */}
                 <div className="flex-1 pt-0.5">
                   <p className="font-bold text-gray-900 text-sm mb-1">{plan.name}</p>
                   <p className="text-gray-700 text-xs">
@@ -152,18 +185,14 @@ export default function InvestPage() {
                   </p>
                 </div>
               </div>
-
-              {/* Divider + note */}
               <div className="border-t border-gray-100 mx-3" />
               <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
                 Un produit qui vous permet de faire travailler votre argent et de générer <span className="font-semibold text-[#22c55e] not-italic">{plan.dailyGain.toLocaleString("fr-FR")} FCFA</span> par jour pendant 120 jours.
               </p>
-
-              {/* Buy button */}
               <div className="px-3 pb-3">
                 <button
                   data-testid={`invest-vip-${plan.vip}`}
-                  onClick={() => handleInvestFixed(plan)}
+                  onClick={() => openConfirmFixed(plan)}
                   disabled={investMutation.isPending}
                   className="w-full py-3 bg-[#22c55e] text-white font-bold rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-1"
                 >
@@ -178,7 +207,6 @@ export default function InvestPage() {
       {/* ── ACTIVITIES ──────────────────────────────── */}
       {activeTab === "activities" && (
         <div className="px-3 space-y-3">
-          {/* Must have fixed plan */}
           {!hasActiveFixed && (
             <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5">
               <ShieldAlert className="w-4 h-4 text-orange-500 flex-shrink-0" />
@@ -191,7 +219,6 @@ export default function InvestPage() {
             </div>
           )}
 
-          {/* Loading skeleton */}
           {loadingProducts && (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
@@ -209,7 +236,6 @@ export default function InvestPage() {
             </div>
           )}
 
-          {/* Empty state */}
           {!loadingProducts && availableProducts.length === 0 && (
             <div className="px-4">
               <EmptyState
@@ -219,7 +245,6 @@ export default function InvestPage() {
             </div>
           )}
 
-          {/* Product cards */}
           {!loadingProducts && availableProducts.map((product: any) => {
             const remaining = product.purchaseLimit > 0
               ? product.purchaseLimit - product.purchaseCount
@@ -233,7 +258,6 @@ export default function InvestPage() {
                 data-testid={`product-card-${product.id}`}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
               >
-                {/* Image + info row */}
                 <div className="flex gap-3 p-3 pb-2">
                   <div className="relative flex-shrink-0">
                     {product.imageUrl ? (
@@ -252,8 +276,6 @@ export default function InvestPage() {
                       </span>
                     )}
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 pt-0.5">
                     <p className="font-bold text-gray-900 text-sm mb-1">{product.name}</p>
                     <p className="text-gray-700 text-xs">
@@ -267,16 +289,12 @@ export default function InvestPage() {
                     </p>
                   </div>
                 </div>
-
-                {/* Divider + note */}
                 <div className="border-t border-gray-100 mx-3" />
                 <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
                   {product.description
                     ? product.description
                     : <>Un produit d'activité qui génère <span className="font-semibold text-[#22c55e] not-italic">{product.dailyGain.toLocaleString("fr-FR")} FCFA</span> par jour pendant {product.duration} jours.</>}
                 </p>
-
-                {/* Action button */}
                 <div className="px-3 pb-3">
                   {!isLaunched ? (
                     <div className="w-full py-3 bg-gray-100 rounded-xl text-center text-xs text-gray-500 font-medium">
@@ -290,7 +308,7 @@ export default function InvestPage() {
                   ) : (
                     <button
                       data-testid={`buy-product-${product.id}`}
-                      onClick={() => handleBuyProduct(product)}
+                      onClick={() => openConfirmProduct(product)}
                       disabled={isBuying || investMutation.isPending}
                       className="w-full py-3 bg-[#22c55e] text-white font-bold rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-1"
                     >
@@ -301,6 +319,81 @@ export default function InvestPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── MODAL DE CONFIRMATION ────────────────────── */}
+      {confirmItem && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 px-4 pb-6">
+          <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl">
+            {/* Image produit */}
+            <div className="relative w-full h-44">
+              {confirmItem.imageUrl ? (
+                <img src={confirmItem.imageUrl} alt={confirmItem.name} className="w-full h-full object-cover" />
+              ) : (
+                <img src={autelImg} alt={confirmItem.name} className="w-full h-full object-cover" />
+              )}
+              <button
+                data-testid="modal-close"
+                onClick={() => { setConfirmItem(null); setBuyingProductId(null); }}
+                className="absolute top-3 right-3 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 to-transparent h-16" />
+            </div>
+
+            {/* Prix */}
+            <div className="bg-white pt-3 pb-1 text-center">
+              <p className="text-[#22c55e] font-black text-3xl tracking-tight">
+                FCFA {confirmItem.price.toLocaleString("fr-FR")}
+              </p>
+            </div>
+
+            {/* Bloc vert */}
+            <div className="bg-[#22c55e] mx-0 px-5 pt-3 pb-5">
+              <p className="text-white text-center text-sm font-semibold mb-0.5">
+                Revenus crédités toutes les 24 h
+              </p>
+              <p className="text-white/80 text-center text-xs mb-4">
+                Vous pouvez acheter plusieurs appareils pour augmenter vos revenus
+              </p>
+
+              <div className="space-y-2 mb-5">
+                <div className="flex justify-between">
+                  <span className="text-white/90 text-sm">Durée :</span>
+                  <span className="text-white font-bold text-sm">{confirmItem.duration} jours</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/90 text-sm">Revenu quotidien :</span>
+                  <span className="text-white font-bold text-sm">FCFA {confirmItem.dailyGain.toLocaleString("fr-FR")}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/90 text-sm">Revenu total :</span>
+                  <span className="text-white font-bold text-sm">FCFA {confirmItem.totalGain.toLocaleString("fr-FR")}</span>
+                </div>
+              </div>
+
+              {/* Boutons */}
+              <div className="flex gap-3">
+                <button
+                  data-testid="modal-cancel"
+                  onClick={() => { setConfirmItem(null); setBuyingProductId(null); }}
+                  className="flex-1 py-3 bg-gray-400 text-white font-bold rounded-2xl text-sm"
+                >
+                  Annuler
+                </button>
+                <button
+                  data-testid="modal-confirm"
+                  onClick={handleConfirm}
+                  disabled={investMutation.isPending}
+                  className="flex-1 py-3 bg-white text-[#22c55e] font-bold rounded-2xl text-sm disabled:opacity-60"
+                >
+                  {investMutation.isPending ? "..." : "Confirmer"}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
