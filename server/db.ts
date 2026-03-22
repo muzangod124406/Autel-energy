@@ -10,7 +10,7 @@ if (!connectionString) {
 
 const isSupabase = !!process.env.SUPABASE_DATABASE_URL;
 
-const pool = new pg.Pool({
+export const pool = new pg.Pool({
   connectionString,
   ssl: isSupabase ? { rejectUnauthorized: false } : undefined,
 });

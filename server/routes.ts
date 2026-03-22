@@ -1,10 +1,11 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
@@ -70,8 +71,13 @@ function toSlug(name: string): string {
 }
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
+  const PgStore = connectPgSimple(session);
   app.use(
     session({
+      store: new PgStore({
+        pool,
+        createTableIfMissing: true,
+      }),
       secret: process.env.SESSION_SECRET || "redbull-invest-secret-key-2024",
       resave: false,
       saveUninitialized: false,
