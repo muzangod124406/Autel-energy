@@ -37,7 +37,7 @@ export default function BilletPage() {
             onClick={() => navigate("/post-blog")}
             className="flex items-center gap-3 bg-white/20 rounded-2xl px-3 py-3 text-left"
           >
-            <div className="w-10 h-10 rounded-xl bg-white/30 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-400 flex items-center justify-center shrink-0">
               <img src={submitIcon} alt="Publier" className="w-6 h-6 object-contain brightness-0 invert" />
             </div>
             <div className="flex-1 min-w-0">
@@ -52,11 +52,11 @@ export default function BilletPage() {
             onClick={() => setShowRules(true)}
             className="flex items-center gap-3 bg-white/20 rounded-2xl px-3 py-3 text-left"
           >
-            <div className="w-10 h-10 rounded-xl bg-white/30 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-orange-400 flex items-center justify-center shrink-0">
               <img src={rulesIcon} alt="Règles" className="w-6 h-6 object-contain brightness-0 invert" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-bold text-sm leading-tight">Publier</p>
+              <p className="text-white font-bold text-sm leading-tight">Règles</p>
               <p className="text-white/80 text-xs leading-tight mt-0.5">Explication des règles</p>
             </div>
             <ArrowRight className="w-4 h-4 text-white/70 shrink-0" />
