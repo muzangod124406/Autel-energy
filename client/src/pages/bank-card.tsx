@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, User, CreditCard, DollarSign, Lock, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
+import { ChevronLeft, ChevronDown } from "lucide-react";
+import serviceClientIcon from "@assets/service-clients_1774171700016.png";
 
 const FALLBACK_METHODS = ["Orange Money", "MTN Mobile Money", "Moov Money", "Wave", "Celtis"];
 
@@ -18,14 +17,34 @@ export default function BankCardPage() {
   const { data: existingCard } = useQuery({ queryKey: ["/api/user/bank-card"] });
   const { data: countriesRaw = [] } = useQuery({ queryKey: ["/api/countries"] });
 
-  const [paymentMethod, setPaymentMethod] = useState((existingCard as any)?.paymentMethod || "");
-  const [accountName, setAccountName] = useState((existingCard as any)?.accountName || "");
-  const [phoneNumber, setPhoneNumber] = useState((existingCard as any)?.phoneNumber || "");
-  const [usdtWallet, setUsdtWallet] = useState((existingCard as any)?.usdtWallet || "");
-  const [txPassword, setTxPassword] = useState("");
-
   const userCountry = (countriesRaw as any[]).find((c: any) => c.slug === (user?.country || ""));
   const allMethods: string[] = userCountry?.operators?.length > 0 ? userCountry.operators : FALLBACK_METHODS;
+
+  const [accountName, setAccountName] = useState((existingCard as any)?.accountName || "");
+  const [paymentMethod, setPaymentMethod] = useState((existingCard as any)?.paymentMethod || allMethods[0] || "Wave");
+  const [phoneNumber, setPhoneNumber] = useState((existingCard as any)?.phoneNumber || "");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [showMethodMenu, setShowMethodMenu] = useState(false);
+  const otpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const sendOtpMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/auth/send-otp", { phone: user?.phone });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setOtpSent(true);
+      toast({ title: "Code envoyé !", description: "Un code OTP a été envoyé sur votre téléphone" });
+      if (data?.code) {
+        if (otpTimerRef.current) clearTimeout(otpTimerRef.current);
+        otpTimerRef.current = setTimeout(() => setOtpCode(data.code), 10000);
+      }
+    },
+    onError: (e: any) => {
+      toast({ title: "Erreur", description: e.message?.replace(/^\d+:\s*/, "") || "Erreur", variant: "destructive" });
+    }
+  });
 
   const saveMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -33,7 +52,7 @@ export default function BankCardPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Enregistré", description: "Carte bancaire enregistrée avec succès" });
+      toast({ title: "Enregistré", description: "Compte de retrait enregistré avec succès" });
       queryClient.invalidateQueries({ queryKey: ["/api/user/bank-card"] });
       navigate("/withdraw");
     },
@@ -42,147 +61,160 @@ export default function BankCardPage() {
     }
   });
 
-  const handleSave = () => {
-    if (!paymentMethod) {
-      toast({ title: "Erreur", description: "Veuillez sélectionner une banque", variant: "destructive" });
+  const handleConfirm = () => {
+    if (!accountName.trim()) {
+      toast({ title: "Erreur", description: "Veuillez entrer votre nom", variant: "destructive" });
       return;
     }
-    if (!accountName.trim()) {
-      toast({ title: "Erreur", description: "Veuillez entrer le nom du titulaire", variant: "destructive" });
+    if (!paymentMethod) {
+      toast({ title: "Erreur", description: "Veuillez choisir une banque", variant: "destructive" });
       return;
     }
     if (!phoneNumber.trim()) {
-      toast({ title: "Erreur", description: "Veuillez entrer le numéro de carte", variant: "destructive" });
+      toast({ title: "Erreur", description: "Veuillez entrer le numéro de compte", variant: "destructive" });
       return;
     }
-    if (!txPassword.trim()) {
-      toast({ title: "Erreur", description: "Veuillez entrer le mot de passe de transaction", variant: "destructive" });
+    if (!otpCode.trim()) {
+      toast({ title: "Erreur", description: "Veuillez entrer le code OTP", variant: "destructive" });
       return;
     }
     saveMutation.mutate({
-      country: user?.country || "togo",
+      country: user?.country || "",
       paymentMethod,
       phoneNumber,
       accountName,
-      usdtWallet,
     });
   };
 
+  const userPhone = user?.phone ? `+${userCountry?.dialCode || ""}${user.phone}` : "";
+
   return (
-    <div className="min-h-screen bg-[#f0f0e4]">
-      <div className="bg-[#22c55e] px-4 pt-6 pb-8">
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header vert */}
+      <div className="bg-[#22c55e] px-4 pt-10 pb-4 flex items-center relative">
         <button
-          onClick={() => navigate("/withdraw")}
-          className="flex items-center gap-2 text-white mb-4"
           data-testid="button-back-card"
+          onClick={() => navigate("/withdraw")}
+          className="flex items-center gap-1 text-white"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ChevronLeft className="w-5 h-5" />
+          <span className="text-sm font-medium">Retour</span>
         </button>
-        <h1 className="text-white text-xl font-bold text-center -mt-8">
-          Informations Mobile Money
+        <h1 className="absolute left-0 right-0 text-center text-white font-bold text-base pointer-events-none">
+          Compte de retrait
         </h1>
       </div>
 
-      <div className="px-4 -mt-4">
-        <div className="bg-white rounded-2xl shadow p-5 space-y-4">
-          <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-2">Banque</label>
-            <div className="relative">
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger
-                  data-testid="select-card-method"
-                  className="w-full h-12 bg-[#f5f5f5] border-none rounded-xl text-gray-500"
-                >
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-gray-400" />
-                    <SelectValue placeholder="Veuillez sélectionner une banque" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {allMethods.map(m => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+      {/* Formulaire */}
+      <div className="flex-1 px-5 pt-8 pb-10 relative">
 
-          <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-2">Nom du titulaire</label>
-            <div className="flex items-center gap-2 bg-[#f5f5f5] rounded-xl px-4 h-12">
-              <User className="w-4 h-4 text-gray-400 shrink-0" />
-              <Input
-                data-testid="input-card-name"
-                placeholder="Nom du titulaire du compte"
-                value={accountName}
-                onChange={e => setAccountName(e.target.value)}
-                className="border-none bg-transparent p-0 h-auto focus-visible:ring-0 text-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-2">Numéro de carte</label>
-            <div className="flex items-center gap-2 bg-[#f5f5f5] rounded-xl px-4 h-12">
-              <CreditCard className="w-4 h-4 text-gray-400 shrink-0" />
-              <Input
-                data-testid="input-card-phone"
-                placeholder="Numéro de compte bancaire"
-                value={phoneNumber}
-                onChange={e => setPhoneNumber(e.target.value)}
-                className="border-none bg-transparent p-0 h-auto focus-visible:ring-0 text-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-2">USDT TRC-20</label>
-            <div className="flex items-center gap-2 bg-[#f5f5f5] rounded-xl px-4 h-12">
-              <DollarSign className="w-4 h-4 text-gray-400 shrink-0" />
-              <Input
-                data-testid="input-card-usdt"
-                placeholder="USDT Wallet"
-                value={usdtWallet}
-                onChange={e => setUsdtWallet(e.target.value)}
-                className="border-none bg-transparent p-0 h-auto focus-visible:ring-0 text-sm"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-semibold text-gray-700 block mb-2">Mot de passe de transaction</label>
-            <div className="flex items-center gap-2 bg-[#f5f5f5] rounded-xl px-4 h-12">
-              <Lock className="w-4 h-4 text-gray-400 shrink-0" />
-              <Input
-                data-testid="input-card-txpassword"
-                type="password"
-                placeholder="Mot de passe de transaction"
-                value={txPassword}
-                onChange={e => setTxPassword(e.target.value)}
-                className="border-none bg-transparent p-0 h-auto focus-visible:ring-0 text-sm"
-              />
-            </div>
-          </div>
-
-          <button
-            data-testid="button-save-card"
-            onClick={handleSave}
-            disabled={saveMutation.isPending}
-            className="w-full h-12 rounded-full bg-[#22c55e] text-white font-bold text-base disabled:opacity-60"
-          >
-            {saveMutation.isPending ? "En cours..." : "Ajouter une carte bancaire"}
-          </button>
+        {/* Avatar service client flottant */}
+        <div className="absolute right-5 top-4 w-14 h-14 rounded-full border-2 border-[#22c55e] overflow-hidden shadow-md">
+          <img src={serviceClientIcon} alt="Service client" className="w-full h-full object-cover" />
         </div>
 
-        <div className="mt-4 pb-8">
-          <h3 className="text-[#22c55e] font-bold text-base mb-3">Explication</h3>
-          <div className="space-y-2 text-sm text-gray-700">
-            <p>1. Vous ne pouvez ajouter qu'une seule carte</p>
-            <p>2. Le numéro de carte doit être un numéro de téléphone Mobile Money valide</p>
-            <p>3. Le nom du titulaire doit correspondre au nom enregistré sur le compte Mobile Money</p>
-            <p>4. Pour modifier votre carte, soumettez un nouveau formulaire</p>
+        {/* Votre nom */}
+        <div className="mb-5">
+          <label className="block text-gray-700 text-sm mb-1">Votre nom</label>
+          <input
+            data-testid="input-card-name"
+            type="text"
+            value={accountName}
+            onChange={e => setAccountName(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-3 text-sm text-gray-800 outline-none focus:border-[#22c55e]"
+            placeholder=""
+          />
+        </div>
+
+        {/* Nom banque */}
+        <div className="mb-5">
+          <label className="block text-gray-700 text-sm mb-1">Nom banque</label>
+          <div className="relative">
+            <button
+              data-testid="select-card-method"
+              type="button"
+              onClick={() => setShowMethodMenu(v => !v)}
+              className="w-full border border-gray-300 rounded px-3 py-3 text-sm text-gray-800 flex items-center justify-between bg-gray-100 outline-none"
+            >
+              <span>{paymentMethod || "Choisir..."}</span>
+              <ChevronDown className="w-4 h-4 text-gray-500" />
+            </button>
+            {showMethodMenu && (
+              <div className="absolute z-30 left-0 right-0 bg-white border border-gray-200 rounded shadow-lg mt-1 max-h-48 overflow-y-auto">
+                {allMethods.map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => { setPaymentMethod(m); setShowMethodMenu(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 ${paymentMethod === m ? "text-[#22c55e] font-semibold" : "text-gray-700"}`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Numéro de compte */}
+        <div className="mb-5">
+          <label className="block text-gray-700 text-sm mb-1">Numéro de compte</label>
+          <input
+            data-testid="input-card-phone"
+            type="text"
+            value={phoneNumber}
+            onChange={e => setPhoneNumber(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-3 text-sm text-gray-800 outline-none focus:border-[#22c55e]"
+            placeholder=""
+          />
+        </div>
+
+        {/* Numéro de téléphone (pré-rempli) */}
+        <div className="mb-5">
+          <label className="block text-gray-700 text-sm mb-1">Numéro de téléphone</label>
+          <input
+            data-testid="input-card-userphone"
+            type="text"
+            value={userPhone}
+            readOnly
+            className="w-full border border-gray-300 rounded px-3 py-3 text-sm text-gray-400 bg-gray-50 outline-none"
+          />
+        </div>
+
+        {/* Code OTP */}
+        <div className="mb-8">
+          <label className="block text-gray-700 text-sm mb-1">Code OTP</label>
+          <div className="flex gap-2">
+            <input
+              data-testid="input-card-otp"
+              type="text"
+              value={otpCode}
+              onChange={e => setOtpCode(e.target.value)}
+              maxLength={6}
+              className="flex-1 border border-gray-300 rounded px-3 py-3 text-sm text-gray-800 outline-none focus:border-[#22c55e]"
+              placeholder=""
+            />
+            <button
+              data-testid="button-send-otp"
+              type="button"
+              onClick={() => sendOtpMutation.mutate()}
+              disabled={sendOtpMutation.isPending}
+              className="px-5 py-3 bg-[#f87171] text-white font-semibold text-sm rounded disabled:opacity-60 whitespace-nowrap"
+            >
+              {sendOtpMutation.isPending ? "..." : "Obtenir"}
+            </button>
+          </div>
+        </div>
+
+        {/* Bouton Confirmer */}
+        <button
+          data-testid="button-save-card"
+          onClick={handleConfirm}
+          disabled={saveMutation.isPending}
+          className="w-full py-4 bg-[#f87171] text-white font-bold text-base rounded disabled:opacity-60"
+        >
+          {saveMutation.isPending ? "En cours..." : "Confirmer"}
+        </button>
       </div>
     </div>
   );
