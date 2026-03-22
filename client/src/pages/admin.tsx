@@ -1198,25 +1198,28 @@ export default function AdminPage() {
                     <img src={t.imageUrl} alt="Capture" className="rounded-lg w-full max-h-48 object-contain bg-gray-100" />
                   )}
 
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      type="number"
-                      placeholder="Bonus (FCFA)"
-                      className="h-8 text-sm"
-                      value={ticketBonuses[t.id] || ""}
-                      onChange={e => setTicketBonuses(p => ({ ...p, [t.id]: e.target.value }))}
-                      data-testid={`input-ticket-bonus-${t.id}`}
-                    />
-                    <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
-                      onClick={() => updateTicketMutation.mutate({ id: t.id, status: "approved", bonus: parseInt(ticketBonuses[t.id] || "0") })}
-                      data-testid={`btn-approve-ticket-${t.id}`}>
-                      <Check className="w-3 h-3 mr-1" /> Approuver
-                    </Button>
-                    <Button size="sm" variant="destructive" className="h-8 whitespace-nowrap"
-                      onClick={() => updateTicketMutation.mutate({ id: t.id, status: "rejected" })}
-                      data-testid={`btn-reject-ticket-${t.id}`}>
-                      <X className="w-3 h-3 mr-1" /> Refuser
-                    </Button>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[10px] text-gray-400 font-medium">Bonus → Solde de recharge</p>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        type="number"
+                        placeholder="Bonus (FCFA)"
+                        className="h-8 text-sm"
+                        value={ticketBonuses[t.id] || ""}
+                        onChange={e => setTicketBonuses(p => ({ ...p, [t.id]: e.target.value }))}
+                        data-testid={`input-ticket-bonus-${t.id}`}
+                      />
+                      <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
+                        onClick={() => updateTicketMutation.mutate({ id: t.id, status: "approved", bonus: parseInt(ticketBonuses[t.id] || "0") })}
+                        data-testid={`btn-approve-ticket-${t.id}`}>
+                        <Check className="w-3 h-3 mr-1" /> Approuver
+                      </Button>
+                      <Button size="sm" variant="destructive" className="h-8 whitespace-nowrap"
+                        onClick={() => updateTicketMutation.mutate({ id: t.id, status: "rejected" })}
+                        data-testid={`btn-reject-ticket-${t.id}`}>
+                        <X className="w-3 h-3 mr-1" /> Refuser
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))
