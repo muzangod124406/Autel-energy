@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Users } from "lucide-react"; 
+import inviteIcon from "@assets/20260322_131635_1774189399662.png";
 import produitsIcon from "@assets/20260322_131838_1774186541685.png";
 import accueilIcon from "@assets/téléchargement_(37)_1774187714341.png";
 import billetIcon from "@assets/bloguer_1774189352527.png";
@@ -15,7 +15,7 @@ type Tab = {
 const tabs: Tab[] = [
   { path: "/", label: "Accueil", imgIcon: accueilIcon },
   { path: "/invest", label: "Produits", imgIcon: produitsIcon },
-  { path: "/invite", label: "Invité", icon: Users },
+  { path: "/invite", label: "Invité", imgIcon: inviteIcon },
   { path: "/billet", label: "Billet", imgIcon: billetIcon },
   { path: "/account", label: "Compte", imgIcon: compteIcon },
 ];
