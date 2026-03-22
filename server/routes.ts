@@ -241,8 +241,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       await storage.updateUser(userId, { spinTickets: (user.spinTickets || 0) + 1, depositBalance: user.depositBalance - amount });
 
-      // Handle referral commissions (configurable via settings)
-      if (user.referredBy) {
+      // Handle referral commissions — only on the user's very first fix investment
+      const allUserInvestments = await storage.getUserInvestments(userId);
+      const fixInvestmentsBefore = allUserInvestments.filter(
+        i => i.planType === "fix" && i.id !== investment.id
+      );
+      const isFirstFixInvestment = planType === "fix" && fixInvestmentsBefore.length === 0;
+
+      if (user.referredBy && isFirstFixInvestment) {
         const cfg = await storage.getSettings();
         const rate1 = (cfg.referralCommission1 ?? 20) / 100;
         const rate2 = (cfg.referralCommission2 ?? 3) / 100;
