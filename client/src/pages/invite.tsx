@@ -103,10 +103,10 @@ export default function InvitePage() {
         <div className="flex gap-3">
           <button
             data-testid="button-liste-revenus"
-            onClick={() => navigate("/team-revenue")}
+            onClick={() => navigate("/team-details")}
             className="flex-1 bg-[#22c55e] text-white font-semibold text-sm py-3 rounded-2xl shadow-sm"
           >
-            Liste des revenus
+            Détail de l'équipe
           </button>
           <button
             data-testid="button-inviter"
@@ -189,7 +189,7 @@ export default function InvitePage() {
                 </div>
                 <button
                   data-testid={`button-details-level-${level.num}`}
-                  onClick={() => navigate("/team-revenue")}
+                  onClick={() => navigate(`/team-details?level=${level.num}`)}
                   className="bg-gray-900 text-white text-sm font-bold px-5 py-2 rounded-xl shadow"
                 >
                   Détails

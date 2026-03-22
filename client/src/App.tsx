@@ -26,6 +26,7 @@ import TelegramPage from "@/pages/telegram";
 import OrdersPage from "@/pages/orders";
 import TransactionsPage from "@/pages/transactions";
 import TeamRevenuePage from "@/pages/team-revenue";
+import TeamDetailsPage from "@/pages/team-details";
 import BalancePage from "@/pages/balance";
 import AboutPage from "@/pages/about";
 import AdminPage from "@/pages/admin";
@@ -105,6 +106,7 @@ function AppContent() {
           <Route path="/orders" component={OrdersPage} />
           <Route path="/transactions" component={TransactionsPage} />
           <Route path="/team-revenue" component={TeamRevenuePage} />
+          <Route path="/team-details" component={TeamDetailsPage} />
           <Route path="/balance" component={BalancePage} />
           <Route path="/about" component={AboutPage} />
           <Route path="/admin" component={AdminPage} />

@@ -441,10 +441,24 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Referrals
   app.get("/api/user/referrals", requireAuth, async (req: Request, res: Response) => {
     const userId = (req.session as any).userId;
-    const level1 = await storage.getUserReferrals(userId, 1);
-    const level2 = await storage.getUserReferrals(userId, 2);
-    const level3 = await storage.getUserReferrals(userId, 3);
-    const user = await storage.getUser(userId);
+    const [rawL1, rawL2, rawL3, user] = await Promise.all([
+      storage.getUserReferrals(userId, 1),
+      storage.getUserReferrals(userId, 2),
+      storage.getUserReferrals(userId, 3),
+      storage.getUser(userId),
+    ]);
+    const enrichWithInvestments = async (refs: any[]) => {
+      return Promise.all(refs.map(async (ref) => {
+        const investments = await storage.getUserInvestments(ref.referredId);
+        const totalInvested = investments.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0);
+        return { ...ref, totalInvested };
+      }));
+    };
+    const [level1, level2, level3] = await Promise.all([
+      enrichWithInvestments(rawL1),
+      enrichWithInvestments(rawL2),
+      enrichWithInvestments(rawL3),
+    ]);
     res.json({ level1, level2, level3, commissionTotal: user?.commissionBalance || 0 });
   });
 
