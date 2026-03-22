@@ -94,11 +94,11 @@ export default function AccountPage() {
       testId: "button-cadeau",
     },
     {
-      label: "Paramètres",
-      icon: <img src={settingsIcon} alt="Paramètres" className="w-8 h-8 object-contain rounded-xl" />,
+      label: "À propos",
+      icon: <img src={settingsIcon} alt="À propos" className="w-8 h-8 object-contain rounded-xl" />,
       bg: "bg-blue-50",
-      route: "/settings",
-      testId: "button-parametres",
+      route: "/about",
+      testId: "button-apropos",
     },
   ];
 
