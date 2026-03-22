@@ -108,8 +108,8 @@ export default function ServiceClientPage() {
       }}
     >
       {/* ─── Header ─── */}
-      <div className="bg-[#22c55e] flex-shrink-0 pt-10">
-        <div className="flex items-center gap-3 px-3 pb-3">
+      <div className="bg-[#22c55e] flex-shrink-0" style={{ paddingTop: "env(safe-area-inset-top, 12px)" }}>
+        <div className="flex items-center gap-3 px-3 py-2">
           <button
             onClick={() => window.history.back()}
             data-testid="button-back-chat"
