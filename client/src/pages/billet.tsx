@@ -6,6 +6,8 @@ import rechargeCircleImg from "@assets/recharge_1773608793085.png";
 import EmptyState from "@/components/empty-state";
 import lv0Img from "@assets/lv0_1773608793133.png";
 import rewardIcon from "@assets/reward_icon_1773608863536.png";
+import submitIcon from "@assets/4245705_1774171951518.png";
+import rulesIcon from "@assets/loi_1774171951475.png";
 
 function maskPhone(phone: string) {
   if (!phone) return "****";
@@ -109,17 +111,17 @@ export default function BilletPage() {
         <button
           data-testid="button-soumettre"
           onClick={() => navigate("/post-blog")}
-          className="flex flex-col items-center gap-1 bg-[#22c55e] text-white text-xs font-bold px-3 py-3 rounded-l-xl shadow-lg mb-1"
+          className="flex flex-col items-center gap-1 bg-[#22c55e] text-white text-xs font-bold px-2 py-2 rounded-l-xl shadow-lg mb-1 w-14"
         >
-          <span className="text-base">🎁</span>
+          <img src={submitIcon} alt="Soumettre" className="w-6 h-6 object-contain brightness-0 invert" />
           <span>Soumettre</span>
         </button>
         <button
           data-testid="button-regles"
           onClick={() => setShowRules(true)}
-          className="flex flex-col items-center gap-1 bg-[#22c55e] text-white text-xs font-bold px-3 py-3 rounded-l-xl shadow-lg"
+          className="flex flex-col items-center gap-1 bg-[#22c55e] text-white text-xs font-bold px-2 py-2 rounded-l-xl shadow-lg w-14"
         >
-          <span className="text-base">🎁</span>
+          <img src={rulesIcon} alt="Règles" className="w-6 h-6 object-contain brightness-0 invert" />
           <span>Règles</span>
         </button>
       </div>
