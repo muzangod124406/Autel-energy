@@ -42,14 +42,16 @@ function FloatingButtons() {
       <button
         data-testid="float-btn-game"
         onClick={() => navigate("/game")}
-        className="w-14 h-14 rounded-full overflow-hidden shadow-lg border-2 border-white active:scale-95 transition-transform"
+        className="w-14 h-14 rounded-full overflow-hidden shadow-lg border-2 border-white animate-bounce-in"
+        style={{ animationDelay: "0.1s" }}
       >
         <img src={gameWheelImg} alt="Jeu" className="w-full h-full object-cover" />
       </button>
       <button
         data-testid="float-btn-service"
         onClick={() => navigate("/service-client")}
-        className="w-14 h-14 rounded-full overflow-hidden shadow-lg border-2 border-white active:scale-95 transition-transform"
+        className="w-14 h-14 rounded-full overflow-hidden shadow-lg border-2 border-white animate-bounce-in"
+        style={{ animationDelay: "0.22s" }}
       >
         <img src={serviceClientImg} alt="Service client" className="w-full h-full object-cover" />
       </button>
@@ -59,6 +61,7 @@ function FloatingButtons() {
 
 function AppContent() {
   const { user, isLoading } = useAuth();
+  const [location] = useLocation();
 
   if (isLoading) {
     return (
@@ -81,31 +84,33 @@ function AppContent() {
 
   return (
     <div className="min-h-screen pb-20">
-      <Switch>
-        <Route path="/" component={HomePage} />
-        <Route path="/invest" component={InvestPage} />
-        <Route path="/invite" component={InvitePage} />
-        <Route path="/billet" component={BilletPage} />
-        <Route path="/post-blog" component={PostBlogPage} />
-        <Route path="/account" component={AccountPage} />
-        <Route path="/game" component={GamePage} />
-        <Route path="/deposit" component={DepositPage} />
-        <Route path="/deposit-history" component={DepositHistoryPage} />
-        <Route path="/deposit-return" component={DepositReturnPage} />
-        <Route path="/withdraw" component={WithdrawPage} />
-        <Route path="/bank-card" component={BankCardPage} />
-        <Route path="/settings" component={SettingsPage} />
-        <Route path="/trade-password" component={TradePasswordPage} />
-        <Route path="/telegram" component={TelegramPage} />
-        <Route path="/orders" component={OrdersPage} />
-        <Route path="/transactions" component={TransactionsPage} />
-        <Route path="/balance" component={BalancePage} />
-        <Route path="/about" component={AboutPage} />
-        <Route path="/admin" component={AdminPage} />
-        <Route path="/treasure" component={TreasurePage} />
-        <Route path="/service-client" component={ServiceClientPage} />
-        <Route component={NotFound} />
-      </Switch>
+      <div key={location} className="animate-page-enter">
+        <Switch>
+          <Route path="/" component={HomePage} />
+          <Route path="/invest" component={InvestPage} />
+          <Route path="/invite" component={InvitePage} />
+          <Route path="/billet" component={BilletPage} />
+          <Route path="/post-blog" component={PostBlogPage} />
+          <Route path="/account" component={AccountPage} />
+          <Route path="/game" component={GamePage} />
+          <Route path="/deposit" component={DepositPage} />
+          <Route path="/deposit-history" component={DepositHistoryPage} />
+          <Route path="/deposit-return" component={DepositReturnPage} />
+          <Route path="/withdraw" component={WithdrawPage} />
+          <Route path="/bank-card" component={BankCardPage} />
+          <Route path="/settings" component={SettingsPage} />
+          <Route path="/trade-password" component={TradePasswordPage} />
+          <Route path="/telegram" component={TelegramPage} />
+          <Route path="/orders" component={OrdersPage} />
+          <Route path="/transactions" component={TransactionsPage} />
+          <Route path="/balance" component={BalancePage} />
+          <Route path="/about" component={AboutPage} />
+          <Route path="/admin" component={AdminPage} />
+          <Route path="/treasure" component={TreasurePage} />
+          <Route path="/service-client" component={ServiceClientPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
       <FloatingButtons />
       <BottomNav />
     </div>

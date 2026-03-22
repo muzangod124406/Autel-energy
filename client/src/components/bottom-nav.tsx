@@ -45,12 +45,12 @@ export default function BottomNav() {
                 <img
                   src={tab.imgIcon}
                   alt={tab.label}
-                  className={`w-9 h-9 object-contain ${isActive ? "opacity-100" : "opacity-40"}`}
+                  className={`w-9 h-9 object-contain transition-all duration-200 ${isActive ? "opacity-100 animate-tab-pop" : "opacity-40"}`}
                 />
               ) : (
-                <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+                <Icon className={`w-6 h-6 transition-all duration-200 ${isActive ? "animate-tab-pop" : ""}`} strokeWidth={isActive ? 2.5 : 2} />
               )}
-              <span className={`text-[10px] ${isActive ? "font-semibold text-[#22c55e]" : "font-medium"}`}>{tab.label}</span>
+              <span className={`text-[10px] transition-all duration-200 ${isActive ? "font-semibold text-[#22c55e] scale-105" : "font-medium"}`}>{tab.label}</span>
             </button>
           );
         })}

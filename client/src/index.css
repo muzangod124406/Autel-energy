@@ -310,3 +310,147 @@
 .overlay-fade-in {
   animation: overlay-fade-in 0.18s ease forwards;
 }
+
+/* ── Page entrance ─────────────────────────────── */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: page-enter 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Card stagger fade-up ──────────────────────── */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-card-in {
+  animation: card-in 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-card-in-1 { animation: card-in 0.36s 0.04s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-card-in-2 { animation: card-in 0.36s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-card-in-3 { animation: card-in 0.36s 0.13s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-card-in-4 { animation: card-in 0.36s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ── Slide in from bottom (dropdowns, select sheets) */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.30s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Scale pop (badges, chips, icons) ─────────── */
+@keyframes scale-pop {
+  0%   { transform: scale(0.75); opacity: 0; }
+  70%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+.animate-scale-pop {
+  animation: scale-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── Shimmer skeleton ──────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+/* ── Bounce-in for floating buttons ───────────── */
+@keyframes bounce-in {
+  0%   { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+  60%  { transform: scale(1.08) rotate(3deg);  opacity: 1; }
+  100% { transform: scale(1) rotate(0deg);     opacity: 1; }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── Ripple on press ───────────────────────────── */
+@keyframes ripple {
+  0%   { transform: scale(0); opacity: 0.5; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ── Global button press feel ──────────────────── */
+button, [role="button"] {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.12s ease;
+}
+
+button:active:not(:disabled), [role="button"]:active {
+  transform: scale(0.94);
+  opacity: 0.85;
+}
+
+/* ── Input focus glow ──────────────────────────── */
+input, textarea, select {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+input:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+
+/* ── Nav tab active scale ──────────────────────── */
+@keyframes tab-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+.animate-tab-pop {
+  animation: tab-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Fade in (simple) ──────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease forwards;
+}
+
+/* ── Number count roll ─────────────────────────── */
+@keyframes count-in {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.animate-count-in {
+  animation: count-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
