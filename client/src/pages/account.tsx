@@ -6,8 +6,9 @@ import autelLogo from "@assets/images_(11)_1774131992392.png";
 import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 import lockIcon from "@assets/19118881-verrouiller-l-etude-de-l-ecole-plat-couleur-icone-vec_1774169768536.jpg";
 import envelopeIcon from "@assets/4627452_1774169768599.png";
-import loginIcon from "@assets/8984546_1774169768623.png";
 import walletIcon from "@assets/withdraw_record_(1)_1774169798074.png";
+import giftIcon from "@assets/—Pngtree—vector_gift_icon_3988959_1774170175431.png";
+import settingsIcon from "@assets/apps.48434.14455387483127854.031a6d9c-9877-466c-8a76-4127fc639_1774170175386.png";
 
 export default function AccountPage() {
   const { user, logout } = useAuth();
@@ -96,22 +97,15 @@ export default function AccountPage() {
       testId: "button-service-client",
     },
     {
-      label: "Publications",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-          <rect x="3" y="3" width="18" height="18" rx="3" fill="#f59e0b" opacity=".15" />
-          <rect x="3" y="3" width="18" height="18" rx="3" stroke="#f59e0b" strokeWidth="1.5" />
-          <path d="M8 7h8M8 12h5" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M8 17l2-2 2 2 4-4" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-      bg: "bg-amber-50",
-      route: "/billet",
-      testId: "button-publications",
+      label: "Cadeau",
+      icon: <img src={giftIcon} alt="Cadeau" className="w-8 h-8 object-contain" />,
+      bg: "bg-cyan-50",
+      route: "/treasure",
+      testId: "button-cadeau",
     },
     {
       label: "Paramètres",
-      icon: <img src={loginIcon} alt="Paramètres" className="w-8 h-8 object-contain" />,
+      icon: <img src={settingsIcon} alt="Paramètres" className="w-8 h-8 object-contain rounded-xl" />,
       bg: "bg-blue-50",
       route: "/settings",
       testId: "button-parametres",

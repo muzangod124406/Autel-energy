@@ -26,6 +26,7 @@ import TransactionsPage from "@/pages/transactions";
 import BalancePage from "@/pages/balance";
 import AboutPage from "@/pages/about";
 import AdminPage from "@/pages/admin";
+import TreasurePage from "@/pages/treasure";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -72,6 +73,7 @@ function AppContent() {
         <Route path="/balance" component={BalancePage} />
         <Route path="/about" component={AboutPage} />
         <Route path="/admin" component={AdminPage} />
+        <Route path="/treasure" component={TreasurePage} />
         <Route component={NotFound} />
       </Switch>
       <BottomNav />
