@@ -1,14 +1,14 @@
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { LogOut, Shield, ChevronRight } from "lucide-react";
+import { Shield, ChevronRight } from "lucide-react";
 import autelLogo from "@assets/images_(11)_1774131992392.png";
 import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 import lockIcon from "@assets/19118881-verrouiller-l-etude-de-l-ecole-plat-couleur-icone-vec_1774169768536.jpg";
-import envelopeIcon from "@assets/4627452_1774169768599.png";
 import walletIcon from "@assets/withdraw_record_(1)_1774169798074.png";
 import giftIcon from "@assets/—Pngtree—vector_gift_icon_3988959_1774170175431.png";
 import settingsIcon from "@assets/apps.48434.14455387483127854.031a6d9c-9877-466c-8a76-4127fc639_1774170175386.png";
+import logoutIcon from "@assets/8984546_1774171682810.png";
 
 export default function AccountPage() {
   const { user, logout } = useAuth();
@@ -34,13 +34,6 @@ export default function AccountPage() {
       testId: "button-investir",
     },
     {
-      label: "Inviter",
-      icon: <img src={envelopeIcon} alt="Inviter" className="w-8 h-8 object-contain" />,
-      bg: "bg-orange-50",
-      route: "/invite",
-      testId: "button-inviter",
-    },
-    {
       label: "Commandes",
       icon: (
         <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
@@ -56,6 +49,22 @@ export default function AccountPage() {
       testId: "button-commandes",
     },
     {
+      label: "Facture",
+      icon: (
+        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
+          <rect x="4" y="2" width="16" height="20" rx="2" fill="#3b82f6" opacity=".15" />
+          <rect x="4" y="2" width="16" height="20" rx="2" stroke="#3b82f6" strokeWidth="1.5" />
+          <line x1="8" y1="7" x2="16" y2="7" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="8" y1="11" x2="16" y2="11" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="8" y1="15" x2="13" y2="15" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M14 17l2 2 3-3" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+      bg: "bg-blue-50",
+      route: "/transactions",
+      testId: "button-facture",
+    },
+    {
       label: "Mot de passe",
       icon: <img src={lockIcon} alt="Mot de passe" className="w-8 h-8 object-contain" />,
       bg: "bg-orange-50",
@@ -68,20 +77,6 @@ export default function AccountPage() {
       bg: "bg-green-50",
       route: "/bank-card",
       testId: "button-compte-retrait",
-    },
-    {
-      label: "Mon équipe",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-          <circle cx="9" cy="7" r="3" fill="#ef4444" opacity=".7" />
-          <circle cx="17" cy="7" r="2.5" fill="#ef4444" opacity=".5" />
-          <path d="M2 20c0-3.31 3.13-6 7-6s7 2.69 7 6" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-          <path d="M17 14c2.21 0 4 1.79 4 4" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      ),
-      bg: "bg-red-50",
-      route: "/referral",
-      testId: "button-mon-equipe",
     },
     {
       label: "Service client",
@@ -111,6 +106,14 @@ export default function AccountPage() {
       testId: "button-parametres",
     },
   ];
+
+  menuItems.push({
+    label: "Déconnecter",
+    icon: <img src={logoutIcon} alt="Déconnecter" className="w-8 h-8 object-contain" />,
+    bg: "bg-red-50",
+    route: "__logout__",
+    testId: "button-logout-grid",
+  });
 
   if (user.isAdmin) {
     menuItems.push({
@@ -221,7 +224,7 @@ export default function AccountPage() {
               <button
                 key={item.testId}
                 data-testid={item.testId}
-                onClick={() => navigate(item.route)}
+                onClick={() => item.route === "__logout__" ? handleLogout() : navigate(item.route)}
                 className="flex flex-col items-center gap-1.5"
               >
                 <div className={`w-14 h-14 ${item.bg} rounded-2xl flex items-center justify-center`}>
@@ -233,17 +236,6 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* ── Déconnexion ─────────────────────────── */}
-        <div className="bg-white rounded-2xl shadow-sm">
-          <button
-            data-testid="button-logout"
-            onClick={handleLogout}
-            className="flex items-center justify-center gap-2 w-full py-4 text-orange-500"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="font-semibold text-base">Déconnexion</span>
-          </button>
-        </div>
 
       </div>
     </div>
