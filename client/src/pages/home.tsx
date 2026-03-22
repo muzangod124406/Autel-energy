@@ -1,6 +1,8 @@
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import autelLogo from "@assets/images_(11)_1774131992392.png";
 import rechargeIcon from "@assets/recharge_(1)_1773608231085.png";
 import withdrawIcon from "@assets/withdraw_1773608230743.png";
@@ -8,11 +10,42 @@ import blogIcon from "@assets/blog_(1)_1773608231117.png";
 import telegramIcon from "@assets/telegram_(1)_1773608231149.png";
 import walletIcon from "@assets/3930266_1773614141608.png";
 import rewardIcon from "@assets/reward_icon_1773608863536.png";
+import goBtn from "@assets/cjbtn_1774197553367.png";
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [, navigate] = useLocation();
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
+  const { toast } = useToast();
+  const qc = useQueryClient();
+
+  const dailyBonusMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/user/daily-bonus"),
+    onSuccess: async () => {
+      await refreshUser();
+      qc.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      toast({ title: "Bonus de 50 FCFA crédité sur votre solde de retrait !" });
+    },
+    onError: (err: any) => {
+      try {
+        const raw = err?.message || "";
+        const jsonStr = raw.substring(raw.indexOf("{"));
+        const data = JSON.parse(jsonStr);
+        toast({ title: data?.message || "Bonus déjà réclamé aujourd'hui" });
+      } catch {
+        toast({ title: "Bonus déjà réclamé aujourd'hui" });
+      }
+    },
+  });
+
+  const todayClaimed = (() => {
+    if (!user?.lastDailyBonus) return false;
+    const last = new Date(user.lastDailyBonus);
+    const now = new Date();
+    return last.getFullYear() === now.getFullYear() &&
+      last.getMonth() === now.getMonth() &&
+      last.getDate() === now.getDate();
+  })();
 
   if (!user) return null;
 
@@ -76,6 +109,25 @@ export default function HomePage() {
       </div>
 
       <div className="px-4 pt-4">
+
+        {/* ── Bouton S'identifier ─────────────────────── */}
+        <button
+          data-testid="button-daily-bonus"
+          onClick={() => !dailyBonusMutation.isPending && dailyBonusMutation.mutate()}
+          disabled={dailyBonusMutation.isPending || todayClaimed}
+          className="w-full mb-3 flex items-center justify-between rounded-full px-4 py-0 overflow-hidden shadow-lg"
+          style={{
+            background: "linear-gradient(90deg, #e03a1e 0%, #f97316 50%, #c57c00 100%)",
+            minHeight: 52,
+            opacity: todayClaimed ? 0.65 : 1,
+          }}
+        >
+          <span className="text-white font-bold text-base">
+            {todayClaimed ? "Bonus déjà réclamé ✓" : "S'identifier  50 FCFA"}
+          </span>
+          <img src={goBtn} alt="GO" className="w-14 h-14 object-contain -my-1" />
+        </button>
+
         <div
           data-testid="game-card"
           className="w-full rounded-2xl overflow-hidden relative shadow-xl"

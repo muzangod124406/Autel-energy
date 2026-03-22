@@ -20,6 +20,7 @@ interface User {
   isBanned: boolean;
   isPromoter: boolean;
   withdrawBlocked: boolean;
+  lastDailyBonus?: string | null;
 }
 
 interface AuthContextType {

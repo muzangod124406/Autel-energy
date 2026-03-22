@@ -24,6 +24,7 @@ export const users = pgTable("users", {
   isPromoter: boolean("is_promoter").notNull().default(false),
   withdrawBlocked: boolean("withdraw_blocked").notNull().default(false),
   requireInviteToWithdraw: boolean("require_invite_to_withdraw").notNull().default(false),
+  lastDailyBonus: timestamp("last_daily_bonus"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

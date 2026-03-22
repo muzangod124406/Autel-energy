@@ -462,6 +462,30 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json({ level1, level2, level3, commissionTotal: user?.commissionBalance || 0 });
   });
 
+  // Daily bonus (s'identifier)
+  app.post("/api/user/daily-bonus", requireAuth, async (req: Request, res: Response) => {
+    const userId = (req.session as any).userId;
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
+
+    const now = new Date();
+    if (user.lastDailyBonus) {
+      const last = new Date(user.lastDailyBonus);
+      const sameDay = last.getFullYear() === now.getFullYear() &&
+        last.getMonth() === now.getMonth() &&
+        last.getDate() === now.getDate();
+      if (sameDay) {
+        return res.status(400).json({ message: "Vous avez déjà réclamé le bonus aujourd'hui" });
+      }
+    }
+
+    const updated = await storage.updateUser(userId, {
+      withdrawBalance: user.withdrawBalance + 50,
+      lastDailyBonus: now,
+    });
+    res.json({ success: true, withdrawBalance: updated?.withdrawBalance });
+  });
+
   // Spin game
   app.post("/api/user/spin", requireAuth, async (req: Request, res: Response) => {
     try {
