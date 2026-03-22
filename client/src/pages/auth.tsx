@@ -2,10 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Phone, KeyRound, User, Shield, ChevronDown } from "lucide-react";
+import { Eye, EyeOff, Lock, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
-import { apiRequest } from "@/lib/queryClient";
-import autelLogo from "@assets/images_(11)_1774131992392.png";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -15,13 +13,13 @@ export default function AuthPage() {
 
   const [loginData, setLoginData] = useState({ phone: "", password: "", country: "" });
   const [regData, setRegData] = useState({ phone: "", password: "", country: "", nickname: "", inviteCode: "", otp: "" });
-  const [showPass, setShowPass] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showLoginPass, setShowLoginPass] = useState(false);
   const [showRegPass, setShowRegPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [otpCountdown, setOtpCountdown] = useState(0);
-  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [showRegCountryDropdown, setShowRegCountryDropdown] = useState(false);
+  const [showLoginCountry, setShowLoginCountry] = useState(false);
+  const [showRegCountry, setShowRegCountry] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -32,35 +30,9 @@ export default function AuthPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (otpCountdown > 0) {
-      const t = setTimeout(() => setOtpCountdown(c => c - 1), 1000);
-      return () => clearTimeout(t);
-    }
-  }, [otpCountdown]);
-
   const { data: countriesRaw = [] } = useQuery({ queryKey: ["/api/countries"] });
   const countries = countriesRaw as any[];
-  const getCountryObj = (slug: string) => countries.find((c: any) => c.slug === slug);
-
-  const handleSendOtp = async (phone: string) => {
-    if (!phone) {
-      toast({ title: "Erreur", description: "Veuillez entrer votre numéro de téléphone", variant: "destructive" });
-      return;
-    }
-    setOtpLoading(true);
-    try {
-      const res = await apiRequest("POST", "/api/auth/send-otp", { phone });
-      const data = await res.json();
-      setOtpCountdown(70);
-      setTimeout(() => {
-        setRegData(d => ({ ...d, otp: data.code }));
-      }, 10000);
-    } catch {
-      toast({ title: "Erreur", description: "Impossible d'envoyer le code OTP", variant: "destructive" });
-    }
-    setOtpLoading(false);
-  };
+  const getCountry = (slug: string) => countries.find((c: any) => c.slug === slug);
 
   const handleLogin = async () => {
     if (!loginData.country || !loginData.phone || !loginData.password) {
@@ -82,6 +54,10 @@ export default function AuthPage() {
       toast({ title: "Erreur", description: "Veuillez remplir tous les champs", variant: "destructive" });
       return;
     }
+    if (regData.password !== confirmPassword) {
+      toast({ title: "Erreur", description: "Les mots de passe ne correspondent pas", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       await register(regData);
@@ -92,186 +68,216 @@ export default function AuthPage() {
     setLoading(false);
   };
 
-  const loginCountry = getCountryObj(loginData.country);
-  const regCountry = getCountryObj(regData.country);
+  const loginCountry = getCountry(loginData.country);
+  const regCountry = getCountry(regData.country);
 
   return (
-    <div className="min-h-screen bg-[#f0f0e4] flex flex-col items-center pt-12 px-4 pb-8">
-      <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center mb-10">
-          <img src={autelLogo} alt="Autel Energy" className="h-20 w-20 object-cover rounded-2xl shadow-md" />
+    <div className="min-h-screen flex flex-col" style={{ background: "#FFD600" }}>
+
+      {/* ── Onglets ─────────────────────────── */}
+      <div className="flex items-end justify-center gap-10 pt-10 pb-4 px-6">
+        <button
+          data-testid="tab-login"
+          onClick={() => setMode("login")}
+          className="flex flex-col items-center gap-1"
+        >
+          <span className={`text-base font-bold ${mode === "login" ? "text-gray-900" : "text-gray-500"}`}>
+            Se Connecter
+          </span>
+          {mode === "login" && <span className="w-8 h-1 rounded-full bg-gray-900" />}
+        </button>
+        <button
+          data-testid="tab-register"
+          onClick={() => setMode("register")}
+          className="flex flex-col items-center gap-1"
+        >
+          <span className={`text-base font-bold ${mode === "register" ? "text-gray-900" : "text-gray-500"}`}>
+            S'inscrire
+          </span>
+          {mode === "register" && <span className="w-8 h-1 rounded-full bg-gray-900" />}
+        </button>
+      </div>
+
+      {/* ── Bannière promo (register uniquement) ── */}
+      {mode === "register" && (
+        <div className="mx-4 mb-3 rounded-2xl overflow-hidden relative" style={{ background: "linear-gradient(135deg, #FF6B00 0%, #FF3300 50%, #CC0000 100%)", minHeight: 100 }}>
+          <div className="absolute top-0 left-0 w-full h-full opacity-20"
+            style={{ backgroundImage: "repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 8px)", backgroundSize: "12px 12px" }} />
+          {/* Blocs décoratifs */}
+          <div className="absolute top-2 right-3 w-10 h-10 rounded-lg bg-orange-400 opacity-70 rotate-12" />
+          <div className="absolute bottom-2 right-8 w-6 h-6 rounded bg-yellow-400 opacity-80 -rotate-6" />
+          <div className="absolute top-4 right-14 w-5 h-5 rounded bg-red-300 opacity-60 rotate-3" />
+          <div className="relative px-5 py-4">
+            <p className="text-white font-bold text-base italic leading-tight drop-shadow">
+              Inscrivez-vous pour gagner
+            </p>
+            <p className="text-white font-extrabold text-3xl italic leading-tight drop-shadow tracking-wide">
+              250XOF+
+            </p>
+          </div>
         </div>
+      )}
 
+      {/* ── Carte formulaire ─────────────────── */}
+      <div className="flex-1 bg-white mx-3 rounded-3xl px-5 pt-6 pb-8 shadow-xl" style={{ minHeight: mode === "login" ? "70vh" : undefined }}>
+
+        {/* ══ CONNEXION ══ */}
         {mode === "login" && (
-          <div className="space-y-5">
-            <div>
-              <p className="text-gray-800 font-medium mb-2">Pays</p>
-              <div className="relative">
-                <button
-                  data-testid="select-country-login"
-                  type="button"
-                  className="w-full bg-[#e8e8d8] rounded-xl px-4 py-3 text-left text-gray-700 flex items-center justify-between"
-                  onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                >
-                  <span>{loginCountry ? `${loginCountry.flag} ${loginCountry.code}` : "Veuillez sélectionner votre pays"}</span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                </button>
-                {showCountryDropdown && (
-                  <div className="absolute z-50 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
-                    {countries.map((c: any) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-800"
-                        onClick={() => { setLoginData({ ...loginData, country: c.slug }); setShowCountryDropdown(false); }}
-                      >
-                        <span>{c.flag}</span>
-                        <span>{c.name} ({c.code})</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-gray-800 font-medium mb-2">Numéro de téléphone</p>
-              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
-                <Phone className="w-5 h-5 text-gray-500 shrink-0" />
-                <input
-                  data-testid="input-phone-login"
-                  type="tel"
-                  placeholder="Veuillez entrer votre numéro de téléphone"
-                  value={loginData.phone}
-                  onChange={e => setLoginData({ ...loginData, phone: e.target.value })}
-                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <p className="text-gray-800 font-medium mb-2">Mot de passe de connexion</p>
-              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
-                <KeyRound className="w-5 h-5 text-gray-500 shrink-0" />
-                <input
-                  data-testid="input-password-login"
-                  type={showPass ? "text" : "password"}
-                  placeholder="Mot de passe de connexion"
-                  value={loginData.password}
-                  onChange={e => setLoginData({ ...loginData, password: e.target.value })}
-                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
-                />
-                <button type="button" onClick={() => setShowPass(!showPass)}>
-                  {showPass ? <Eye className="w-5 h-5 text-gray-400" /> : <EyeOff className="w-5 h-5 text-gray-400" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
+          <div className="space-y-4">
+            {/* Pays */}
+            <div className="relative">
               <button
-                data-testid="tab-register"
+                data-testid="select-country-login"
                 type="button"
-                onClick={() => setMode("register")}
-                className="flex-1 py-3 rounded-full border-2 border-[#22c55e] text-[#22c55e] font-semibold bg-white"
+                onClick={() => setShowLoginCountry(!showLoginCountry)}
+                className="w-full bg-gray-100 rounded-2xl px-4 py-3.5 flex items-center justify-between text-gray-700"
               >
+                <span className="text-sm">{loginCountry ? `${loginCountry.flag} ${loginCountry.code}` : "Sélectionnez votre pays"}</span>
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              </button>
+              {showLoginCountry && (
+                <div className="absolute z-50 w-full bg-white rounded-2xl shadow-xl mt-1 overflow-hidden border border-gray-100">
+                  {countries.map((c: any) => (
+                    <button key={c.id} type="button"
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 text-gray-800 text-sm"
+                      onClick={() => { setLoginData({ ...loginData, country: c.slug }); setShowLoginCountry(false); }}>
+                      <span className="text-lg">{c.flag}</span>
+                      <span>{c.name} <span className="text-gray-400">{c.code}</span></span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Téléphone avec préfixe pays */}
+            <div className="flex items-center bg-gray-100 rounded-2xl overflow-hidden">
+              {loginCountry ? (
+                <span className="pl-4 pr-2 text-sm font-semibold text-gray-700 whitespace-nowrap">{loginCountry.code}</span>
+              ) : null}
+              <input
+                data-testid="input-phone-login"
+                type="tel"
+                placeholder="Entrez votre numéro de téléphone"
+                value={loginData.phone}
+                onChange={e => setLoginData({ ...loginData, phone: e.target.value })}
+                className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm px-4 py-3.5"
+              />
+            </div>
+
+            {/* Mot de passe */}
+            <div className="flex items-center bg-gray-100 rounded-2xl px-4 py-3.5 gap-3">
+              <Lock className="w-5 h-5 text-gray-400 shrink-0" />
+              <input
+                data-testid="input-password-login"
+                type={showLoginPass ? "text" : "password"}
+                placeholder="Entrez votre mot de passe"
+                value={loginData.password}
+                onChange={e => setLoginData({ ...loginData, password: e.target.value })}
+                className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
+              />
+              <button type="button" onClick={() => setShowLoginPass(!showLoginPass)}>
+                {showLoginPass ? <Eye className="w-5 h-5 text-gray-400" /> : <EyeOff className="w-5 h-5 text-gray-400" />}
+              </button>
+            </div>
+
+            {/* Flèche */}
+            <div className="text-center text-gray-400 text-xl">↓</div>
+
+            {/* Bouton */}
+            <button
+              data-testid="button-login"
+              type="button"
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full py-4 rounded-full font-extrabold text-gray-900 text-base tracking-widest shadow-md"
+              style={{ background: "#FFD600" }}
+            >
+              {loading ? "..." : "SE CONNECTER"}
+            </button>
+
+            <p className="text-center text-gray-500 text-sm pt-2">
+              Pas encore de compte ?{" "}
+              <button onClick={() => setMode("register")} className="text-orange-500 font-semibold">
                 S'inscrire
               </button>
-              <button
-                data-testid="button-login"
-                type="button"
-                onClick={handleLogin}
-                disabled={loading}
-                className="flex-1 py-3 rounded-full bg-[#22c55e] text-white font-semibold shadow-md"
-              >
-                {loading ? "..." : "Se connecter"}
-              </button>
-            </div>
+            </p>
           </div>
         )}
 
+        {/* ══ INSCRIPTION ══ */}
         {mode === "register" && (
-          <div className="space-y-5">
-            <div>
-              <p className="text-gray-800 font-medium mb-2">Pays</p>
+          <div className="space-y-4">
+            {/* Pays + téléphone */}
+            <div className="flex items-center bg-gray-100 rounded-2xl overflow-hidden">
               <div className="relative">
                 <button
                   data-testid="select-country-register"
                   type="button"
-                  className="w-full bg-[#e8e8d8] rounded-xl px-4 py-3 text-left text-gray-700 flex items-center justify-between"
-                  onClick={() => setShowRegCountryDropdown(!showRegCountryDropdown)}
+                  onClick={() => setShowRegCountry(!showRegCountry)}
+                  className="flex items-center gap-1 pl-4 pr-2 py-3.5 text-sm font-semibold text-gray-700 whitespace-nowrap"
                 >
-                  <span>{regCountry ? `${regCountry.flag} ${regCountry.name}` : "Veuillez sélectionner votre pays"}</span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                  <span>{regCountry ? `${regCountry.code}` : "+---"}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
                 </button>
-                {showRegCountryDropdown && (
-                  <div className="absolute z-50 w-full bg-white rounded-xl shadow-lg mt-1 overflow-hidden">
+                {showRegCountry && (
+                  <div className="absolute z-50 left-0 top-full w-56 bg-white rounded-2xl shadow-xl mt-1 overflow-hidden border border-gray-100">
                     {countries.map((c: any) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2 text-gray-800"
-                        onClick={() => { setRegData({ ...regData, country: c.slug }); setShowRegCountryDropdown(false); }}
-                      >
-                        <span>{c.flag}</span>
-                        <span>{c.name} ({c.code})</span>
+                      <button key={c.id} type="button"
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 text-gray-800 text-sm"
+                        onClick={() => { setRegData({ ...regData, country: c.slug }); setShowRegCountry(false); }}>
+                        <span className="text-lg">{c.flag}</span>
+                        <span>{c.name} <span className="text-gray-400">{c.code}</span></span>
                       </button>
                     ))}
                   </div>
                 )}
               </div>
+              <div className="w-px h-6 bg-gray-300" />
+              <input
+                data-testid="input-phone-register"
+                type="tel"
+                placeholder="Entrez votre numéro de téléphone"
+                value={regData.phone}
+                onChange={e => setRegData({ ...regData, phone: e.target.value })}
+                className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm px-4 py-3.5"
+              />
             </div>
 
-            <div>
-              <p className="text-gray-800 font-medium mb-2">Numéro de téléphone</p>
-              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
-                <Phone className="w-5 h-5 text-gray-500 shrink-0" />
-                <input
-                  data-testid="input-phone-register"
-                  type="tel"
-                  placeholder="Veuillez entrer votre numéro de téléphone"
-                  value={regData.phone}
-                  onChange={e => setRegData({ ...regData, phone: e.target.value })}
-                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
-                />
-              </div>
+            {/* Mot de passe */}
+            <div className="flex items-center bg-gray-100 rounded-2xl px-4 py-3.5 gap-3">
+              <Lock className="w-5 h-5 text-gray-400 shrink-0" />
+              <input
+                data-testid="input-password-register"
+                type={showRegPass ? "text" : "password"}
+                placeholder="Entrez votre mot de passe"
+                value={regData.password}
+                onChange={e => setRegData({ ...regData, password: e.target.value })}
+                className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
+              />
+              <button type="button" onClick={() => setShowRegPass(!showRegPass)}>
+                {showRegPass ? <Eye className="w-5 h-5 text-gray-400" /> : <EyeOff className="w-5 h-5 text-gray-400" />}
+              </button>
             </div>
 
-            <div>
-              <p className="text-gray-800 font-medium mb-2">Mot de passe de connexion</p>
-              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
-                <KeyRound className="w-5 h-5 text-gray-500 shrink-0" />
-                <input
-                  data-testid="input-password-register"
-                  type={showRegPass ? "text" : "password"}
-                  placeholder="Mot de passe de connexion"
-                  value={regData.password}
-                  onChange={e => setRegData({ ...regData, password: e.target.value })}
-                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
-                />
-                <button type="button" onClick={() => setShowRegPass(!showRegPass)}>
-                  {showRegPass ? <Eye className="w-5 h-5 text-gray-400" /> : <EyeOff className="w-5 h-5 text-gray-400" />}
-                </button>
-              </div>
+            {/* Confirmer mot de passe */}
+            <div className="flex items-center bg-gray-100 rounded-2xl px-4 py-3.5 gap-3">
+              <Lock className="w-5 h-5 text-gray-400 shrink-0" />
+              <input
+                data-testid="input-confirm-password"
+                type={showConfirmPass ? "text" : "password"}
+                placeholder="Veuillez saisir à nouveau le mot de passe"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
+              />
+              <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)}>
+                {showConfirmPass ? <Eye className="w-5 h-5 text-gray-400" /> : <EyeOff className="w-5 h-5 text-gray-400" />}
+              </button>
             </div>
 
-            <div>
-              <p className="text-gray-800 font-medium mb-2">Surnom</p>
-              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
-                <User className="w-5 h-5 text-gray-500 shrink-0" />
-                <input
-                  data-testid="input-nickname"
-                  type="text"
-                  placeholder="Entrez votre surnom"
-                  value={regData.nickname}
-                  onChange={e => setRegData({ ...regData, nickname: e.target.value })}
-                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <p className="text-gray-800 font-medium mb-2">Code d'invitation</p>
-              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
+            {/* Code d'invitation (optionnel, visible si non pré-rempli) */}
+            {!regData.inviteCode && (
+              <div className="flex items-center bg-gray-100 rounded-2xl px-4 py-3.5 gap-3">
                 <input
                   data-testid="input-invite-code"
                   type="text"
@@ -280,56 +286,30 @@ export default function AuthPage() {
                   onChange={e => setRegData({ ...regData, inviteCode: e.target.value })}
                   className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
                 />
-                {regData.inviteCode && (
-                  <button type="button" onClick={() => setRegData({ ...regData, inviteCode: "" })}>
-                    <span className="w-5 h-5 rounded-full bg-gray-400 text-white text-xs flex items-center justify-center">✕</span>
-                  </button>
-                )}
               </div>
-            </div>
+            )}
 
-            <div>
-              <p className="text-gray-800 font-medium mb-2">Code de vérification (OTP)</p>
-              <div className="flex items-center bg-[#e8e8d8] rounded-xl px-4 py-3 gap-3">
-                <Shield className="w-5 h-5 text-gray-500 shrink-0" />
-                <input
-                  data-testid="input-otp-register"
-                  type="text"
-                  placeholder="Code de vérification"
-                  value={regData.otp}
-                  onChange={e => setRegData({ ...regData, otp: e.target.value })}
-                  className="flex-1 bg-transparent outline-none text-gray-800 placeholder:text-gray-400 text-sm"
-                />
-                <button
-                  type="button"
-                  disabled={otpLoading || otpCountdown > 0}
-                  onClick={() => handleSendOtp(regData.phone)}
-                  className="text-blue-500 font-semibold text-sm whitespace-nowrap disabled:text-gray-400"
-                >
-                  {otpCountdown > 0 ? `${otpCountdown}s` : otpLoading ? "..." : "Envoyer"}
-                </button>
-              </div>
-            </div>
+            {/* Flèche */}
+            <div className="text-center text-gray-400 text-xl">↓</div>
 
-            <div className="flex gap-3 pt-2">
-              <button
-                data-testid="tab-login"
-                type="button"
-                onClick={() => setMode("login")}
-                className="flex-1 py-3 rounded-full border-2 border-[#22c55e] text-[#22c55e] font-semibold bg-white"
-              >
+            {/* Bouton */}
+            <button
+              data-testid="button-register"
+              type="button"
+              onClick={handleRegister}
+              disabled={loading}
+              className="w-full py-4 rounded-full font-extrabold text-gray-900 text-base tracking-widest shadow-md"
+              style={{ background: "#FFD600" }}
+            >
+              {loading ? "..." : "SOUMETTRE"}
+            </button>
+
+            <p className="text-center text-gray-500 text-sm pt-2">
+              Déjà un compte ?{" "}
+              <button onClick={() => setMode("login")} className="text-orange-500 font-semibold">
                 Se connecter
               </button>
-              <button
-                data-testid="button-register"
-                type="button"
-                onClick={handleRegister}
-                disabled={loading}
-                className="flex-1 py-3 rounded-full bg-[#22c55e] text-white font-semibold shadow-md"
-              >
-                {loading ? "..." : "S'inscrire"}
-              </button>
-            </div>
+            </p>
           </div>
         )}
       </div>
