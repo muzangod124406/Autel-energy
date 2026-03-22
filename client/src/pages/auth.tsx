@@ -26,9 +26,9 @@ export default function AuthPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const reg = params.get("reg");
-    if (reg) {
-      setRegData(d => ({ ...d, inviteCode: reg }));
+    const code = params.get("code") || params.get("reg");
+    if (code) {
+      setRegData(d => ({ ...d, inviteCode: code }));
       setMode("register");
     }
   }, []);

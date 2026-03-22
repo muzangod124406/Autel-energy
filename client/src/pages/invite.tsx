@@ -18,7 +18,7 @@ export default function InvitePage() {
   const { data: referrals } = useQuery<any>({ queryKey: ["/api/user/referrals"] });
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
 
-  const inviteLink = `${window.location.origin}/auth?reg=${user?.referralCode}`;
+  const inviteLink = `${window.location.origin}/inscription?code=${user?.referralCode}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(inviteLink);
