@@ -753,6 +753,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.post("/api/admin/users/:id/credit-commission", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { amount } = req.body;
+      if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+        return res.status(400).json({ message: "Montant invalide" });
+      }
+      const credit = Math.floor(Number(amount));
+      await storage.addToUserBalance(req.params.id, credit, credit);
+      const updated = await storage.getUser(req.params.id);
+      res.json({ success: true, commissionBalance: updated?.commissionBalance, withdrawBalance: updated?.withdrawBalance });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
   app.get("/api/admin/users/:id/referrals", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     const level1 = await storage.getUserReferrals(req.params.id, 1);
     const level2 = await storage.getUserReferrals(req.params.id, 2);

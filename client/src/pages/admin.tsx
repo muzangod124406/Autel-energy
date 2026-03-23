@@ -72,6 +72,7 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [editBalance, setEditBalance] = useState("");
   const [editWithdrawBalance, setEditWithdrawBalance] = useState("");
+  const [editCreditCommission, setEditCreditCommission] = useState("");
   const [editPassword, setEditPassword] = useState("");
   const [editTxPassword, setEditTxPassword] = useState("");
   const [assignPlan, setAssignPlan] = useState("");
@@ -212,6 +213,19 @@ export default function AdminPage() {
       toast({ title: "Mis à jour" });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setSelectedUser(null);
+    },
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
+  });
+
+  const creditCommissionMutation = useMutation({
+    mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
+      const res = await apiRequest("POST", `/api/admin/users/${id}/credit-commission`, { amount });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Commission créditée avec succès" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setEditCreditCommission("");
     },
     onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
   });
@@ -831,6 +845,33 @@ export default function AdminPage() {
                       <div className="flex gap-2 mt-1">
                         <Input type="number" placeholder="Solde retrait" value={editWithdrawBalance} onChange={e => setEditWithdrawBalance(e.target.value)} data-testid="admin-edit-withdraw-balance" />
                         <Button size="sm" onClick={() => { updateUserMutation.mutate({ id: selectedUser.id, data: { withdrawBalance: parseInt(editWithdrawBalance) } }); setEditWithdrawBalance(""); }}>OK</Button>
+                      </div>
+                    </div>
+                    <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
+                      <label className="text-xs font-semibold text-orange-700">Crédit commission manquante</label>
+                      <p className="text-[10px] text-orange-500 mb-2">Ajoute le montant au solde commission ET retrait (ne remplace pas)</p>
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Montant à créditer (FCFA)"
+                          value={editCreditCommission}
+                          onChange={e => setEditCreditCommission(e.target.value)}
+                          data-testid="admin-credit-commission"
+                          className="bg-white"
+                        />
+                        <Button
+                          size="sm"
+                          className="bg-orange-500 hover:bg-orange-600 text-white shrink-0"
+                          disabled={creditCommissionMutation.isPending || !editCreditCommission}
+                          onClick={() => {
+                            const amt = parseInt(editCreditCommission);
+                            if (!amt || amt <= 0) return;
+                            creditCommissionMutation.mutate({ id: selectedUser.id, amount: amt });
+                          }}
+                          data-testid="admin-credit-commission-btn"
+                        >
+                          {creditCommissionMutation.isPending ? "..." : "Créditer"}
+                        </Button>
                       </div>
                     </div>
                     <div>
