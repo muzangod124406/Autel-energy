@@ -292,19 +292,16 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       await storage.updateUser(userId, { depositBalance: user.depositBalance - amount });
       await storage.addSpinTicket(userId, 1);
 
-      // +1 ticket spin au parrain direct sur TOUT investissement (fix ET activités)
-      if (user.referredBy) {
-        await storage.addSpinTicket(user.referredBy, 1);
-      }
-
-      // Commissions de parrainage uniquement sur le PREMIER achat fix du filleul
+      // Vérifier si c'est le premier plan fixe du filleul
       const allUserInvestments = await storage.getUserInvestments(userId);
       const previousFixInvestments = allUserInvestments.filter(
         i => i.planType === "fix" && i.id !== investment.id
       );
       const isFirstFixInvestment = planType === "fix" && previousFixInvestments.length === 0;
 
+      // Sur le premier plan fixe : ticket spin + commissions au parrain
       if (user.referredBy && isFirstFixInvestment) {
+        await storage.addSpinTicket(user.referredBy, 1);
         const cfg = await storage.getSettings();
         const rate1 = (cfg.referralCommission1 ?? 20) / 100;
         const rate2 = (cfg.referralCommission2 ?? 3) / 100;
