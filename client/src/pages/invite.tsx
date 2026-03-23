@@ -58,15 +58,15 @@ export default function InvitePage() {
   ];
 
   const statsTop = [
-    { label: "Taille de l'équipe", value: totalFriends },
-    { label: "Première recharge", value: l1Recharged + l2Recharged + l3Recharged },
+    { label: "Total inscrits", value: totalFriends },
+    { label: "Total rechargés", value: l1Recharged + l2Recharged + l3Recharged },
     { label: "Revenu équipe", value: `${totalRevenue.toFixed(0)} F` },
   ];
 
   const statsBottom = [
-    { label: "Inscrites", value: totalFriends },
-    { label: "Rechargé niv.1", value: `${l1Recharged}/${l1.length}` },
-    { label: "Rechargé niv.2", value: `${l2Recharged}/${l2.length}` },
+    { label: "Recharge niv.1", value: `${l1Recharged}/${l1.length}` },
+    { label: "Recharge niv.2", value: `${l2Recharged}/${l2.length}` },
+    { label: "Recharge niv.3", value: `${l3Recharged}/${l3.length}` },
   ];
 
   return (
