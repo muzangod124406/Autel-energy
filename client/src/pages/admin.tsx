@@ -1252,10 +1252,16 @@ export default function AdminPage() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-700">Téléphone destinataire (optionnel)</label>
-                <Input className="mt-1" placeholder="Laisser vide = tout le monde" value={newCode.recipientPhone}
+                <label className="text-xs font-medium text-gray-700">
+                  Téléphone destinataire <span className="text-gray-400 font-normal">(laisser vide = pour tous)</span>
+                </label>
+                <Input className="mt-1" placeholder="Vide = tout le monde" value={newCode.recipientPhone}
                   onChange={e => setNewCode(p => ({ ...p, recipientPhone: e.target.value }))}
+                  autoComplete="off"
                   data-testid="input-gift-recipient" />
+                {newCode.recipientPhone.trim().length > 0 && newCode.recipientPhone.trim().length < 6 && (
+                  <p className="text-xs text-red-500 mt-1">Numéro trop court — laissez vide pour un code général</p>
+                )}
               </div>
               <div>
                 <label className="text-xs font-medium text-gray-700">Date d'expiration</label>

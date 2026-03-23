@@ -948,7 +948,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const { code, recipientPhone, amount, expiresAt } = req.body;
       if (!code || !amount || !expiresAt) return res.status(400).json({ message: "Code, montant et date d'expiration sont requis" });
-      const gc = await storage.createGiftCode({ code, recipientPhone: recipientPhone || null, amount, expiresAt: new Date(expiresAt) });
+      const cleanRecipient = (recipientPhone || "").toString().trim();
+      const finalRecipient = cleanRecipient.length >= 6 ? cleanRecipient : null;
+      const gc = await storage.createGiftCode({ code, recipientPhone: finalRecipient, amount, expiresAt: new Date(expiresAt) });
       res.json(gc);
     } catch (e: any) {
       if (e.message?.includes("unique")) return res.status(400).json({ message: "Ce code existe déjà" });
