@@ -92,6 +92,7 @@ export const tickets = pgTable("tickets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull(),
   imageUrl: text("image_url"),
+  imageUrl2: text("image_url2"),
   description: text("description"),
   status: text("status").notNull().default("pending"),
   bonus: integer("bonus").default(0),

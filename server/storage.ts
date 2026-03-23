@@ -56,6 +56,7 @@ export interface IStorage {
   getRecentSpinResults(limit?: number): Promise<(SpinResult & { user?: User })[]>;
 
   createTicket(userId: string, data: any): Promise<Ticket>;
+  getUserTickets(userId: string): Promise<Ticket[]>;
   getAllTickets(status?: string): Promise<(Ticket & { user?: User })[]>;
   updateTicket(id: string, data: Partial<Ticket>): Promise<Ticket | undefined>;
 
@@ -416,6 +417,10 @@ export class DatabaseStorage implements IStorage {
   async createTicket(userId: string, data: any): Promise<Ticket> {
     const [ticket] = await db.insert(tickets).values({ ...data, userId }).returning();
     return ticket;
+  }
+
+  async getUserTickets(userId: string): Promise<Ticket[]> {
+    return db.select().from(tickets).where(eq(tickets.userId, userId)).orderBy(desc(tickets.createdAt));
   }
 
   async getAllTickets(status?: string): Promise<(Ticket & { user?: User })[]> {

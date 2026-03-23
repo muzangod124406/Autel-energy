@@ -93,13 +93,14 @@ export default function BilletPage() {
               )}
 
               {/* Image(s) */}
-              {post.imageUrl && (
+              {(post.imageUrl || post.imageUrl2) && (
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  <img
-                    src={post.imageUrl}
-                    alt="post"
-                    className="w-full h-32 object-cover rounded-xl col-span-1"
-                  />
+                  {post.imageUrl && (
+                    <img src={post.imageUrl} alt="capture 1" className="w-full h-32 object-cover rounded-xl" />
+                  )}
+                  {post.imageUrl2 && (
+                    <img src={post.imageUrl2} alt="capture 2" className="w-full h-32 object-cover rounded-xl" />
+                  )}
                 </div>
               )}
 
@@ -133,12 +134,15 @@ export default function BilletPage() {
               <img src={rewardIcon} alt="récompense" className="w-24 h-24 object-contain" />
             </div>
             <h2 className="text-gray-900 font-bold text-lg text-center leading-snug mb-3">
-              Partagez des captures d'écran de retrait pour recevoir des récompenses en espèces
+              Partagez vos captures de retrait et recevez une récompense en espèces
             </h2>
-            <p className="text-gray-600 text-sm text-center leading-relaxed mb-6">
-              Envoyez une capture d'écran du dernier retrait réussi dans la section des commentaires,
-              et une fois approuvé, vous recevrez immédiatement une récompense de 10–400 FCFA.
-            </p>
+            <div className="text-gray-600 text-sm leading-relaxed mb-6 space-y-2">
+              <p className="font-semibold text-gray-800">Conditions pour publier :</p>
+              <p>✅ Avoir au moins <strong>un retrait approuvé</strong> sur votre compte.</p>
+              <p>✅ <strong>Une seule publication par jour</strong> est autorisée.</p>
+              <p>✅ Importer <strong>2 captures d'écran</strong> de votre retrait réussi.</p>
+              <p className="mt-3 text-gray-500">Une fois votre publication approuvée par un administrateur, vous recevrez immédiatement une récompense de <strong>10–400 FCFA</strong>.</p>
+            </div>
             <button
               data-testid="button-compris"
               onClick={() => setShowRules(false)}

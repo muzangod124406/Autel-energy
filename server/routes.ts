@@ -607,12 +607,37 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(tix);
   });
 
-  app.post("/api/user/tickets", requireAuth, upload.single("image"), async (req: Request, res: Response) => {
+  app.post("/api/user/tickets", requireAuth, upload.array("images", 2), async (req: Request, res: Response) => {
     try {
       const userId = (req.session as any).userId;
-      const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+      // Condition 1 : au moins un retrait approuvé
+      const allTxs = await storage.getUserTransactions(userId, "withdrawal");
+      const hasApprovedWithdrawal = allTxs.some(t => t.status === "approved");
+      if (!hasApprovedWithdrawal) {
+        return res.status(400).json({ message: "Vous devez avoir au moins un retrait approuvé avant de publier." });
+      }
+
+      // Condition 2 : une seule publication par jour
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const userTickets = await storage.getUserTickets(userId);
+      const publishedToday = userTickets.some(t => new Date(t.createdAt) >= todayStart);
+      if (publishedToday) {
+        return res.status(400).json({ message: "Vous avez déjà publié aujourd'hui. Revenez demain." });
+      }
+
+      // Condition 3 : au moins 2 images requises
+      const files = (req.files as Express.Multer.File[]) || [];
+      if (files.length < 2) {
+        return res.status(400).json({ message: "Veuillez importer exactement 2 captures d'écran." });
+      }
+
+      const imageUrl = `/uploads/${files[0].filename}`;
+      const imageUrl2 = `/uploads/${files[1].filename}`;
+
       const ticket = await storage.createTicket(userId, {
-        imageUrl, description: req.body.description
+        imageUrl, imageUrl2, description: req.body.description
       });
       res.json(ticket);
     } catch (e: any) {
