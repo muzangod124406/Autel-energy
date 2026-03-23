@@ -290,8 +290,22 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       await storage.updateUser(userId, { spinTickets: (user.spinTickets || 0) + 1, depositBalance: user.depositBalance - amount });
 
-      // Spin ticket + commissions de parrainage sur chaque investissement fix
+      // Spin ticket pour le parrain direct à chaque investissement fix
       if (user.referredBy && planType === "fix") {
+        const level1Referrer = await storage.getUser(user.referredBy);
+        if (level1Referrer) {
+          await storage.updateUser(level1Referrer.id, { spinTickets: (level1Referrer.spinTickets || 0) + 1 });
+        }
+      }
+
+      // Commissions de parrainage uniquement sur le PREMIER achat fix du filleul
+      const allUserInvestments = await storage.getUserInvestments(userId);
+      const previousFixInvestments = allUserInvestments.filter(
+        i => i.planType === "fix" && i.id !== investment.id
+      );
+      const isFirstFixInvestment = planType === "fix" && previousFixInvestments.length === 0;
+
+      if (user.referredBy && isFirstFixInvestment) {
         const cfg = await storage.getSettings();
         const rate1 = (cfg.referralCommission1 ?? 20) / 100;
         const rate2 = (cfg.referralCommission2 ?? 3) / 100;
@@ -300,8 +314,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         const level1Referrer = await storage.getUser(user.referredBy);
         if (level1Referrer) {
           const commission1 = Math.floor(amount * rate1);
-          // +1 spin ticket et commission (mise à jour atomique)
-          await storage.updateUser(level1Referrer.id, { spinTickets: (level1Referrer.spinTickets || 0) + 1 });
           await storage.addToUserBalance(level1Referrer.id, commission1, commission1);
 
           if (level1Referrer.referredBy) {
