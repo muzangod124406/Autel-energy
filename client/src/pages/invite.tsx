@@ -57,18 +57,6 @@ export default function InvitePage() {
     { num: 3, members: l3, recharged: l3Recharged, percent: c3, gradient: LEVEL_GRADIENTS[2] },
   ];
 
-  const statsTop = [
-    { label: "Total inscrits", value: totalFriends },
-    { label: "Total rechargés", value: l1Recharged + l2Recharged + l3Recharged },
-    { label: "Revenu équipe", value: `${totalRevenue.toFixed(0)} F` },
-  ];
-
-  const statsBottom = [
-    { label: "Recharge niv.1", value: `${l1Recharged}/${l1.length}` },
-    { label: "Recharge niv.2", value: `${l2Recharged}/${l2.length}` },
-    { label: "Recharge niv.3", value: `${l3Recharged}/${l3.length}` },
-  ];
-
   return (
     <div className="min-h-screen pb-28" style={{ background: "#f0fdf4" }}>
 
@@ -123,26 +111,6 @@ export default function InvitePage() {
             <Share2 className="w-4 h-4" />
             Inviter maintenant
           </button>
-        </div>
-
-        {/* ── Carte statistiques équipe ──────────── */}
-        <div className="rounded-2xl overflow-hidden shadow-sm" style={{ background: "linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)" }}>
-          <div className="grid grid-cols-3 divide-x divide-yellow-200 border-b border-yellow-200">
-            {statsTop.map((s, i) => (
-              <div key={i} className="flex flex-col items-center py-4 px-2">
-                <p className="text-gray-500 text-[10px] text-center leading-tight mb-1">{s.label}</p>
-                <p className="text-gray-900 font-extrabold text-xl">{s.value}</p>
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-3 divide-x divide-yellow-200">
-            {statsBottom.map((s, i) => (
-              <div key={i} className="flex flex-col items-center py-4 px-2">
-                <p className="text-gray-500 text-[10px] text-center leading-tight mb-1">{s.label}</p>
-                <p className="text-gray-900 font-extrabold text-xl">{s.value}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* ── Cartes niveau ─────────────────────── */}
