@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { pool } from "./db";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -61,6 +62,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Migrations automatiques au démarrage (dev + production)
+  try {
+    await pool.query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS image_url2 text");
+    log("Migration: tickets.image_url2 OK");
+  } catch (e: any) {
+    log(`Migration warning: ${e.message}`);
+  }
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
