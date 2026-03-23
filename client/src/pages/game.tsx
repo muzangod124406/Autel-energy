@@ -170,7 +170,12 @@ export default function GamePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const { data: ticketData } = useQuery({ queryKey: ["/api/user/spin-tickets"] });
+  const { data: ticketData } = useQuery({
+    queryKey: ["/api/user/spin-tickets"],
+    refetchOnMount: true,
+    staleTime: 0,
+    refetchInterval: 10000,
+  });
   const tickets = (ticketData as any)?.tickets ?? user?.spinTickets ?? 0;
 
   useEffect(() => {

@@ -288,14 +288,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         userId, planType, vipLevel, amount, dailyGain, duration, totalGain, endDate
       });
 
-      await storage.updateUser(userId, { spinTickets: (user.spinTickets || 0) + 1, depositBalance: user.depositBalance - amount });
+      // Débiter le dépôt et donner +1 ticket spin à l'investisseur (atomique)
+      await storage.updateUser(userId, { depositBalance: user.depositBalance - amount });
+      await storage.addSpinTicket(userId, 1);
 
-      // Spin ticket pour le parrain direct à chaque investissement fix
-      if (user.referredBy && planType === "fix") {
-        const level1Referrer = await storage.getUser(user.referredBy);
-        if (level1Referrer) {
-          await storage.updateUser(level1Referrer.id, { spinTickets: (level1Referrer.spinTickets || 0) + 1 });
-        }
+      // +1 ticket spin au parrain direct sur TOUT investissement (fix ET activités)
+      if (user.referredBy) {
+        await storage.addSpinTicket(user.referredBy, 1);
       }
 
       // Commissions de parrainage uniquement sur le PREMIER achat fix du filleul

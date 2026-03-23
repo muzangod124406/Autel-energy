@@ -13,6 +13,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
   addToUserBalance(id: string, commissionDelta: number, withdrawDelta: number): Promise<void>;
+  addSpinTicket(id: string, count?: number): Promise<void>;
   getAllUsers(filter?: any): Promise<User[]>;
   getUserCount(): Promise<number>;
   getTodayRegistrations(): Promise<number>;
@@ -121,6 +122,12 @@ export class DatabaseStorage implements IStorage {
     await db.update(users).set({
       commissionBalance: sql`${users.commissionBalance} + ${commissionDelta}`,
       withdrawBalance: sql`${users.withdrawBalance} + ${withdrawDelta}`,
+    }).where(eq(users.id, id));
+  }
+
+  async addSpinTicket(id: string, count = 1): Promise<void> {
+    await db.update(users).set({
+      spinTickets: sql`${users.spinTickets} + ${count}`,
     }).where(eq(users.id, id));
   }
 
