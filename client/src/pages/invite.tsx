@@ -44,18 +44,18 @@ export default function InvitePage() {
   const totalFriends = l1.length + l2.length + l3.length;
   const totalRevenue = referrals?.commissionTotal || 0;
 
-  const levels = [
-    { num: 1, members: l1, recharged: l1Recharged, percent: c1, gradient: LEVEL_GRADIENTS[0] },
-    { num: 2, members: l2, recharged: l2Recharged, percent: c2, gradient: LEVEL_GRADIENTS[1] },
-    { num: 3, members: l3, recharged: l3Recharged, percent: c3, gradient: LEVEL_GRADIENTS[2] },
-  ];
-
   const hasRecharged = (m: any) =>
     (m.totalInvested || 0) > 0 || (m.referred?.depositBalance || 0) > 0 || (m.referred?.withdrawBalance || 0) > 0;
 
   const l1Recharged = l1.filter(hasRecharged).length;
   const l2Recharged = l2.filter(hasRecharged).length;
   const l3Recharged = l3.filter(hasRecharged).length;
+
+  const levels = [
+    { num: 1, members: l1, recharged: l1Recharged, percent: c1, gradient: LEVEL_GRADIENTS[0] },
+    { num: 2, members: l2, recharged: l2Recharged, percent: c2, gradient: LEVEL_GRADIENTS[1] },
+    { num: 3, members: l3, recharged: l3Recharged, percent: c3, gradient: LEVEL_GRADIENTS[2] },
+  ];
 
   const statsTop = [
     { label: "Taille de l'équipe", value: totalFriends },
