@@ -45,21 +45,28 @@ export default function InvitePage() {
   const totalRevenue = referrals?.commissionTotal || 0;
 
   const levels = [
-    { num: 1, members: l1, percent: c1, gradient: LEVEL_GRADIENTS[0] },
-    { num: 2, members: l2, percent: c2, gradient: LEVEL_GRADIENTS[1] },
-    { num: 3, members: l3, percent: c3, gradient: LEVEL_GRADIENTS[2] },
+    { num: 1, members: l1, recharged: l1Recharged, percent: c1, gradient: LEVEL_GRADIENTS[0] },
+    { num: 2, members: l2, recharged: l2Recharged, percent: c2, gradient: LEVEL_GRADIENTS[1] },
+    { num: 3, members: l3, recharged: l3Recharged, percent: c3, gradient: LEVEL_GRADIENTS[2] },
   ];
+
+  const hasRecharged = (m: any) =>
+    (m.totalInvested || 0) > 0 || (m.referred?.depositBalance || 0) > 0 || (m.referred?.withdrawBalance || 0) > 0;
+
+  const l1Recharged = l1.filter(hasRecharged).length;
+  const l2Recharged = l2.filter(hasRecharged).length;
+  const l3Recharged = l3.filter(hasRecharged).length;
 
   const statsTop = [
     { label: "Taille de l'équipe", value: totalFriends },
-    { label: "Recharge d'équipe", value: "0 CFA" },
-    { label: "Retrait de l'équipe", value: "0 CFA" },
+    { label: "Première recharge", value: l1Recharged + l2Recharged + l3Recharged },
+    { label: "Revenu équipe", value: `${totalRevenue.toFixed(0)} F` },
   ];
 
   const statsBottom = [
-    { label: "Nouvelle équipe", value: totalFriends },
-    { label: "Première recharge", value: l1.length },
-    { label: "Premier retrait", value: 0 },
+    { label: "Inscrites", value: totalFriends },
+    { label: "Rechargé niv.1", value: `${l1Recharged}/${l1.length}` },
+    { label: "Rechargé niv.2", value: `${l2Recharged}/${l2.length}` },
   ];
 
   return (
@@ -173,12 +180,12 @@ export default function InvitePage() {
             <div className="relative z-10 flex items-stretch px-4 py-5 pl-10">
               <div className="flex-1 space-y-3">
                 <div>
-                  <p className="text-white/70 text-xs">Registre/Valide</p>
-                  <p className="text-white font-extrabold text-xl">{level.members.length}/{level.members.length}</p>
+                  <p className="text-white/70 text-xs">Inscrit / Première recharge</p>
+                  <p className="text-white font-extrabold text-xl">{level.members.length} / {level.recharged}</p>
                 </div>
                 <div>
                   <p className="text-white/70 text-xs">Revenu total</p>
-                  <p className="text-white font-extrabold text-xl">{totalRevenue > 0 && i === 0 ? totalRevenue.toLocaleString("fr-FR") : 0}</p>
+                  <p className="text-white font-extrabold text-xl">{i === 0 ? totalRevenue.toLocaleString("fr-FR") : 0}</p>
                 </div>
               </div>
               <div className="flex flex-col items-center justify-center gap-3 pl-4">
