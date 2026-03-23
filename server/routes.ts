@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, pool } from "./db";
 import { users } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
@@ -826,6 +826,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     try {
       const { status } = req.body;
       const tx = await storage.updateTransaction(req.params.id, { status });
+
+      // Dépôt approuvé → créditer le solde dépôt
       if (tx && status === "approved" && tx.type === "deposit") {
         const user = await storage.getUser(tx.userId);
         if (user) {
@@ -834,6 +836,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           });
         }
       }
+
+      // Retrait rejeté → rembourser le solde retrait (qui avait été débité à la demande)
+      if (tx && status === "rejected" && tx.type === "withdrawal") {
+        await db.update(users).set({
+          withdrawBalance: sql`${users.withdrawBalance} + ${tx.amount}`,
+        }).where(eq(users.id, tx.userId));
+      }
+
       if (tx && status === "approved" && tx.type === "withdrawal" && WESTPAY_ENABLED) {
         try {
           const user = await storage.getUser(tx.userId);
