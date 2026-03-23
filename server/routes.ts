@@ -448,11 +448,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         if (!valid) return res.status(400).json({ message: "Mot de passe de transaction incorrect" });
       }
 
+      // Heure locale Afrique de l'Ouest (WAT = UTC+1)
       const now = new Date();
-      const hour = now.getHours();
+      const hour = parseInt(now.toLocaleString("fr-FR", { timeZone: "Africa/Douala", hour: "numeric", hour12: false }), 10);
       const startHour = cfg.withdrawStartHour ?? 10;
       const endHour = cfg.withdrawEndHour ?? 15;
-      if (hour < startHour || hour > endHour) return res.status(400).json({ message: `Horaire de retrait: ${startHour}h à ${endHour}h` });
+      if (hour < startHour || hour >= endHour) return res.status(400).json({ message: `Horaire de retrait: ${startHour}h à ${endHour}h` });
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
