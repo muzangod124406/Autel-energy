@@ -764,6 +764,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.post("/api/admin/users/:id/credit-spin", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { count } = req.body;
+      if (!count || isNaN(Number(count)) || Number(count) <= 0) {
+        return res.status(400).json({ message: "Nombre invalide" });
+      }
+      const nb = Math.floor(Number(count));
+      await storage.addSpinTicket(req.params.id, nb);
+      const updated = await storage.getUser(req.params.id);
+      res.json({ success: true, spinTickets: updated?.spinTickets });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
   app.get("/api/admin/users/:id/referrals", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     const level1 = await storage.getUserReferrals(req.params.id, 1);
     const level2 = await storage.getUserReferrals(req.params.id, 2);

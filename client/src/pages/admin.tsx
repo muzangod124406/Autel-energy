@@ -73,6 +73,7 @@ export default function AdminPage() {
   const [editBalance, setEditBalance] = useState("");
   const [editWithdrawBalance, setEditWithdrawBalance] = useState("");
   const [editCreditCommission, setEditCreditCommission] = useState("");
+  const [editCreditSpin, setEditCreditSpin] = useState("");
   const [editPassword, setEditPassword] = useState("");
   const [editTxPassword, setEditTxPassword] = useState("");
   const [assignPlan, setAssignPlan] = useState("");
@@ -226,6 +227,19 @@ export default function AdminPage() {
       toast({ title: "Commission créditée avec succès" });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setEditCreditCommission("");
+    },
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
+  });
+
+  const creditSpinMutation = useMutation({
+    mutationFn: async ({ id, count }: { id: string; count: number }) => {
+      const res = await apiRequest("POST", `/api/admin/users/${id}/credit-spin`, { count });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Ticket(s) spin crédité(s)" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setEditCreditSpin("");
     },
     onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
   });
@@ -871,6 +885,32 @@ export default function AdminPage() {
                           data-testid="admin-credit-commission-btn"
                         >
                           {creditCommissionMutation.isPending ? "..." : "Créditer"}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                      <label className="text-xs font-semibold text-purple-700">🎰 Crédit tickets spin manquants</label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          type="number"
+                          placeholder="Nombre de tickets"
+                          value={editCreditSpin}
+                          onChange={e => setEditCreditSpin(e.target.value)}
+                          data-testid="admin-credit-spin"
+                          className="bg-white"
+                        />
+                        <Button
+                          size="sm"
+                          className="bg-purple-600 hover:bg-purple-700 text-white shrink-0"
+                          disabled={creditSpinMutation.isPending || !editCreditSpin}
+                          onClick={() => {
+                            const nb = parseInt(editCreditSpin);
+                            if (!nb || nb <= 0) return;
+                            creditSpinMutation.mutate({ id: selectedUser.id, count: nb });
+                          }}
+                          data-testid="admin-credit-spin-btn"
+                        >
+                          {creditSpinMutation.isPending ? "..." : "Créditer"}
                         </Button>
                       </div>
                     </div>
