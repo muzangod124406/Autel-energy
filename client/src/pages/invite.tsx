@@ -180,8 +180,8 @@ export default function InvitePage() {
             <div className="relative z-10 flex items-stretch px-4 py-5 pl-10">
               <div className="flex-1 space-y-3">
                 <div>
-                  <p className="text-white/70 text-xs">Inscrit / Première recharge</p>
-                  <p className="text-white font-extrabold text-xl">{level.members.length} / {level.recharged}</p>
+                  <p className="text-white/70 text-xs">Première recharge / Inscrits</p>
+                  <p className="text-white font-extrabold text-xl">{level.recharged} / {level.members.length}</p>
                 </div>
                 <div>
                   <p className="text-white/70 text-xs">Revenu total</p>
