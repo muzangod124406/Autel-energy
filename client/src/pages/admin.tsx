@@ -14,7 +14,7 @@ import {
   Check, X, DollarSign, Settings, Shield, Eye, Trash2, Plus,
   Link2, Package, Edit2, ToggleLeft, ToggleRight,
   Upload, Calendar, UserCheck, Globe, Wallet, Award, RotateCcw, CreditCard,
-  AlertTriangle, Zap, Clock, ShoppingCart, MessageCircle, Send, Image, ChevronLeft
+  AlertTriangle, Clock, ShoppingCart, MessageCircle, Send, Image, ChevronLeft
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -731,10 +731,6 @@ export default function AdminPage() {
                   <p className="text-xs text-gray-400 mb-3">Date et heure<br /><span className="text-gray-600 font-medium">{fmtDate(tx.createdAt)}</span></p>
                   {tx.status === "pending" && (
                     <div className="space-y-2">
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="sm"
-                        onClick={() => toast({ title: "OmniPay", description: "Paiement envoyé via OmniPay" })}>
-                        <Zap className="w-4 h-4 mr-2" /> Envoyer via OmniPay
-                      </Button>
                       <div className="flex gap-2">
                         <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" size="sm"
                           onClick={() => updateTxMutation.mutate({ id: tx.id, status: "approved" })}
