@@ -12,6 +12,7 @@ export interface IStorage {
   getUserByReferralCode(code: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
+  addToUserBalance(id: string, commissionDelta: number, withdrawDelta: number): Promise<void>;
   getAllUsers(filter?: any): Promise<User[]>;
   getUserCount(): Promise<number>;
   getTodayRegistrations(): Promise<number>;
@@ -114,6 +115,13 @@ export class DatabaseStorage implements IStorage {
     const hashedPassword = await bcrypt.hash(insertUser.password, 10);
     const [user] = await db.insert(users).values({ ...insertUser, password: hashedPassword }).returning();
     return user;
+  }
+
+  async addToUserBalance(id: string, commissionDelta: number, withdrawDelta: number): Promise<void> {
+    await db.update(users).set({
+      commissionBalance: sql`${users.commissionBalance} + ${commissionDelta}`,
+      withdrawBalance: sql`${users.withdrawBalance} + ${withdrawDelta}`,
+    }).where(eq(users.id, id));
   }
 
   async updateUser(id: string, data: Partial<User>): Promise<User | undefined> {

@@ -290,24 +290,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       await storage.updateUser(userId, { spinTickets: (user.spinTickets || 0) + 1, depositBalance: user.depositBalance - amount });
 
-      // Handle referral commissions — only on the user's very first fix investment
-      const allUserInvestments = await storage.getUserInvestments(userId);
-      const fixInvestmentsBefore = allUserInvestments.filter(
-        i => i.planType === "fix" && i.id !== investment.id
-      );
-      const isFirstFixInvestment = planType === "fix" && fixInvestmentsBefore.length === 0;
-
-      // Spin ticket for direct referrer on every investment by their filleul
-      if (user.referredBy) {
-        const directReferrer = await storage.getUser(user.referredBy);
-        if (directReferrer) {
-          await storage.updateUser(directReferrer.id, {
-            spinTickets: (directReferrer.spinTickets || 0) + 1
-          });
-        }
-      }
-
-      if (user.referredBy && isFirstFixInvestment) {
+      // Spin ticket + commissions de parrainage sur chaque investissement fix
+      if (user.referredBy && planType === "fix") {
         const cfg = await storage.getSettings();
         const rate1 = (cfg.referralCommission1 ?? 20) / 100;
         const rate2 = (cfg.referralCommission2 ?? 3) / 100;
@@ -316,28 +300,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         const level1Referrer = await storage.getUser(user.referredBy);
         if (level1Referrer) {
           const commission1 = Math.floor(amount * rate1);
-          await storage.updateUser(level1Referrer.id, {
-            commissionBalance: level1Referrer.commissionBalance + commission1,
-            withdrawBalance: level1Referrer.withdrawBalance + commission1
-          });
-        }
-        if (level1Referrer?.referredBy) {
-          const level2Referrer = await storage.getUser(level1Referrer.referredBy);
-          if (level2Referrer) {
-            const commission2 = Math.floor(amount * rate2);
-            await storage.updateUser(level2Referrer.id, {
-              commissionBalance: level2Referrer.commissionBalance + commission2,
-              withdrawBalance: level2Referrer.withdrawBalance + commission2
-            });
-          }
-          if (level2Referrer?.referredBy) {
-            const level3Referrer = await storage.getUser(level2Referrer.referredBy);
-            if (level3Referrer) {
-              const commission3 = Math.floor(amount * rate3);
-              await storage.updateUser(level3Referrer.id, {
-                commissionBalance: level3Referrer.commissionBalance + commission3,
-                withdrawBalance: level3Referrer.withdrawBalance + commission3
-              });
+          // +1 spin ticket et commission (mise à jour atomique)
+          await storage.updateUser(level1Referrer.id, { spinTickets: (level1Referrer.spinTickets || 0) + 1 });
+          await storage.addToUserBalance(level1Referrer.id, commission1, commission1);
+
+          if (level1Referrer.referredBy) {
+            const level2Referrer = await storage.getUser(level1Referrer.referredBy);
+            if (level2Referrer) {
+              const commission2 = Math.floor(amount * rate2);
+              await storage.addToUserBalance(level2Referrer.id, commission2, commission2);
+
+              if (level2Referrer.referredBy) {
+                const level3Referrer = await storage.getUser(level2Referrer.referredBy);
+                if (level3Referrer) {
+                  const commission3 = Math.floor(amount * rate3);
+                  await storage.addToUserBalance(level3Referrer.id, commission3, commission3);
+                }
+              }
             }
           }
         }
