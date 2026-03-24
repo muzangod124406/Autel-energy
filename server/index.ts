@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { pool } from "./db";
+import { initSupabaseStorage } from "./supabase-storage";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -69,6 +70,9 @@ app.use((req, res, next) => {
   } catch (e: any) {
     log(`Migration warning: ${e.message}`);
   }
+
+  // Initialiser Supabase Storage (buckets + policies)
+  await initSupabaseStorage();
 
   await registerRoutes(httpServer, app);
 

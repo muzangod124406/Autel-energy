@@ -4,12 +4,12 @@ import { storage } from "./storage";
 import { db, pool } from "./db";
 import { users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
+import { uploadToSupabase, BUCKETS } from "./supabase-storage";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
 import { z } from "zod";
 import {
   buildWestpayPaymentUrl, verifyWestpaySignature, westpayTransfer,
@@ -18,16 +18,8 @@ import {
 } from "./westpay";
 
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = path.join(process.cwd(), "client", "public", "uploads");
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      cb(null, Date.now() + "-" + file.originalname);
-    }
-  })
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
 function generateReferralCode(): string {
@@ -621,8 +613,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         return res.status(400).json({ message: "Veuillez importer exactement 2 captures d'écran." });
       }
 
-      const imageUrl = `/uploads/${files[0].filename}`;
-      const imageUrl2 = `/uploads/${files[1].filename}`;
+      const ext0 = path.extname(files[0].originalname) || ".jpg";
+      const ext1 = path.extname(files[1].originalname) || ".jpg";
+      const name0 = `${userId}/${Date.now()}_1${ext0}`;
+      const name1 = `${userId}/${Date.now()}_2${ext1}`;
+
+      const [imageUrl, imageUrl2] = await Promise.all([
+        uploadToSupabase(BUCKETS.BLOG, name0, files[0].buffer, files[0].mimetype),
+        uploadToSupabase(BUCKETS.BLOG, name1, files[1].buffer, files[1].mimetype),
+      ]);
 
       const ticket = await storage.createTicket(userId, {
         imageUrl, imageUrl2, description: req.body.description
@@ -941,7 +940,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/products", requireAuth, requireAdmin, upload.single("image"), async (req: Request, res: Response) => {
     try {
-      const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl || null;
+      let imageUrl = req.body.imageUrl || null;
+      if (req.file) {
+        const ext = path.extname(req.file.originalname) || ".jpg";
+        imageUrl = await uploadToSupabase(BUCKETS.FILES, `products/${Date.now()}${ext}`, req.file.buffer, req.file.mimetype);
+      }
       const data = {
         name: req.body.name,
         imageUrl,
@@ -963,7 +966,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.put("/api/admin/products/:id", requireAuth, requireAdmin, upload.single("image"), async (req: Request, res: Response) => {
     try {
       const updates: any = { ...req.body };
-      if (req.file) updates.imageUrl = `/uploads/${req.file.filename}`;
+      if (req.file) {
+        const ext = path.extname(req.file.originalname) || ".jpg";
+        updates.imageUrl = await uploadToSupabase(BUCKETS.FILES, `products/${Date.now()}${ext}`, req.file.buffer, req.file.mimetype);
+      }
       if (updates.price) updates.price = parseInt(updates.price);
       if (updates.dailyGain) updates.dailyGain = parseInt(updates.dailyGain);
       if (updates.totalGain) updates.totalGain = parseInt(updates.totalGain);
@@ -1243,7 +1249,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/chat/messages", requireAuth, upload.single("image"), async (req: Request, res: Response) => {
     try {
       const userId = (req.session as any).userId;
-      const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+      let imageUrl: string | undefined;
+      if (req.file) {
+        const ext = path.extname(req.file.originalname) || ".jpg";
+        imageUrl = await uploadToSupabase(BUCKETS.FILES, `chat/${userId}/${Date.now()}${ext}`, req.file.buffer, req.file.mimetype);
+      }
       const content = req.body.content || undefined;
       if (!content && !imageUrl) return res.status(400).json({ message: "Message vide" });
       const msg = await storage.createChatMessage({ userId, senderType: "user", content, imageUrl });
@@ -1266,7 +1276,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/chat/:userId/messages", requireAuth, requireAdmin, upload.single("image"), async (req: Request, res: Response) => {
     try {
-      const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+      let imageUrl: string | undefined;
+      if (req.file) {
+        const ext = path.extname(req.file.originalname) || ".jpg";
+        imageUrl = await uploadToSupabase(BUCKETS.FILES, `chat/admin/${Date.now()}${ext}`, req.file.buffer, req.file.mimetype);
+      }
       const content = req.body.content || undefined;
       if (!content && !imageUrl) return res.status(400).json({ message: "Message vide" });
       const msg = await storage.createChatMessage({ userId: req.params.userId, senderType: "admin", content, imageUrl });
