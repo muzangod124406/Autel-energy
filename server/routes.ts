@@ -5,6 +5,7 @@ import { db, pool } from "./db";
 import { users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { uploadToSupabase, BUCKETS } from "./supabase-storage";
+import { generateAIResponse } from "./ai-agent";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
@@ -1258,6 +1259,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!content && !imageUrl) return res.status(400).json({ message: "Message vide" });
       const msg = await storage.createChatMessage({ userId, senderType: "user", content, imageUrl });
       res.json(msg);
+
+      // Réponse automatique IA (fire-and-forget, délai naturel de 1-2s)
+      if (content) {
+        const delay = 1000 + Math.floor(Math.random() * 1500);
+        setTimeout(async () => {
+          try {
+            const aiReply = generateAIResponse(content);
+            await storage.createChatMessage({ userId, senderType: "admin", content: aiReply });
+          } catch (_) {}
+        }, delay);
+      }
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }
