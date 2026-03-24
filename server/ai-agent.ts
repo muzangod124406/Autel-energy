@@ -1,148 +1,216 @@
-type KnowledgeEntry = {
-  keywords: string[];
+type Entry = {
+  id: string;
+  tags: string[];
+  phrases: string[];
   response: string;
-  telegram?: boolean;
+  telegram?: true;
 };
 
-const KB: KnowledgeEntry[] = [
-  // ─── DÉPÔT / RECHARGE ───
+const KB: Entry[] = [
+  // ── SALUTATIONS ──
   {
-    keywords: ["dépôt", "depot", "recharge", "recharg", "créditer", "crediter", "alimenter", "alimenter", "approvisionner", "virement", "paiement", "payer", "envoyer argent", "transfert"],
-    response: `Votre demande de recharge est enregistrée et fera l'objet d'un traitement dans un délai maximal de **30 minutes** après validation du justificatif par nos opérateurs. Assurez-vous que le montant transféré correspond exactement à celui renseigné dans votre requête, et que le numéro de téléphone indiqué est bien celui du compte mobile money associé. Tout écart peut engendrer un retard de traitement.`
+    id: "greet",
+    tags: ["bonjour", "bonsoir", "salut", "hello", "hi", "bonne nuit", "bonne matinée", "coucou", "hey"],
+    phrases: [],
+    response: `Bonjour ! Bienvenue sur le service client Autel Energy. 😊 Comment puis-je vous assister aujourd'hui ?\n\nJe peux vous renseigner sur :\n• Les dépôts et retraits\n• Les plans d'investissement\n• Le parrainage et les commissions\n• Le fonctionnement de la plateforme\n• Et bien plus encore !`
   },
   {
-    keywords: ["dépôt pas reçu", "depot pas reçu", "recharge pas reçu", "pas crédité", "pas reçu", "argent pas arrivé", "pas arrivé", "non reçu", "en attente depuis"],
-    response: `Si votre transaction de recharge demeure en attente au-delà de **30 minutes**, nous vous invitons à vous assurer que votre justificatif de paiement a bien été soumis. Dans le cas contraire, veuillez contacter notre service via Telegram pour une prise en charge prioritaire. [[TELEGRAM]]`
+    id: "merci",
+    tags: ["merci", "thank", "parfait", "super", "très bien", "ok merci", "d'accord merci", "bonne continuation"],
+    phrases: [],
+    response: `Je vous en prie ! C'est un plaisir de vous accompagner. N'hésitez pas à revenir si vous avez d'autres questions. Bonne continuation sur Autel Energy ! 🌟`
   },
   {
-    keywords: ["montant minimum dépôt", "minimum recharge", "combien minimum", "recharge minimum"],
-    response: `Le montant minimal de recharge est de **1 000 FCFA**. Tout dépôt inférieur à ce seuil ne sera pas traité et fera l'objet d'un remboursement automatique.`
-  },
-
-  // ─── RETRAIT ───
-  {
-    keywords: ["retrait", "retirer", "withdraw", "récupérer", "encaisser", "virement sortant"],
-    response: `Les retraits sont opérationnels durant la plage horaire configurée par l'administration. Votre demande est traitée dans un délai de **10 à 30 minutes** une fois validée. Veillez à ce que vos coordonnées bancaires soient correctement renseignées dans votre profil avant toute sollicitation de retrait.`
-  },
-  {
-    keywords: ["retrait bloqué", "retrait impossible", "ne peut pas retirer", "solde retrait", "solde insuffisant retrait", "horaire retrait", "heure retrait"],
-    response: `Plusieurs facteurs peuvent restreindre l'accès aux retraits : plage horaire non éligible, solde de retrait insuffisant, absence de carte bancaire liée ou dépassement du quota journalier de **2 retraits par jour**. Vérifiez ces paramètres dans votre espace personnel.`
-  },
-  {
-    keywords: ["retrait rejeté", "retrait annulé", "retrait refusé", "retrait non traité"],
-    response: `Un retrait rejeté entraîne le remboursement intégral du montant sur votre solde de retrait dans les meilleurs délais. Si votre solde n'a pas été restitué sous **1 heure**, contactez notre service via Telegram. [[TELEGRAM]]`
-  },
-  {
-    keywords: ["frais retrait", "commission retrait", "taxe retrait", "pourcentage retrait"],
-    response: `Un prélèvement de frais de service est appliqué à chaque opération de retrait. Le montant net que vous percevrez est affiché avant confirmation de votre requête. Ces frais couvrent les coûts opérationnels liés au traitement des transactions.`
+    id: "ok",
+    tags: ["ok", "d'accord", "compris", "entendu", "vu", "reçu"],
+    phrases: [],
+    response: `Très bien ! Si vous avez d'autres questions ou besoin d'assistance, je suis disponible à tout moment. 😊`
   },
 
-  // ─── INVESTISSEMENT / PLAN FIXE ───
+  // ── PLATEFORME EN GÉNÉRAL ──
   {
-    keywords: ["investir", "investissement", "plan fixe", "vip", "acheter plan", "souscrire", "plan", "niveau vip"],
-    response: `Nos plans d'investissement fixes sont structurés en **9 niveaux VIP**, chacun offrant un rendement journalier et une durée de cycle de **120 jours**. Le capital est prélevé sur votre portefeuille de dépôt. Les gains quotidiens sont automatiquement crédités sur votre solde de retrait jusqu'à l'échéance du plan.`
+    id: "platform",
+    tags: ["fonctionne", "comment ça marche", "c'est quoi", "plateforme", "autel", "expliquer", "principe", "concept"],
+    phrases: ["comment fonctionne", "comment ca marche", "c est quoi", "qu est ce que", "presentation", "qu'est-ce que autel", "kesako"],
+    response: `**Autel Energy** est une plateforme d'investissement sécurisée. Voici comment elle fonctionne :\n\n**1. Rechargez votre compte** — Effectuez un dépôt via Mobile Money (Orange, MTN, Moov).\n\n**2. Investissez** — Choisissez un plan d'investissement fixe parmi nos 9 niveaux VIP. Chaque plan génère des gains journaliers automatiques pendant 120 jours.\n\n**3. Retirez vos gains** — Vos bénéfices s'accumulent sur votre solde de retrait, disponible à tout moment selon les horaires configurés.\n\n**4. Invitez des amis** — Parrainez vos proches et percevez des commissions sur leurs investissements.\n\nC'est simple, transparent et rentable ! 💰`
   },
   {
-    keywords: ["gain", "rendement", "profit", "bénéfice", "revenu", "rapporte", "combien rapporte"],
-    response: `Vos gains journaliers sont calculés en fonction du niveau VIP souscrit et sont crédités automatiquement chaque jour sur votre portefeuille de retrait. Consultez la section **Investissements** pour visualiser le détail de vos rendements actifs.`
-  },
-  {
-    keywords: ["solde dépôt", "solde investissement", "portefeuille dépôt", "solde principal"],
-    response: `Votre **portefeuille de dépôt** est exclusivement dédié à l'acquisition de plans d'investissement. Ce solde n'est pas directement retirable ; il est converti en capital productif lors de la souscription à un plan.`
-  },
-  {
-    keywords: ["plan activité", "produit activité", "activité", "achat produit"],
-    response: `Les produits d'activités sont des opportunités d'investissement à court terme créées par l'administration. Chaque acquisition vous confère un ticket de participation à la roue de chance et génère un rendement selon les conditions du produit sélectionné.`
+    id: "start",
+    tags: ["commencer", "démarrer", "débuter", "première fois", "nouveau", "s'inscrire", "inscription", "créer compte"],
+    phrases: ["comment commencer", "par où commencer", "je suis nouveau", "premiere fois"],
+    response: `Bienvenue ! Pour démarrer sur Autel Energy, suivez ces étapes simples :\n\n**Étape 1** — Créez votre compte en quelques secondes sur la page d'inscription.\n\n**Étape 2** — Effectuez votre premier dépôt via Mobile Money (min. 1 000 FCFA).\n\n**Étape 3** — Choisissez un plan d'investissement selon votre budget.\n\n**Étape 4** — Vos gains sont crédités automatiquement chaque jour ! 🎉\n\nSi vous avez un code de parrainage, saisissez-le dès l'inscription — il ne peut pas être ajouté après.`
   },
 
-  // ─── PARRAINAGE / COMMISSION ───
+  // ── DÉPÔT ──
   {
-    keywords: ["parrainage", "parrain", "filleul", "inviter", "invitation", "référence", "code invitation", "code parrainage", "lien invitation"],
-    response: `Notre programme de parrainage offre une rémunération en cascade sur **3 niveaux** : **20%** pour votre filleul direct, **3%** pour le second niveau et **2%** pour le troisième. Ces commissions sont attribuées exclusivement lors du **premier investissement en plan fixe** de votre filleul.`
+    id: "deposit_how",
+    tags: ["depot", "dépôt", "recharge", "recharger", "déposer", "alimenter", "approvisionner"],
+    phrases: ["comment faire un depot", "comment deposer", "comment recharger", "procedure depot", "faire un depot", "faire un dépôt", "effectuer un depot"],
+    response: `Voici la procédure pour effectuer un dépôt :\n\n**Étape 1** — Dans l'application, appuyez sur **"Recharger"** depuis votre tableau de bord.\n\n**Étape 2** — Sélectionnez votre pays et votre opérateur Mobile Money (Orange, MTN ou Moov).\n\n**Étape 3** — Entrez le montant souhaité (minimum **1 000 FCFA**).\n\n**Étape 4** — Effectuez le transfert Mobile Money vers le numéro indiqué.\n\n**Étape 5** — Téléchargez votre capture d'écran de confirmation.\n\n⏱️ Votre solde sera crédité dans un délai de **10 à 30 minutes** après validation.`
   },
   {
-    keywords: ["commission pas reçue", "commission manquante", "pas de commission", "commission introuvable", "où est ma commission"],
-    response: `Les commissions de parrainage sont exclusivement générées lors du **premier plan fixe** souscrit par votre filleul direct. Si votre commission n'a pas été créditée après vérification de cette condition, veuillez contacter notre équipe via Telegram pour une investigation approfondie. [[TELEGRAM]]`
-  },
-
-  // ─── ROUE DE CHANCE / SPIN ───
-  {
-    keywords: ["roue", "roue de chance", "spin", "tourner", "ticket", "ticket spin", "tour gratuit"],
-    response: `Vous obtenez **1 ticket de spin** à chaque souscription à un investissement. De plus, lors du **premier plan fixe** de votre filleul, vous recevez également un ticket additionnel. Accédez à la section **Roue de chance** pour utiliser vos tickets et tenter de remporter des gains instantanés.`
+    id: "deposit_delay",
+    tags: ["pas reçu", "pas arrive", "pas credite", "en attente", "non reçu", "depot pas reçu", "recharge pas reçu"],
+    phrases: ["argent pas arrive", "pas encore recu", "toujours en attente", "depot pas traite", "recharge pas traite"],
+    response: `Si votre dépôt est en attente depuis plus de **30 minutes**, voici ce qu'il faut vérifier :\n\n✅ Avez-vous bien soumis votre capture d'écran de confirmation ?\n✅ Le montant transféré correspond-il exactement à celui saisi ?\n✅ Le numéro Mobile Money utilisé est-il correct ?\n\nSi tout est en ordre et que le problème persiste, contactez notre équipe pour une régularisation rapide.`,
+    telegram: true
   },
   {
-    keywords: ["ticket manquant", "ticket pas reçu", "pas de ticket", "ticket spin manquant"],
-    response: `Si vous estimez qu'un ticket de spin n'a pas été crédité après un investissement éligible, signalez-le à notre administration qui procédera à la régularisation manuelle. Contactez-nous via Telegram. [[TELEGRAM]]`
-  },
-
-  // ─── BLOG / BILLET ───
-  {
-    keywords: ["blog", "billet", "publication", "publier", "poster", "témoignage", "capture", "screenshot"],
-    response: `La publication d'un billet de blog requiert trois conditions cumulatives : **1 retrait approuvé**, exactement **2 captures d'écran** justificatives, et le respect de la limite de **1 publication par jour**. Ces prérequis garantissent l'authenticité des témoignages sur notre plateforme.`
-  },
-  {
-    keywords: ["billet rejeté", "publication refusée", "blog refusé", "ne peut pas publier"],
-    response: `Si votre billet a été rejeté, vérifiez que les deux conditions suivantes sont satisfaites : avoir au moins un retrait approuvé à votre actif, et avoir soumis exactement 2 captures d'écran valides. En cas de difficulté persistante, contactez notre service. [[TELEGRAM]]`
+    id: "deposit_min",
+    tags: ["minimum", "montant minimum", "minimum depot", "combien minimum"],
+    phrases: ["quel est le minimum", "montant minimum depot"],
+    response: `Le montant **minimum de dépôt** est de **1 000 FCFA**.\n\nIl n'y a pas de maximum imposé. Vous pouvez recharger autant que vous le souhaitez selon vos objectifs d'investissement.`
   },
 
-  // ─── COMPTE / MOT DE PASSE ───
+  // ── RETRAIT ──
   {
-    keywords: ["mot de passe", "password", "connexion", "login", "accès", "se connecter", "oublié", "réinitialiser"],
-    response: `En cas de perte de vos identifiants de connexion, veuillez contacter notre service d'assistance qui procédera à la **réinitialisation sécurisée** de vos paramètres d'authentification. Aucune récupération automatique n'est disponible pour des raisons de sécurité. [[TELEGRAM]]`
+    id: "withdraw_how",
+    tags: ["retrait", "retirer", "retirer argent", "encaisser", "recuperer argent"],
+    phrases: ["comment faire un retrait", "comment retirer", "comment recuperer mon argent", "procedure retrait"],
+    response: `Voici la procédure de retrait :\n\n**Étape 1** — Assurez-vous d'avoir lié votre carte bancaire (Mobile Money) dans votre profil.\n\n**Étape 2** — Appuyez sur **"Retrait"** depuis votre tableau de bord.\n\n**Étape 3** — Entrez le montant à retirer et votre mot de passe de transaction.\n\n**Étape 4** — Confirmez la demande.\n\n⏱️ Le virement est effectué sous **10 à 30 minutes**.\n\n⚠️ Les retraits sont limités à **2 par jour** et doivent être effectués dans les horaires définis par l'administration.`
   },
   {
-    keywords: ["mot de passe transaction", "pin", "code transaction", "mot de passe retrait"],
-    response: `Le mot de passe de transaction est un dispositif de sécurité supplémentaire obligatoire lors de vos retraits. Il se configure depuis la rubrique **Paramètres du compte** de votre espace personnel. En cas d'oubli, contactez notre service pour une procédure de réinitialisation. [[TELEGRAM]]`
+    id: "withdraw_blocked",
+    tags: ["retrait bloque", "impossible retirer", "erreur retrait", "solde insuffisant", "pas assez"],
+    phrases: ["je peux pas retirer", "retrait ne fonctionne pas", "retrait impossible", "pourquoi je peux pas retirer"],
+    response: `Si votre retrait est bloqué, vérifiez les points suivants :\n\n❌ **Solde insuffisant** — Votre solde de retrait est-il assez élevé ?\n❌ **Horaires** — Les retraits sont uniquement disponibles dans la plage horaire autorisée.\n❌ **Limite journalière** — Maximum **2 retraits par jour**.\n❌ **Carte non liée** — Avez-vous bien enregistré votre Mobile Money dans votre profil ?\n\nSi tout est correct et que le problème persiste, contactez-nous.`,
+    telegram: true
   },
   {
-    keywords: ["inscription", "créer compte", "s'inscrire", "enregistrer", "nouveau compte"],
-    response: `L'inscription sur notre plateforme est gratuite et instantanée. Renseignez vos informations personnelles via la page d'inscription. Si un code de parrainage vous a été communiqué, assurez-vous de le saisir lors de cette étape, car il ne peut pas être ajouté ultérieurement.`
-  },
-
-  // ─── BONUS / PROMOTIONS ───
-  {
-    keywords: ["bonus", "promotion", "code cadeau", "gift code", "code promo", "cadeau", "offre"],
-    response: `Des codes cadeaux promotionnels sont régulièrement distribués par l'administration sur nos canaux officiels Telegram. Une fois un code valide saisi depuis la rubrique dédiée, le montant correspondant est instantanément crédité sur votre portefeuille de dépôt.`
-  },
-  {
-    keywords: ["bonus connexion", "bonus journalier", "bonus quotidien", "récompense quotidienne"],
-    response: `Un bonus de connexion journalier est automatiquement attribué à chaque utilisateur se connectant à la plateforme. Veillez à vous connecter quotidiennement afin de bénéficier de cette récompense cumulée.`
+    id: "withdraw_fees",
+    tags: ["frais retrait", "commission retrait", "taxe retrait", "combien prend"],
+    phrases: ["frais de retrait", "quel pourcentage", "combien de frais", "c'est combien les frais"],
+    response: `Des **frais de service** sont prélevés sur chaque retrait. Le montant net que vous recevrez est affiché clairement avant que vous confirmiez votre demande, donc pas de surprise ! Le pourcentage exact est configuré par l'administration.`
   },
 
-  // ─── CARTE BANCAIRE / COORDONNÉES ───
+  // ── INVESTISSEMENT ──
   {
-    keywords: ["carte bancaire", "coordonnées bancaires", "lier carte", "mobile money", "numéro mobile", "orange money", "mtn", "moov"],
-    response: `Pour effectuer un retrait, vous devez préalablement renseigner vos coordonnées de paiement mobile dans la rubrique **Carte bancaire** de votre profil. Assurez-vous que le numéro de téléphone et l'opérateur sont corrects, car toute erreur peut occasionner un délai supplémentaire dans le traitement.`
+    id: "invest_how",
+    tags: ["investir", "investissement", "plan fixe", "souscrire", "acheter plan", "vip"],
+    phrases: ["comment investir", "comment souscrire", "comment acheter un plan", "je veux investir"],
+    response: `Pour investir sur Autel Energy :\n\n**Étape 1** — Rechargez votre compte (si ce n'est pas déjà fait).\n\n**Étape 2** — Allez dans la section **"Investir"**.\n\n**Étape 3** — Choisissez votre **niveau VIP** (1 à 9) selon votre budget.\n\n**Étape 4** — Confirmez l'achat.\n\n✅ Vos gains journaliers sont automatiquement ajoutés à votre solde de retrait chaque jour pendant **120 jours**. Plus le niveau VIP est élevé, plus le rendement est important !`
+  },
+  {
+    id: "invest_gain",
+    tags: ["gain", "rendement", "profit", "rapporte", "combien gagne", "benefice", "revenu journalier"],
+    phrases: ["combien ca rapporte", "quel est le rendement", "combien je gagne", "comment sont calcules les gains"],
+    response: `Vos **gains journaliers** dépendent du niveau VIP de votre plan. Chaque jour, les bénéfices sont automatiquement crédités sur votre **solde de retrait**. Rendez-vous dans la section **Investissements** pour voir le détail de chaque plan et son rendement exact. Les plans vont du VIP 1 (accessible) au VIP 9 (premium).`
+  },
+  {
+    id: "two_wallets",
+    tags: ["deux soldes", "deux portefeuilles", "solde depot", "solde retrait", "difference solde", "pourquoi deux"],
+    phrases: ["c'est quoi la difference", "pourquoi deux soldes", "solde investissement", "solde principal"],
+    response: `La plateforme utilise **2 portefeuilles distincts** :\n\n💼 **Solde Dépôt** — C'est le capital que vous rechargez. Il sert uniquement à acheter des plans d'investissement. Il n'est pas retirable directement.\n\n💵 **Solde Retrait** — Ce sont vos gains accumulés. Ce solde est retirable à tout moment (selon les horaires). Il se remplit automatiquement chaque jour grâce à vos plans actifs.`
   },
 
-  // ─── DÉLAIS ───
+  // ── PARRAINAGE ──
   {
-    keywords: ["délai", "combien de temps", "attente", "traitement", "quand", "durée"],
-    response: `Les délais de traitement standards sont : **recharge** 10-30 min, **retrait** 10-30 min, **commission** instantanée. Ces délais peuvent varier en cas de volume élevé de transactions ou d'incidents techniques auprès des opérateurs de paiement.`
+    id: "referral_how",
+    tags: ["parrainage", "parrain", "inviter", "invitation", "code parrainage", "filleul", "referencer", "lien invitation"],
+    phrases: ["comment parrainer", "comment inviter", "code de parrainage", "mon lien invitation", "comment gagner avec parrainage"],
+    response: `Le programme de parrainage Autel Energy est très avantageux !\n\n**Comment ça marche :**\n📌 Partagez votre lien d'invitation depuis la section **"Inviter"**.\n\n**Commissions reçues :**\n🥇 **Niveau 1** (filleuls directs) — **20%** de commission\n🥈 **Niveau 2** — **3%** de commission\n🥉 **Niveau 3** — **2%** de commission\n\n⚠️ Ces commissions sont versées **une seule fois**, lors du premier investissement en plan fixe de votre filleul.\n\n🎰 De plus, vous recevez **1 ticket de roue de chance** pour chaque premier plan fixe d'un filleul !`
+  },
+  {
+    id: "commission_missing",
+    tags: ["commission pas reçue", "pas de commission", "commission manquante", "commission introuvable"],
+    phrases: ["je n'ai pas recu ma commission", "ou est ma commission", "commission non versee"],
+    response: `Les commissions sont versées uniquement lors du **premier investissement en plan fixe** de votre filleul direct. Assurez-vous que :\n\n✅ Votre filleul a bien utilisé votre code de parrainage à l'inscription\n✅ Il a souscrit à un **plan fixe** (pas un produit d'activité)\n✅ C'est bien son **premier** plan fixe\n\nSi toutes ces conditions sont remplies et que la commission n'est pas là, contactez notre équipe.`,
+    telegram: true
   },
 
-  // ─── PROBLÈME TECHNIQUE ───
+  // ── ROUE DE CHANCE ──
   {
-    keywords: ["bug", "erreur", "problème", "probleme", "ne fonctionne pas", "ne marche pas", "plantage", "bloqué", "coincé"],
-    response: `Nous avons pris note de votre signalement d'incident technique. Dans un premier temps, veuillez vider le cache de votre navigateur et actualiser la page. Si la dysfonction persiste, notre équipe technique sera en mesure de vous assister via notre canal de support officiel. [[TELEGRAM]]`
+    id: "spin",
+    tags: ["roue", "spin", "tourner la roue", "ticket spin", "tour gratuit", "ticket roue"],
+    phrases: ["comment avoir un ticket", "comment utiliser la roue", "roue de chance"],
+    response: `La **Roue de Chance** vous permet de gagner des FCFA instantanément ! 🎰\n\nComment obtenir des tickets :\n🎫 **+1 ticket** à chaque achat de plan d'investissement (fixe ou activité)\n🎫 **+1 ticket** lors du premier plan fixe de votre filleul parrainé\n\nPour jouer, rendez-vous dans la section **"Roue de Chance"** et utilisez vos tickets disponibles. Bonne chance ! 🍀`
   },
 
-  // ─── SÉCURITÉ / FRAUDE ───
+  // ── BLOG ──
   {
-    keywords: ["sécurité", "fraude", "arnaque", "fiable", "légitime", "confiance", "sérieux"],
-    response: `La plateforme Autel Energy opère selon des protocoles de sécurité rigoureux. Toutes vos données personnelles et financières sont protégées. Nous vous recommandons de ne jamais communiquer vos identifiants à un tiers et de vous connecter exclusivement via le lien officiel de la plateforme.`
+    id: "blog",
+    tags: ["blog", "billet", "publier", "publication", "temoignage", "capture ecran", "screenshot"],
+    phrases: ["comment publier un billet", "comment poster sur le blog", "conditions blog"],
+    response: `Pour publier un **billet de blog** (témoignage), vous devez remplir 3 conditions :\n\n✅ Avoir au moins **1 retrait approuvé** à votre actif\n✅ Soumettre exactement **2 captures d'écran** justificatives\n✅ Respecter la limite de **1 publication par jour**\n\nCes conditions garantissent l'authenticité des témoignages sur la plateforme.`
   },
 
-  // ─── TELEGRAM ───
+  // ── COMPTE ──
   {
-    keywords: ["telegram", "groupe", "canal", "rejoindre", "communauté", "contact", "service client", "support", "aide", "assistance"],
-    response: `Notre équipe de support est disponible sur Telegram pour toute assistance personnalisée. N'hésitez pas à nous rejoindre via le lien ci-dessous pour une prise en charge rapide et efficace. [[TELEGRAM]]`
+    id: "password",
+    tags: ["mot de passe", "password", "connexion", "login", "oublie", "reinitialiser", "acces"],
+    phrases: ["j'ai oublié mon mot de passe", "mot de passe oublié", "je peux pas me connecter", "probleme connexion"],
+    response: `Si vous avez oublié votre mot de passe, contactez notre service d'assistance pour une **réinitialisation sécurisée** de votre compte. Pour des raisons de sécurité, cette opération doit être effectuée manuellement par un administrateur.`,
+    telegram: true
+  },
+  {
+    id: "tx_password",
+    tags: ["mot de passe transaction", "pin retrait", "code transaction", "mot de passe retrait"],
+    phrases: ["mot de passe de transaction", "j'ai oublié mon code transaction"],
+    response: `Le **mot de passe de transaction** est un code de sécurité supplémentaire pour vos retraits. Vous pouvez le configurer ou le modifier dans la section **Paramètres** de votre profil. En cas d'oubli, contactez notre support.`,
+    telegram: true
+  },
+  {
+    id: "bank_card",
+    tags: ["carte bancaire", "mobile money", "coordonnees bancaires", "lier carte", "orange money", "mtn", "moov money"],
+    phrases: ["comment lier ma carte", "ajouter mobile money", "lier mon numero"],
+    response: `Pour lier votre compte Mobile Money :\n\n**Étape 1** — Allez dans **"Carte Bancaire"** depuis votre profil.\n\n**Étape 2** — Sélectionnez votre opérateur (Orange Money, MTN ou Moov).\n\n**Étape 3** — Entrez votre numéro de téléphone Mobile Money.\n\n**Étape 4** — Enregistrez.\n\nCette étape est obligatoire avant d'effectuer votre premier retrait.`
+  },
+
+  // ── BONUS / CODES ──
+  {
+    id: "gift_code",
+    tags: ["code cadeau", "gift code", "code promo", "promotion", "bonus", "cadeau"],
+    phrases: ["comment utiliser un code cadeau", "ou entrer le code", "j'ai un code"],
+    response: `Pour utiliser un **code cadeau** :\n\n**Étape 1** — Depuis votre tableau de bord, cherchez la section **"Code Cadeau"**.\n\n**Étape 2** — Saisissez votre code et validez.\n\n✅ Le bonus est instantanément crédité sur votre solde de dépôt.\n\nNos codes cadeaux sont distribués régulièrement sur notre canal Telegram officiel. Rejoignez-le pour ne rien manquer !`
+  },
+  {
+    id: "daily_bonus",
+    tags: ["bonus connexion", "bonus journalier", "bonus quotidien", "recompense quotidienne"],
+    phrases: ["bonus de connexion", "bonus chaque jour"],
+    response: `Un **bonus de connexion journalier** est attribué automatiquement à chaque utilisateur qui se connecte quotidiennement. Connectez-vous chaque jour pour accumuler ces récompenses ! Ne manquez aucun jour pour maximiser vos gains. 📅`
+  },
+
+  // ── DÉLAIS ──
+  {
+    id: "delays",
+    tags: ["combien de temps", "delai", "attente", "duree", "quand"],
+    phrases: ["combien de temps ca prend", "quel est le delai", "c'est long"],
+    response: `Voici nos délais de traitement habituels :\n\n⚡ **Dépôt** — 10 à 30 minutes\n⚡ **Retrait** — 10 à 30 minutes\n💰 **Gains journaliers** — Crédités automatiquement chaque jour\n🎁 **Commissions** — Instantanées après l'investissement éligible du filleul\n\nCes délais peuvent varier en cas de forte affluence ou d'incident technique chez les opérateurs.`
+  },
+
+  // ── PROBLÈMES TECHNIQUES ──
+  {
+    id: "bug",
+    tags: ["bug", "erreur", "probleme", "ne fonctionne pas", "marche pas", "plante", "bloque", "incident"],
+    phrases: ["ca ne marche pas", "j'ai un problème", "il y a un bug", "ça ne fonctionne pas", "application bloquee"],
+    response: `Désolé pour ce désagrément. Voici les étapes de dépannage :\n\n🔄 **Rafraîchissez** la page ou redémarrez l'application\n🧹 **Videz le cache** de votre navigateur\n🌐 **Vérifiez** votre connexion internet\n\nSi le problème persiste après ces étapes, notre équipe technique est disponible pour vous assister.`,
+    telegram: true
+  },
+
+  // ── SÉCURITÉ ──
+  {
+    id: "security",
+    tags: ["securite", "fiable", "arnaque", "legitime", "confiance", "serieux"],
+    phrases: ["c'est fiable", "c'est une arnaque", "peut on faire confiance", "est ce serieux"],
+    response: `**Autel Energy** est une plateforme sécurisée et fiable. Vos données personnelles et financières sont protégées. Quelques conseils de sécurité :\n\n🔐 Ne partagez jamais vos identifiants\n🔐 Connectez-vous uniquement via le lien officiel\n🔐 Activez votre mot de passe de transaction pour sécuriser vos retraits`
+  },
+
+  // ── TELEGRAM SUPPORT ──
+  {
+    id: "telegram",
+    tags: ["telegram", "service client", "support", "contacter", "aide humaine", "conseiller", "agent"],
+    phrases: ["je veux parler a quelqu'un", "joindre le support", "contacter service client", "parler a un agent"],
+    response: `Notre équipe de support est disponible sur **Telegram** pour vous assister personnellement. Cliquez ci-dessous pour nous rejoindre — un conseiller prendra en charge votre demande rapidement.`,
+    telegram: true
   },
 ];
 
 function normalize(text: string): string {
-  return text.toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['']/g, " ")
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -150,40 +218,66 @@ function normalize(text: string): string {
 
 export function generateAIResponse(userMessage: string): string {
   const norm = normalize(userMessage);
-  const words = norm.split(" ");
 
+  // ── Détection salutation pure ──
+  const greetWords = ["bonjour", "bonsoir", "salut", "hello", "hi", "coucou", "hey", "bonne nuit"];
+  const normWords = norm.split(" ");
+  if (normWords.every(w => greetWords.includes(w) || w.length <= 1)) {
+    const entry = KB.find(e => e.id === "greet")!;
+    return entry.response;
+  }
+
+  // ── Détection remerciement ──
+  const thanksWords = ["merci", "thank", "super", "parfait"];
+  if (normWords.length <= 4 && normWords.some(w => thanksWords.includes(w))) {
+    return KB.find(e => e.id === "merci")!.response;
+  }
+
+  // ── Scoring ──
   let bestScore = 0;
-  let bestEntry: KnowledgeEntry | null = null;
+  let bestEntry: Entry | null = null;
 
   for (const entry of KB) {
     let score = 0;
-    for (const kw of entry.keywords) {
-      const kwNorm = normalize(kw);
-      if (norm.includes(kwNorm)) {
-        score += kwNorm.split(" ").length * 2;
+
+    // Correspondance de phrases exactes (poids très élevé)
+    for (const phrase of entry.phrases) {
+      const pNorm = normalize(phrase);
+      if (norm.includes(pNorm)) {
+        score += pNorm.split(" ").length * 5;
+      }
+    }
+
+    // Correspondance de tags
+    for (const tag of entry.tags) {
+      const tNorm = normalize(tag);
+      const tWords = tNorm.split(" ");
+      if (norm.includes(tNorm)) {
+        score += tWords.length * 3;
       } else {
-        const kwWords = kwNorm.split(" ");
-        for (const kword of kwWords) {
-          if (kword.length > 3 && words.some(w => w.includes(kword) || kword.includes(w))) {
-            score += 1;
+        for (const tw of tWords) {
+          if (tw.length > 3) {
+            if (normWords.some(w => w === tw || w.startsWith(tw) || tw.startsWith(w))) {
+              score += 1;
+            }
           }
         }
       }
     }
+
     if (score > bestScore) {
       bestScore = score;
       bestEntry = entry;
     }
   }
 
-  const CONFIDENCE_THRESHOLD = 2;
+  const THRESHOLD = 2;
 
-  if (!bestEntry || bestScore < CONFIDENCE_THRESHOLD) {
-    return `Nous avons bien reçu votre message. Afin de vous apporter une assistance personnalisée et optimale, notre équipe spécialisée reste disponible sur Telegram. Un conseiller prendra en charge votre requête dans les meilleurs délais. [[TELEGRAM]]`;
+  if (!bestEntry || bestScore < THRESHOLD) {
+    return `Je n'ai pas bien saisi votre demande. Pourriez-vous la reformuler ? Vous pouvez m'interroger sur les dépôts, retraits, investissements, parrainage, ou le fonctionnement général de la plateforme.\n\nSi vous préférez parler directement à un conseiller, notre équipe est disponible sur Telegram. [[TELEGRAM]]`;
   }
 
   let response = bestEntry.response;
-
   if (bestEntry.telegram && !response.includes("[[TELEGRAM]]")) {
     response += " [[TELEGRAM]]";
   }
