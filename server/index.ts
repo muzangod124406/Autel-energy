@@ -67,6 +67,8 @@ app.use((req, res, next) => {
   try {
     await pool.query("ALTER TABLE tickets ADD COLUMN IF NOT EXISTS image_url2 text");
     log("Migration: tickets.image_url2 OK");
+    await pool.query("ALTER TABLE investments ADD COLUMN IF NOT EXISTS product_id text");
+    log("Migration: investments.product_id OK");
   } catch (e: any) {
     log(`Migration warning: ${e.message}`);
   }

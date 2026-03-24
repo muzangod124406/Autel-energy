@@ -271,6 +271,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         if (product.purchaseLimit > 0 && product.purchaseCount >= product.purchaseLimit) {
           return res.status(400).json({ message: "Limite d'achat atteinte pour ce produit" });
         }
+        // Un utilisateur ne peut avoir qu'une seule activité active à la fois
+        const allInvestments = await storage.getUserInvestments(userId);
+        const hasActiveActivity = allInvestments.some(
+          (i: any) => i.planType === "activity" && i.status === "active"
+        );
+        if (hasActiveActivity) {
+          return res.status(400).json({ message: "Vous avez déjà une activité en cours. Attendez la fin du cycle pour en acheter une nouvelle." });
+        }
         await storage.incrementProductPurchaseCount(productId);
       }
 
@@ -278,7 +286,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       endDate.setDate(endDate.getDate() + duration);
 
       const investment = await storage.createInvestment({
-        userId, planType, vipLevel, amount, dailyGain, duration, totalGain, endDate
+        userId, planType, vipLevel, amount, dailyGain, duration, totalGain, endDate, productId: productId || null
       });
 
       // Débiter le dépôt et donner +1 ticket spin à l'investisseur (atomique)

@@ -52,6 +52,7 @@ export const investments = pgTable("investments", {
   startDate: timestamp("start_date").notNull().defaultNow(),
   endDate: timestamp("end_date").notNull(),
   assignedByAdmin: boolean("assigned_by_admin").notNull().default(false),
+  productId: text("product_id"),
 });
 
 export const transactions = pgTable("transactions", {

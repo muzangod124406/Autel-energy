@@ -39,6 +39,9 @@ export default function InvestPage() {
   const hasActiveFixed = (userInvestments as any[]).some(
     (i: any) => i.status === "active" && i.planType === "fix"
   );
+  const hasActiveActivity = (userInvestments as any[]).some(
+    (i: any) => i.status === "active" && i.planType === "activity"
+  );
 
   const investMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -250,6 +253,9 @@ export default function InvestPage() {
               : null;
             const isLaunched = !product.launchDate || new Date(product.launchDate) <= new Date();
             const isBuying = investMutation.isPending && buyingProductId === product.id;
+            const alreadyOwned = (userInvestments as any[]).some(
+              (i: any) => i.productId === product.id && i.status === "active"
+            );
 
             return (
               <div
@@ -269,9 +275,9 @@ export default function InvestPage() {
                     <span className="absolute top-1.5 left-1.5 bg-[#f97316] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
                       {product.cycleDays}jours
                     </span>
-                    {remaining !== null && remaining <= 5 && (
-                      <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
-                        {remaining} restant{remaining > 1 ? "s" : ""}
+                    {alreadyOwned && (
+                      <span className="absolute top-1.5 right-1.5 bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                        ✓ Acheté
                       </span>
                     )}
                   </div>
@@ -286,6 +292,11 @@ export default function InvestPage() {
                     <p className="text-gray-700 text-xs">
                       Revenu total:<span className="font-semibold"> {product.totalGain.toLocaleString("fr-FR")}.00XAF</span>
                     </p>
+                    {remaining !== null && (
+                      <p className="text-xs mt-1 font-semibold" style={{ color: remaining <= 5 ? "#ef4444" : "#f97316" }}>
+                        {remaining} place{remaining > 1 ? "s" : ""} restante{remaining > 1 ? "s" : ""}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="border-t border-gray-100 mx-3" />
@@ -303,6 +314,10 @@ export default function InvestPage() {
                   ) : !hasActiveFixed ? (
                     <div className="w-full py-3 bg-orange-50 border border-orange-200 rounded-xl text-center text-xs text-orange-600 font-medium flex items-center justify-center gap-1">
                       <Lock className="w-3 h-3" /> Plan Fixe 120J requis
+                    </div>
+                  ) : hasActiveActivity ? (
+                    <div className="w-full py-3 bg-green-50 border border-green-200 rounded-xl text-center text-xs text-green-700 font-semibold flex items-center justify-center gap-1">
+                      {alreadyOwned ? "✓ Cette activité est en cours" : "⏳ Une activité est déjà en cours"}
                     </div>
                   ) : (
                     <button
