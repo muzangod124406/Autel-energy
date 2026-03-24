@@ -6,12 +6,21 @@ import { ArrowLeft, Phone, MoreVertical, Smile, Paperclip, Image, Send, Check, C
 import autelLogo from "@assets/images_(11)_1774131992392.png";
 import serviceImg from "@assets/561c62c4e80617ebf5313bc562f02542_1774182788114.jpg";
 
-const TELEGRAM_HANDLE = "@claraautel0";
-const TELEGRAM_URL = "https://t.me/claraautel0";
+const TELEGRAM_SUPPORT_URL = "https://t.me/claraautel0";
+const TELEGRAM_GROUP_URL = "https://t.me/autelenergy";
+
+function TelegramIcon() {
+  return (
+    <svg className="w-4 h-4 fill-white flex-shrink-0" viewBox="0 0 24 24">
+      <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/>
+    </svg>
+  );
+}
 
 function MessageContent({ text, isUser }: { text: string; isUser: boolean }) {
   const hasTelegram = text.includes("[[TELEGRAM]]");
-  const clean = text.replace("[[TELEGRAM]]", "").trim();
+  const hasGroup = text.includes("[[GROUP]]");
+  const clean = text.replace("[[TELEGRAM]]", "").replace("[[GROUP]]", "").trim();
 
   const renderText = (t: string) =>
     t.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
@@ -20,21 +29,39 @@ function MessageContent({ text, isUser }: { text: string; isUser: boolean }) {
         : <span key={i}>{part}</span>
     );
 
+  const renderLines = (t: string) =>
+    t.split("\n").map((line, i) => (
+      <span key={i}>
+        {renderText(line)}
+        {i < t.split("\n").length - 1 && <br />}
+      </span>
+    ));
+
   return (
     <div>
-      {clean && <p className="text-sm leading-relaxed">{renderText(clean)}</p>}
+      {clean && <p className="text-sm leading-relaxed">{renderLines(clean)}</p>}
       {hasTelegram && (
         <a
-          href={TELEGRAM_URL}
+          href={TELEGRAM_SUPPORT_URL}
           target="_blank"
           rel="noreferrer"
           className="mt-2 flex items-center gap-2 bg-[#229ED9] text-white text-xs font-semibold px-3 py-2 rounded-xl w-fit"
           data-testid="btn-telegram-support"
         >
-          <svg className="w-4 h-4 fill-white flex-shrink-0" viewBox="0 0 24 24">
-            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/>
-          </svg>
-          Contacter {TELEGRAM_HANDLE}
+          <TelegramIcon />
+          Service client @claraautel0
+        </a>
+      )}
+      {hasGroup && (
+        <a
+          href={TELEGRAM_GROUP_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2 flex items-center gap-2 bg-[#229ED9] text-white text-xs font-semibold px-3 py-2 rounded-xl w-fit"
+          data-testid="btn-telegram-group"
+        >
+          <TelegramIcon />
+          Rejoindre le groupe Autel Energy
         </a>
       )}
     </div>

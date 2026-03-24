@@ -195,12 +195,20 @@ const KB: Entry[] = [
     response: `**Autel Energy** est une plateforme sécurisée et fiable. Vos données personnelles et financières sont protégées. Quelques conseils de sécurité :\n\n🔐 Ne partagez jamais vos identifiants\n🔐 Connectez-vous uniquement via le lien officiel\n🔐 Activez votre mot de passe de transaction pour sécuriser vos retraits`
   },
 
+  // ── GROUPE COMMUNAUTAIRE TELEGRAM ──
+  {
+    id: "group",
+    tags: ["groupe", "group", "communaute", "rejoindre", "canal", "chaine", "telegram", "autelenergy", "rejoindre groupe", "lien groupe"],
+    phrases: ["rejoindre le groupe", "lien du groupe", "comment rejoindre", "comment acceder au groupe", "ou est le groupe", "groupe telegram", "canal telegram", "je veux rejoindre"],
+    response: `Rejoignez notre **communauté officielle Autel Energy** sur Telegram pour accéder aux actualités, bonus exclusifs, codes cadeaux et annonces importantes !\n\nPour rejoindre, cliquez sur le bouton ci-dessous. Assurez-vous d'utiliser uniquement **ce lien officiel** pour éviter les arnaques. [[GROUP]]`
+  },
+
   // ── TELEGRAM SUPPORT ──
   {
     id: "telegram",
-    tags: ["telegram", "service client", "support", "contacter", "aide humaine", "conseiller", "agent"],
-    phrases: ["je veux parler a quelqu'un", "joindre le support", "contacter service client", "parler a un agent"],
-    response: `Notre équipe de support est disponible sur **Telegram** pour vous assister personnellement. Cliquez ci-dessous pour nous rejoindre — un conseiller prendra en charge votre demande rapidement.`,
+    tags: ["service client", "support", "contacter", "aide humaine", "conseiller", "agent", "assistance"],
+    phrases: ["je veux parler a quelqu'un", "joindre le support", "contacter service client", "parler a un agent", "parler a un humain"],
+    response: `Notre équipe de support est disponible sur **Telegram** pour vous assister personnellement. Un conseiller prendra en charge votre demande dans les meilleurs délais.`,
     telegram: true
   },
 ];
@@ -274,7 +282,7 @@ export function generateAIResponse(userMessage: string): string {
   const THRESHOLD = 2;
 
   if (!bestEntry || bestScore < THRESHOLD) {
-    return `Je n'ai pas bien saisi votre demande. Pourriez-vous la reformuler ? Vous pouvez m'interroger sur les dépôts, retraits, investissements, parrainage, ou le fonctionnement général de la plateforme.\n\nSi vous préférez parler directement à un conseiller, notre équipe est disponible sur Telegram. [[TELEGRAM]]`;
+    return `Soyez plus explicite svp ! 🙏\n\nJe peux vous aider sur :\n• Dépôt / Retrait\n• Investissement / Plan VIP\n• Parrainage / Commission\n• Roue de chance\n• Rejoindre le groupe\n• Fonctionnement de la plateforme`;
   }
 
   let response = bestEntry.response;
