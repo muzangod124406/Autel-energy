@@ -1,26 +1,44 @@
-import { createClient } from "@supabase/supabase-js";
 import { pool } from "./db";
 
-function getSupabaseProjectUrl(): string {
-  const dbUrl = process.env.SUPABASE_DATABASE_URL || "";
-  const poolerMatch = dbUrl.match(/postgres\.([^:@]+)/);
-  if (poolerMatch) return `https://${poolerMatch[1]}.supabase.co`;
-  const directMatch = dbUrl.match(/@db\.([^.]+)\.supabase\.co/);
-  if (directMatch) return `https://${directMatch[1]}.supabase.co`;
-  throw new Error("Impossible de dériver l'URL Supabase depuis DATABASE_URL");
-}
-
-const supabaseUrl = getSupabaseProjectUrl();
-const supabaseKey = process.env.SUPABASE_ANON_KEY || "";
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+let supabase: any = null;
 
 export const BUCKETS = {
   BLOG: "blog-images",
   FILES: "user-files",
 };
 
+function tryInitSupabaseClient() {
+  try {
+    const dbUrl = process.env.SUPABASE_DATABASE_URL || "";
+    let supabaseUrl = "";
+
+    const poolerMatch = dbUrl.match(/postgres\.([^:@]+)/);
+    if (poolerMatch) supabaseUrl = `https://${poolerMatch[1]}.supabase.co`;
+
+    const directMatch = dbUrl.match(/@db\.([^.]+)\.supabase\.co/);
+    if (directMatch) supabaseUrl = `https://${directMatch[1]}.supabase.co`;
+
+    const supabaseKey = process.env.SUPABASE_ANON_KEY || "";
+
+    if (!supabaseUrl || !supabaseKey) return null;
+
+    const { createClient } = require("@supabase/supabase-js");
+    return createClient(supabaseUrl, supabaseKey);
+  } catch {
+    return null;
+  }
+}
+
+supabase = tryInitSupabaseClient();
+
+export { supabase };
+
 export async function initSupabaseStorage() {
+  if (!supabase) {
+    console.log("[Supabase Storage] Variables non configurées, stockage Supabase désactivé.");
+    return;
+  }
+
   try {
     for (const bucket of Object.values(BUCKETS)) {
       await pool.query(`
@@ -80,6 +98,8 @@ export async function uploadToSupabase(
   buffer: Buffer,
   mimeType: string
 ): Promise<string> {
+  if (!supabase) throw new Error("Supabase non configuré");
+
   const { error } = await supabase.storage
     .from(bucket)
     .upload(filePath, buffer, { contentType: mimeType, upsert: true });
