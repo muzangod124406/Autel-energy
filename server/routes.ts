@@ -460,11 +460,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const apiKey = s.soleaspayApiKey || process.env.SOLEASPAY_API_KEY;
       if (!apiKey) return res.status(503).json({ message: "SoleasPay non configuré" });
 
-      const { amount, operator, phoneNumber } = req.body;
+      const { amount, operator, phoneNumber, country } = req.body;
       if (!amount || amount < 100) return res.status(400).json({ message: "Montant invalide" });
       if (!operator) return res.status(400).json({ message: "Opérateur requis" });
 
-      const countrySlug = user.country || "";
+      // Allow user to choose a different country (e.g. different mobile money operator)
+      const countrySlug = country || user.country || "";
       const serviceId = getSoleasPayServiceId(countrySlug, operator);
       if (!serviceId) return res.status(400).json({ message: `Opérateur non supporté: ${operator}` });
 
