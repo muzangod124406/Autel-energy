@@ -782,11 +782,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Settings
   app.get("/api/settings", async (req: Request, res: Response) => {
     const s = await storage.getSettings();
-    // Masquer la clé OpenAI dans la réponse publique
-    const { openaiApiKey, ...safeSettings } = s;
+    // Masquer les clés sensibles dans la réponse publique
+    const { openaiApiKey, soleaspayApiKey, soleaspaySecretHash, ...safeSettings } = s;
     res.json({
       ...safeSettings,
       openaiApiKey: openaiApiKey ? `${openaiApiKey.slice(0, 8)}${"*".repeat(20)}` : "",
+      soleaspayApiKey: soleaspayApiKey ? `${(soleaspayApiKey as string).slice(0, 8)}${"*".repeat(20)}` : "",
+      soleaspaySecretHash: soleaspaySecretHash ? `${"*".repeat(16)}` : "",
     });
   });
 
@@ -1048,15 +1050,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.put("/api/admin/settings", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       const data = { ...req.body };
-      // Ne pas écraser la vraie clé si on reçoit une valeur masquée
-      if (data.openaiApiKey && data.openaiApiKey.includes("*")) {
-        delete data.openaiApiKey;
-      }
+      // Ne pas écraser les vraies clés si on reçoit des valeurs masquées
+      if (data.openaiApiKey && data.openaiApiKey.includes("*")) delete data.openaiApiKey;
+      if (data.soleaspayApiKey && data.soleaspayApiKey.includes("*")) delete data.soleaspayApiKey;
+      if (data.soleaspaySecretHash && data.soleaspaySecretHash.includes("*")) delete data.soleaspaySecretHash;
       const s = await storage.updateSettings(data);
-      const { openaiApiKey, ...safeSettings } = s;
+      const { openaiApiKey, soleaspayApiKey, soleaspaySecretHash, ...safeSettings } = s;
       res.json({
         ...safeSettings,
         openaiApiKey: openaiApiKey ? `${openaiApiKey.slice(0, 8)}${"*".repeat(20)}` : "",
+        soleaspayApiKey: soleaspayApiKey ? `${(soleaspayApiKey as string).slice(0, 8)}${"*".repeat(20)}` : "",
+        soleaspaySecretHash: soleaspaySecretHash ? `${"*".repeat(16)}` : "",
       });
     } catch (e: any) {
       res.status(500).json({ message: e.message });

@@ -129,6 +129,8 @@ export default function AdminPage() {
   const [spApiKey, setSpApiKey] = useState("");
   const [spSecretHash, setSpSecretHash] = useState("");
   const [spSaved, setSpSaved] = useState(false);
+  const [spKeyFromDb, setSpKeyFromDb] = useState(false);
+  const [spHashFromDb, setSpHashFromDb] = useState(false);
 
   // Stats date filter
   const [statsFrom, setStatsFrom] = useState("");
@@ -218,6 +220,17 @@ export default function AdminPage() {
   const { data: settingsData, refetch: refetchSettings } = useQuery({ queryKey: ["/api/settings"] });
   useEffect(() => {
     if (settingsData && !settingsForm) setSettingsForm(settingsData);
+    if (settingsData) {
+      const d = settingsData as any;
+      if (d.soleaspayApiKey && !spKeyFromDb) {
+        setSpApiKey(d.soleaspayApiKey);
+        setSpKeyFromDb(true);
+      }
+      if (d.soleaspaySecretHash && !spHashFromDb) {
+        setSpSecretHash(d.soleaspaySecretHash);
+        setSpHashFromDb(true);
+      }
+    }
   }, [settingsData]);
   const { data: channels = [], refetch: refetchChannels } = useQuery({ queryKey: ["/api/admin/channels"] });
   const { data: adminProducts = [], refetch: refetchProducts } = useQuery({ queryKey: ["/api/admin/products"] });
@@ -1789,38 +1802,51 @@ export default function AdminPage() {
 
             <Card className="p-4 space-y-4">
               <div>
-                <label className="text-xs font-medium text-gray-600">Clé API SoleasPay <span className="text-red-500">*</span></label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-gray-600">Clé API SoleasPay <span className="text-red-500">*</span></label>
+                  {spKeyFromDb && spApiKey.includes("*") && (
+                    <span className="text-[10px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">✓ Configurée</span>
+                  )}
+                </div>
                 <Input
                   data-testid="input-soleaspay-apikey"
                   className="mt-1 font-mono text-xs"
                   placeholder="SP_BSnx7C0..."
                   value={spApiKey}
-                  onChange={e => { setSpApiKey(e.target.value); setSpSaved(false); }}
-                  type="password"
+                  onChange={e => { setSpApiKey(e.target.value); setSpSaved(false); setSpKeyFromDb(false); }}
                 />
-                <p className="text-xs text-gray-400 mt-1">Clé fournie par SoleasPay. Gardez-la confidentielle.</p>
+                {spKeyFromDb && spApiKey.includes("*") ? (
+                  <p className="text-xs text-green-600 mt-1">Clé déjà enregistrée. Tapez une nouvelle valeur pour la remplacer.</p>
+                ) : (
+                  <p className="text-xs text-gray-400 mt-1">Clé fournie par SoleasPay. Gardez-la confidentielle.</p>
+                )}
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600">Secret Hash (webhook)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-gray-600">Secret Hash (webhook)</label>
+                  {spHashFromDb && spSecretHash.includes("*") && (
+                    <span className="text-[10px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">✓ Configuré</span>
+                  )}
+                </div>
                 <Input
                   data-testid="input-soleaspay-secret"
                   className="mt-1 font-mono text-xs"
                   placeholder="Votre secret hash pour vérifier les callbacks"
                   value={spSecretHash}
-                  onChange={e => { setSpSecretHash(e.target.value); setSpSaved(false); }}
-                  type="password"
+                  onChange={e => { setSpSecretHash(e.target.value); setSpSaved(false); setSpHashFromDb(false); }}
                 />
                 <p className="text-xs text-gray-400 mt-1">Optionnel. Utilisé pour valider l'authenticité des webhooks SoleasPay.</p>
               </div>
               <Button
                 data-testid="button-save-soleaspay"
                 className="w-full"
-                disabled={updateSettingsMutation.isPending || !spApiKey}
+                disabled={updateSettingsMutation.isPending || (!spApiKey || spApiKey.includes("*"))}
                 onClick={async () => {
                   const patch: any = { soleaspayApiKey: spApiKey };
-                  if (spSecretHash) patch.soleaspaySecretHash = spSecretHash;
+                  if (spSecretHash && !spSecretHash.includes("*")) patch.soleaspaySecretHash = spSecretHash;
                   await saveSettings(patch);
                   setSpSaved(true);
+                  setSpKeyFromDb(true);
                 }}
               >
                 {updateSettingsMutation.isPending ? "Enregistrement..." : spSaved ? "✓ Enregistré" : "Enregistrer les identifiants"}
