@@ -14,7 +14,7 @@ import {
   Check, X, DollarSign, Settings, Shield, Eye, Trash2, Plus,
   Link2, Package, Edit2, ToggleLeft, ToggleRight,
   Upload, Calendar, UserCheck, Globe, Wallet, Award, RotateCcw, CreditCard,
-  AlertTriangle, Clock, ShoppingCart, MessageCircle, Send, Image, ChevronLeft
+  AlertTriangle, Clock, ShoppingCart, MessageCircle, Send, Image, ChevronLeft, Bot, Key
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -148,6 +148,10 @@ export default function AdminPage() {
 
   // WestPay — toujours appelé (règle des hooks), activé uniquement sur l'onglet
   const { data: wpStatus } = useQuery<any>({ queryKey: ["/api/admin/westpay/status"], enabled: activeTab === "westpay" });
+  // Statut IA — vérifié uniquement sur l'onglet paramètres
+  const { data: aiStatus, refetch: refetchAiStatus, isFetching: aiChecking } = useQuery<any>({
+    queryKey: ["/api/admin/ai-status"], enabled: activeTab === "settings", refetchOnWindowFocus: false,
+  });
   const { data: wpBalances, refetch: refetchBalances, isFetching: balFetching } = useQuery<any[]>({
     queryKey: ["/api/admin/westpay/balances"], enabled: false,
   });
@@ -1864,6 +1868,59 @@ export default function AdminPage() {
                     data-testid="admin-service-client2" />
                 </div>
                 <SaveBtn fields={["telegramGroup", "telegramChannel", "telegramService", "serviceClient1", "serviceClient2"]} />
+              </Card>
+
+              {/* Intelligence Artificielle */}
+              <Card className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-sm flex items-center gap-2 text-purple-600">
+                    <Bot className="w-4 h-4" /> Assistant IA (OpenAI)
+                  </h3>
+                  {aiChecking ? (
+                    <span className="text-xs text-gray-400 animate-pulse">Vérification...</span>
+                  ) : aiStatus ? (
+                    aiStatus.ok ? (
+                      <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        <Check className="w-3 h-3" /> IA Active
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-full border border-red-200">
+                        <AlertTriangle className="w-3 h-3" /> IA Hors service
+                      </span>
+                    )
+                  ) : null}
+                </div>
+
+                {aiStatus && !aiStatus.ok && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                    <p className="text-red-700 text-xs font-semibold flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                      Problème IA : {aiStatus.error || "Clé API invalide ou absente"}
+                    </p>
+                    <p className="text-red-500 text-xs mt-1">Le chatbot utilise le mode hors ligne (réponses basiques) jusqu'à correction.</p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-xs font-medium text-gray-700 flex items-center gap-1">
+                    <Key className="w-3 h-3" /> Clé API OpenAI
+                  </label>
+                  <Input
+                    className="mt-1 font-mono text-xs"
+                    type="password"
+                    placeholder="sk-..."
+                    value={sf.openaiApiKey || ""}
+                    onChange={e => set("openaiApiKey", e.target.value)}
+                    data-testid="admin-openai-key"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Obtenez votre clé sur platform.openai.com. Si vide, le mode hors ligne est utilisé.</p>
+                </div>
+                <div className="flex gap-2">
+                  <SaveBtn fields={["openaiApiKey"]} />
+                  <Button size="sm" variant="outline" onClick={() => refetchAiStatus()} disabled={aiChecking} data-testid="admin-ai-test">
+                    {aiChecking ? "Test..." : "Tester l'IA"}
+                  </Button>
+                </div>
               </Card>
 
               {/* Activités */}

@@ -122,6 +122,7 @@ export const settings = pgTable("settings", {
   referralCommission2: integer("referral_commission2").notNull().default(3),
   referralCommission3: integer("referral_commission3").notNull().default(2),
   statsResetDate: timestamp("stats_reset_date"),
+  openaiApiKey: text("openai_api_key").notNull().default(""),
 });
 
 export const countries = pgTable("countries", {

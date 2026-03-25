@@ -5,7 +5,7 @@ import { db, pool } from "./db";
 import { users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { uploadToSupabase, BUCKETS } from "./supabase-storage";
-import { generateAIResponse } from "./ai-agent";
+import { generateAIResponse, generateAIResponseOpenAI, checkOpenAIStatus } from "./ai-agent";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
@@ -1274,7 +1274,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         const delay = 1000 + Math.floor(Math.random() * 1500);
         setTimeout(async () => {
           try {
-            const aiReply = generateAIResponse(content);
+            const cfg = await storage.getSettings();
+            let aiReply: string;
+            if (cfg.openaiApiKey && cfg.openaiApiKey.trim() !== "") {
+              try {
+                aiReply = await generateAIResponseOpenAI(content, cfg.openaiApiKey);
+              } catch (_) {
+                aiReply = generateAIResponse(content);
+              }
+            } else {
+              aiReply = generateAIResponse(content);
+            }
             await storage.createChatMessage({ userId, senderType: "admin", content: aiReply });
           } catch (_) {}
         }, delay);
@@ -1309,6 +1319,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }
+  });
+
+  // ─── Statut de l'IA (OpenAI) pour l'admin ──────────────────────────────
+  app.get("/api/admin/ai-status", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    const cfg = await storage.getSettings();
+    const result = await checkOpenAIStatus(cfg.openaiApiKey || "");
+    res.json(result);
   });
 
   // ─── Job automatique : crédit des gains à la fin du cycle ───────────────

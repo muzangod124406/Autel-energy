@@ -69,6 +69,8 @@ app.use((req, res, next) => {
     log("Migration: tickets.image_url2 OK");
     await pool.query("ALTER TABLE investments ADD COLUMN IF NOT EXISTS product_id text");
     log("Migration: investments.product_id OK");
+    await pool.query("ALTER TABLE settings ADD COLUMN IF NOT EXISTS openai_api_key text NOT NULL DEFAULT ''");
+    log("Migration: settings.openai_api_key OK");
   } catch (e: any) {
     log(`Migration warning: ${e.message}`);
   }
