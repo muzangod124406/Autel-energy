@@ -188,18 +188,21 @@ export default function DepositPage() {
 
   const handleLinkDeposit = () => {
     const amt = parseInt(amount);
-    if (!linkFormData.accountName || !linkFormData.phoneNumber || !linkFormData.paymentMethod || !linkFormData.country) {
+    const isSoleas = selectedChannelId === "__soleaspay__";
+    const missingFields = isSoleas
+      ? !linkFormData.phoneNumber || !linkFormData.paymentMethod || !linkFormData.country
+      : !linkFormData.accountName || !linkFormData.phoneNumber || !linkFormData.paymentMethod || !linkFormData.country;
+    if (missingFields) {
       toast({ title: "Erreur", description: "Veuillez remplir tous les champs", variant: "destructive" });
       return;
     }
-    const isSoleasVirtual = selectedChannelId === "__soleaspay__";
     depositMutation.mutate({
       amount: amt, country: linkFormData.country, paymentMethod: linkFormData.paymentMethod,
       phoneNumber: linkFormData.phoneNumber, accountName: linkFormData.accountName,
-      channelId: isSoleasVirtual ? null : selectedChannel?.id,
-      channelName: isSoleasVirtual ? soleasChannelName : selectedChannel?.name,
+      channelId: isSoleas ? null : selectedChannel?.id,
+      channelName: isSoleas ? soleasChannelName : selectedChannel?.name,
     });
-    if (!isSoleasVirtual && selectedChannel?.redirectUrl) {
+    if (!isSoleas && selectedChannel?.redirectUrl) {
       setTimeout(() => window.open(selectedChannel.redirectUrl, "_blank"), 500);
     }
   };
@@ -487,48 +490,118 @@ export default function DepositPage() {
             </div>
 
             {/* Corps scrollable */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4" style={{ paddingBottom: "1rem" }}>
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5" style={{ paddingBottom: "1rem" }}>
               <p className="text-sm text-gray-500">
                 Canal: <strong>{selectedChannelId === "__soleaspay__" ? soleasChannelName : selectedChannel?.name}</strong> | Montant: <strong>{parseInt(amount || "0").toLocaleString()} FCFA</strong>
               </p>
-              {[
-                { key: "accountName", label: "Nom du compte de paiement", placeholder: "Votre nom", type: "text", testId: "input-link-account-name" },
-                { key: "phoneNumber", label: "Numéro de téléphone de paiement", placeholder: "Ex: 0701234567", type: "tel", testId: "input-link-phone" },
-                { key: "paymentMethod", label: "Moyen de paiement", placeholder: "Ex: Wave, Orange Money, MTN...", type: "text", testId: "input-link-payment-method" },
-              ].map(f => (
-                <div key={f.key}>
-                  <label className="text-xs font-medium text-gray-600">{f.label}</label>
-                  <input
-                    data-testid={f.testId}
-                    type={f.type}
-                    placeholder={f.placeholder}
-                    value={(linkFormData as any)[f.key]}
-                    onChange={e => setLinkFormData({ ...linkFormData, [f.key]: e.target.value })}
-                    className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-transparent"
-                  />
-                </div>
-              ))}
-              <div>
-                <label className="text-xs font-medium text-gray-600">Pays</label>
-                <select
-                  data-testid="select-link-country"
-                  value={linkFormData.country}
-                  onChange={e => setLinkFormData({ ...linkFormData, country: e.target.value })}
-                  className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-white"
-                >
-                  <option value="">Sélectionner un pays</option>
-                  {countriesList.map((c: any) => <option key={c.id} value={c.slug}>{c.name}</option>)}
-                </select>
-              </div>
+
+              {selectedChannelId === "__soleaspay__" ? (
+                /* Formulaire SoleasPay : pays → opérateurs → téléphone */
+                <>
+                  {/* Pays */}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700">Pays de paiement</label>
+                    <select
+                      data-testid="select-soleas-country"
+                      value={linkFormData.country}
+                      onChange={e => {
+                        const slug = e.target.value;
+                        setLinkFormData({ ...linkFormData, country: slug, paymentMethod: "" });
+                        setSoleasCountry(slug);
+                      }}
+                      className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-white"
+                    >
+                      <option value="">Sélectionner un pays</option>
+                      {countriesList.filter((c: any) => c.isActive).map((c: any) => (
+                        <option key={c.slug} value={c.slug}>{c.flag} {c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Opérateur */}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700">Opérateur Mobile Money</label>
+                    {!linkFormData.country ? (
+                      <p className="text-xs text-gray-400 mt-2">Sélectionnez d'abord un pays</p>
+                    ) : (soleasOperators as string[]).length === 0 ? (
+                      <p className="text-xs text-gray-400 mt-2">Chargement des opérateurs...</p>
+                    ) : (
+                      <div className="mt-2 space-y-2">
+                        {(soleasOperators as string[]).map(op => (
+                          <button
+                            key={op}
+                            type="button"
+                            data-testid={`btn-op-${op}`}
+                            onClick={() => setLinkFormData({ ...linkFormData, paymentMethod: op })}
+                            className={`w-full py-3 px-4 rounded-xl border text-sm font-medium text-left transition-all ${
+                              linkFormData.paymentMethod === op
+                                ? "border-green-500 bg-green-50 text-green-700"
+                                : "border-gray-200 text-gray-700"
+                            }`}
+                          >
+                            {op}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Téléphone */}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700">Numéro de téléphone Mobile Money</label>
+                    <input
+                      data-testid="input-soleas-phone"
+                      type="tel"
+                      placeholder="Ex: 0701234567"
+                      value={linkFormData.phoneNumber}
+                      onChange={e => setLinkFormData({ ...linkFormData, phoneNumber: e.target.value })}
+                      className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-transparent"
+                    />
+                  </div>
+                </>
+              ) : (
+                /* Formulaire standard pour autres canaux */
+                <>
+                  {[
+                    { key: "accountName", label: "Nom du compte de paiement", placeholder: "Votre nom", type: "text", testId: "input-link-account-name" },
+                    { key: "phoneNumber", label: "Numéro de téléphone de paiement", placeholder: "Ex: 0701234567", type: "tel", testId: "input-link-phone" },
+                    { key: "paymentMethod", label: "Moyen de paiement", placeholder: "Ex: Wave, Orange Money, MTN...", type: "text", testId: "input-link-payment-method" },
+                  ].map(f => (
+                    <div key={f.key}>
+                      <label className="text-xs font-medium text-gray-600">{f.label}</label>
+                      <input
+                        data-testid={f.testId}
+                        type={f.type}
+                        placeholder={f.placeholder}
+                        value={(linkFormData as any)[f.key]}
+                        onChange={e => setLinkFormData({ ...linkFormData, [f.key]: e.target.value })}
+                        className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-transparent"
+                      />
+                    </div>
+                  ))}
+                  <div>
+                    <label className="text-xs font-medium text-gray-600">Pays</label>
+                    <select
+                      data-testid="select-link-country"
+                      value={linkFormData.country}
+                      onChange={e => setLinkFormData({ ...linkFormData, country: e.target.value })}
+                      className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-white"
+                    >
+                      <option value="">Sélectionner un pays</option>
+                      {countriesList.map((c: any) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Bouton fixe en bas */}
+            {/* Bouton fixe en bas — toujours visible */}
             <div className="flex-shrink-0 px-5 py-4 bg-white border-t border-gray-100">
               <button
                 data-testid="button-link-proceed"
                 onClick={handleLinkDeposit}
-                disabled={depositMutation.isPending}
-                className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
+                disabled={depositMutation.isPending || (selectedChannelId === "__soleaspay__" && (!linkFormData.country || !linkFormData.paymentMethod || !linkFormData.phoneNumber))}
+                className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-50"
               >
                 {depositMutation.isPending ? "En cours..." : "Procéder au paiement →"}
               </button>
