@@ -154,10 +154,10 @@ export default function DepositPage() {
       return;
     }
 
-    // SoleasPay virtual channel
+    // SoleasPay virtual channel — opens the payment info form
     if (selectedChannelId === "__soleaspay__") {
-      setShowSoleasForm(true);
-      setSoleasSuccess(false);
+      setLinkFormData({ accountName: "", phoneNumber: "", paymentMethod: "", country: user?.country || "" });
+      setShowLinkForm(true);
       return;
     }
 
@@ -192,12 +192,14 @@ export default function DepositPage() {
       toast({ title: "Erreur", description: "Veuillez remplir tous les champs", variant: "destructive" });
       return;
     }
+    const isSoleasVirtual = selectedChannelId === "__soleaspay__";
     depositMutation.mutate({
       amount: amt, country: linkFormData.country, paymentMethod: linkFormData.paymentMethod,
       phoneNumber: linkFormData.phoneNumber, accountName: linkFormData.accountName,
-      channelId: selectedChannel?.id, channelName: selectedChannel?.name,
+      channelId: isSoleasVirtual ? null : selectedChannel?.id,
+      channelName: isSoleasVirtual ? soleasChannelName : selectedChannel?.name,
     });
-    if (selectedChannel?.redirectUrl) {
+    if (!isSoleasVirtual && selectedChannel?.redirectUrl) {
       setTimeout(() => window.open(selectedChannel.redirectUrl, "_blank"), 500);
     }
   };
@@ -487,7 +489,7 @@ export default function DepositPage() {
             {/* Corps scrollable */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4" style={{ paddingBottom: "1rem" }}>
               <p className="text-sm text-gray-500">
-                Canal: <strong>{selectedChannel?.name}</strong> | Montant: <strong>{parseInt(amount || "0").toLocaleString()} FCFA</strong>
+                Canal: <strong>{selectedChannelId === "__soleaspay__" ? soleasChannelName : selectedChannel?.name}</strong> | Montant: <strong>{parseInt(amount || "0").toLocaleString()} FCFA</strong>
               </p>
               {[
                 { key: "accountName", label: "Nom du compte de paiement", placeholder: "Votre nom", type: "text", testId: "input-link-account-name" },
