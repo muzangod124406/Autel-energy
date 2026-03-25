@@ -26,12 +26,10 @@ export default function DepositPage() {
     country: user?.country || "",
   });
 
-  // SoleasPay state
-  const [showSoleasForm, setShowSoleasForm] = useState(false);
+  // SoleasPay inline form state
   const [soleasOperator, setSoleasOperator] = useState("");
   const [soleasPhone, setSoleasPhone] = useState("");
   const [soleasCountry, setSoleasCountry] = useState(user?.country || "");
-  const [soleasSuccess, setSoleasSuccess] = useState(false);
 
   const { data: channels = [] } = useQuery<any[]>({ queryKey: ["/api/channels"] });
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
@@ -71,6 +69,8 @@ export default function DepositPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       refreshUser();
       setShowLinkForm(false);
+      setSoleasPhone("");
+      setSoleasOperator("");
     },
     onError: (e: any) => {
       toast({ title: e.message || "Erreur", variant: "destructive" });
@@ -93,20 +93,6 @@ export default function DepositPage() {
     }
   });
 
-  const soleasPayMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/user/deposit/soleaspay/init", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      setSoleasSuccess(true);
-      setShowSoleasForm(false);
-      toast({ title: "Demande envoyée !", description: "Confirmez le paiement sur votre téléphone." });
-    },
-    onError: (e: any) => {
-      toast({ title: e.message || "Erreur SoleasPay", variant: "destructive" });
-    }
-  });
 
   const selectedChannel = (channels as any[]).find((c: any) => c.id === selectedChannelId);
 
@@ -122,26 +108,6 @@ export default function DepositPage() {
     return "Paiement par lien";
   };
 
-  const handleSoleasDeposit = () => {
-    const amt = parseInt(amount);
-    if (!amt || amt < depositMinAmount) {
-      toast({ title: "Erreur", description: `Montant minimum: ${formatCFA(depositMinAmount)}`, variant: "destructive" });
-      return;
-    }
-    if (!soleasCountry) {
-      toast({ title: "Erreur", description: "Veuillez sélectionner un pays", variant: "destructive" });
-      return;
-    }
-    if (!soleasOperator) {
-      toast({ title: "Erreur", description: "Veuillez sélectionner un opérateur", variant: "destructive" });
-      return;
-    }
-    if (!soleasPhone) {
-      toast({ title: "Erreur", description: "Numéro de téléphone requis", variant: "destructive" });
-      return;
-    }
-    soleasPayMutation.mutate({ amount: amt, operator: soleasOperator, phoneNumber: soleasPhone, country: soleasCountry });
-  };
 
   const handleRecharge = () => {
     const amt = parseInt(amount);
@@ -154,10 +120,20 @@ export default function DepositPage() {
       return;
     }
 
-    // SoleasPay virtual channel — opens the payment info form
+    // SoleasPay virtual channel — submit inline form directly
     if (selectedChannelId === "__soleaspay__") {
-      setLinkFormData({ accountName: "", phoneNumber: "", paymentMethod: "", country: user?.country || "" });
-      setShowLinkForm(true);
+      if (!soleasCountry || !soleasOperator || !soleasPhone) {
+        toast({ title: "Erreur", description: "Veuillez choisir le pays, l'opérateur et entrer votre numéro", variant: "destructive" });
+        return;
+      }
+      depositMutation.mutate({
+        amount: amt,
+        country: soleasCountry,
+        paymentMethod: soleasOperator,
+        phoneNumber: soleasPhone,
+        channelId: null,
+        channelName: soleasChannelName,
+      });
       return;
     }
 
@@ -207,7 +183,7 @@ export default function DepositPage() {
     }
   };
 
-  const isPending = depositMutation.isPending || westpayMutation.isPending || soleasPayMutation.isPending || isRedirecting;
+  const isPending = depositMutation.isPending || westpayMutation.isPending || isRedirecting;
 
   return (
     <div className="bg-white">
@@ -262,14 +238,71 @@ export default function DepositPage() {
           </div>
         </div>
 
-        {soleasSuccess && selectedChannelId === "__soleaspay__" && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center mt-3">
-            <p className="text-green-700 font-bold text-sm">✓ Demande envoyée !</p>
-            <p className="text-green-600 text-xs mt-1">Confirmez le paiement sur votre téléphone. Le crédit sera ajouté automatiquement.</p>
+        {/* Champs inline SoleasPay — visibles dès que SoleasPay est sélectionné */}
+        {selectedChannelId === "__soleaspay__" && (
+          <div className="py-4 border-b border-gray-100 space-y-4">
+            {/* Pays */}
+            <div>
+              <p className="text-xs font-semibold text-gray-600 mb-1">Pays de paiement</p>
+              <select
+                data-testid="select-soleas-country-inline"
+                value={soleasCountry}
+                onChange={e => { setSoleasCountry(e.target.value); setSoleasOperator(""); }}
+                className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none bg-white"
+              >
+                <option value="">Sélectionner un pays</option>
+                {countriesList.filter((c: any) => c.isActive).map((c: any) => (
+                  <option key={c.slug} value={c.slug}>{c.flag} {c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Opérateurs */}
+            {soleasCountry && (
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-2">Opérateur Mobile Money</p>
+                {(soleasOperators as string[]).length === 0 ? (
+                  <p className="text-xs text-gray-400">Chargement des opérateurs...</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {(soleasOperators as string[]).map(op => (
+                      <button
+                        key={op}
+                        type="button"
+                        data-testid={`btn-op-${op}`}
+                        onClick={() => setSoleasOperator(op)}
+                        className={`py-3 px-3 rounded-xl border text-sm font-medium transition-all ${
+                          soleasOperator === op
+                            ? "border-green-500 bg-green-50 text-green-700"
+                            : "border-gray-200 text-gray-700"
+                        }`}
+                      >
+                        {op}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Numéro de téléphone */}
+            {soleasOperator && (
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-1">Numéro de téléphone Mobile Money</p>
+                <input
+                  data-testid="input-soleas-phone-inline"
+                  type="tel"
+                  placeholder="Ex: 0701234567"
+                  value={soleasPhone}
+                  onChange={e => setSoleasPhone(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none bg-white"
+                />
+              </div>
+            )}
           </div>
         )}
 
-        <div className="pt-6">
+        <div className="pt-6 pb-28">
           <button
             data-testid="button-deposit-now"
             onClick={handleRecharge}
@@ -291,111 +324,6 @@ export default function DepositPage() {
           </div>
         </div>
       </div>
-
-      {/* SoleasPay form bottom sheet */}
-      {showSoleasForm && (
-        <div className="fixed inset-0 bg-black/60 z-[200] flex items-end">
-          <div className="bg-white w-full rounded-t-3xl flex flex-col" style={{ maxHeight: "92vh" }}>
-            {/* Header fixe */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
-              <h3 className="font-bold text-base flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-blue-600" /> {soleasChannelName}
-              </h3>
-              <button onClick={() => setShowSoleasForm(false)} data-testid="btn-close-soleas-form"><X className="w-5 h-5" /></button>
-            </div>
-
-            {/* Corps scrollable */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5" style={{ paddingBottom: "6rem" }}>
-              <p className="text-sm text-gray-500">
-                Montant : <strong>{parseInt(amount || "0").toLocaleString()} FCFA</strong>
-              </p>
-
-              {/* Country selector */}
-              <div>
-                <p className="text-xs font-semibold text-gray-700 mb-2">Pays de paiement</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {countriesList
-                    .filter((c: any) => c.isActive)
-                    .map((c: any) => (
-                      <button
-                        key={c.slug}
-                        data-testid={`btn-soleas-country-${c.slug}`}
-                        onClick={() => { setSoleasCountry(c.slug); setSoleasOperator(""); }}
-                        className={`py-2.5 px-3 rounded-xl border text-xs font-medium text-left transition-all ${
-                          soleasCountry === c.slug
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-gray-200 text-gray-700"
-                        }`}
-                      >
-                        {c.flag && <span className="mr-1">{c.flag}</span>}{c.name}
-                      </button>
-                    ))}
-                </div>
-              </div>
-
-              {/* Operator selection */}
-              {soleasCountry && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-700 mb-2">Opérateur Mobile Money</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(soleasOperators as string[]).length > 0 ? (
-                      (soleasOperators as string[]).map((op: string) => (
-                        <button
-                          key={op}
-                          data-testid={`btn-operator-${op}`}
-                          onClick={() => setSoleasOperator(op)}
-                          className={`py-3 px-3 rounded-xl border text-sm font-medium transition-all ${
-                            soleasOperator === op
-                              ? "border-blue-500 bg-blue-50 text-blue-700"
-                              : "border-gray-200 text-gray-700"
-                          }`}
-                        >
-                          {op}
-                        </button>
-                      ))
-                    ) : (
-                      <p className="col-span-2 text-center text-sm text-gray-400 py-3">
-                        Aucun opérateur disponible pour ce pays
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Phone number */}
-              <div>
-                <label className="text-xs font-semibold text-gray-700">Numéro Mobile Money</label>
-                <input
-                  data-testid="input-soleas-phone"
-                  type="tel"
-                  placeholder="Ex: 0701234567"
-                  value={soleasPhone}
-                  onChange={e => setSoleasPhone(e.target.value)}
-                  className="w-full mt-2 border border-gray-200 rounded-xl px-3 py-3 text-sm outline-none focus:border-blue-400 bg-transparent"
-                />
-              </div>
-
-              <div className="bg-blue-50 rounded-xl p-3">
-                <p className="text-xs text-blue-700">
-                  Après confirmation, vous recevrez une notification sur votre téléphone pour valider le paiement.
-                </p>
-              </div>
-            </div>
-
-            {/* Bouton fixe en bas — toujours visible */}
-            <div className="flex-shrink-0 px-5 py-4 bg-white border-t border-gray-100">
-              <button
-                data-testid="button-soleas-pay"
-                onClick={handleSoleasDeposit}
-                disabled={soleasPayMutation.isPending || !soleasOperator || !soleasPhone || !soleasCountry}
-                className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl text-base disabled:opacity-50"
-              >
-                {soleasPayMutation.isPending ? "Envoi en cours..." : "Payer maintenant"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Method bottom sheet — channels list */}
       {showMethodSheet && (
