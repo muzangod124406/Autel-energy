@@ -45,6 +45,10 @@ export default function DepositPage() {
   const showSoleasPay = paymentProvider === "soleaspay" || paymentProvider === "both";
   const showWestPay = paymentProvider === "westpay" || paymentProvider === "both";
 
+  // Find the SoleasPay channel defined by admin (type="soleaspay") to get its custom name
+  const soleasChannel = (channels as any[]).find((c: any) => c.type === "soleaspay" && c.isActive);
+  const soleasChannelName = soleasChannel?.name || "SoleasPay";
+
   // SoleasPay operators for user's country
   const { data: soleasOperators = [] } = useQuery<string[]>({
     queryKey: ["/api/soleaspay/operators", user?.country],
@@ -243,7 +247,7 @@ export default function DepositPage() {
                     <Smartphone className="w-5 h-5 text-blue-600" />
                   </div>
                   <div className="text-left">
-                    <p className="text-gray-900 font-bold text-sm">SoleasPay</p>
+                    <p className="text-gray-900 font-bold text-sm">{soleasChannelName}</p>
                     <p className="text-xs text-gray-400">Push Mobile Money — confirmation sur votre téléphone</p>
                   </div>
                 </div>
@@ -301,7 +305,7 @@ export default function DepositPage() {
           <div className="bg-white w-full rounded-t-3xl p-5" style={{ maxHeight: "90vh", overflowY: "auto" }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-base flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-blue-600" /> Paiement SoleasPay
+                <Smartphone className="w-5 h-5 text-blue-600" /> {soleasChannelName}
               </h3>
               <button onClick={() => setShowSoleasForm(false)} data-testid="btn-close-soleas-form"><X className="w-5 h-5" /></button>
             </div>

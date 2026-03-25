@@ -1229,6 +1229,7 @@ export default function AdminPage() {
                     <SelectItem value="link">Lien de paiement</SelectItem>
                     <SelectItem value="leekpay">LeekPay (API automatique)</SelectItem>
                     <SelectItem value="westpay">WestPay / RobotPay (Mobile Money)</SelectItem>
+                    <SelectItem value="soleaspay">SoleasPay (Push Mobile Money)</SelectItem>
                   </SelectContent>
                 </Select>
                 {(editingChannel ? editingChannel.type : channelForm.type) === "link" && (
@@ -1236,6 +1237,11 @@ export default function AdminPage() {
                     value={editingChannel ? editingChannel.redirectUrl || "" : channelForm.redirectUrl}
                     onChange={e => editingChannel ? setEditingChannel({ ...editingChannel, redirectUrl: e.target.value }) : setChannelForm({ ...channelForm, redirectUrl: e.target.value })}
                     data-testid="admin-channel-url" />
+                )}
+                {(editingChannel ? editingChannel.type : channelForm.type) === "soleaspay" && (
+                  <p className="text-xs text-blue-600 bg-blue-50 rounded-lg p-2">
+                    Ce canal s'affiche uniquement pour les pays où SoleasPay est activé (configurez-les dans l'onglet <strong>SoleasPay</strong>).
+                  </p>
                 )}
                 <div className="flex gap-2">
                   {editingChannel ? (
@@ -1257,7 +1263,9 @@ export default function AdminPage() {
                   <div className="flex items-center justify-between gap-2">
                     <div>
                       <p className="font-semibold text-sm">{ch.name}</p>
-                      <p className="text-xs text-gray-400">{ch.type === "leekpay" ? "LeekPay (API)" : ch.type === "westpay" ? "WestPay / RobotPay" : "Lien de paiement"}</p>
+                      <p className="text-xs text-gray-400">
+                        {ch.type === "leekpay" ? "LeekPay (API)" : ch.type === "westpay" ? "WestPay / RobotPay" : ch.type === "soleaspay" ? "SoleasPay (Push Mobile Money)" : "Lien de paiement"}
+                      </p>
                       {ch.redirectUrl && <p className="text-xs text-blue-500 truncate max-w-[180px]">{ch.redirectUrl}</p>}
                     </div>
                     <div className="flex items-center gap-1">
