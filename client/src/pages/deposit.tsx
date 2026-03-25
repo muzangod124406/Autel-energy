@@ -4,7 +4,7 @@ import { BKAPAY_KEY, formatCFA } from "@/lib/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ChevronRight, X, Zap, Link2, Smartphone } from "lucide-react";
+import { ArrowLeft, ChevronRight, X, Zap, Link2 } from "lucide-react";
 import { useLocation } from "wouter";
 import robotpayIcon from "@assets/icon_2_1774133145999.png";
 
@@ -227,14 +227,14 @@ export default function DepositPage() {
         >
           <p className="text-gray-700 font-medium text-sm">Méthode de recharge</p>
           <div className="flex items-center gap-1">
-            <span className="text-gray-400 text-sm">
+            <span className={`text-sm font-medium ${selectedChannelId ? "text-[#22c55e]" : "text-gray-400"}`}>
               {selectedChannelId === "__soleaspay__"
                 ? soleasChannelName
                 : selectedChannel
                 ? selectedChannel.name
-                : "Veuillez choisir une méthode de recharge"}
+                : "Veuillez choisir"}
             </span>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className={`w-4 h-4 ${selectedChannelId ? "text-[#22c55e]" : "text-gray-400"}`} />
           </div>
         </div>
 
@@ -248,7 +248,7 @@ export default function DepositPage() {
                 data-testid="select-soleas-country-inline"
                 value={soleasCountry}
                 onChange={e => { setSoleasCountry(e.target.value); setSoleasOperator(""); }}
-                className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none bg-white"
+                className={`w-full border rounded-xl py-3 px-4 text-sm outline-none bg-white transition-colors ${soleasCountry ? "border-[#22c55e] text-gray-900" : "border-gray-200 text-gray-400"}`}
               >
                 <option value="">Sélectionner un pays</option>
                 {countriesList.filter((c: any) => c.isActive).map((c: any) => (
@@ -295,7 +295,7 @@ export default function DepositPage() {
                   placeholder="Ex: 0701234567"
                   value={soleasPhone}
                   onChange={e => setSoleasPhone(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none bg-white"
+                  className={`w-full border rounded-xl py-3 px-4 text-sm outline-none bg-white transition-colors ${soleasPhone ? "border-[#22c55e]" : "border-gray-200"}`}
                 />
               </div>
             )}
@@ -359,17 +359,17 @@ export default function DepositPage() {
                   {/* SoleasPay virtual channel */}
                   {showSoleasPay && (
                     <div
-                      className="flex items-center justify-between py-4 px-5 cursor-pointer active:bg-gray-50"
+                      className={`flex items-center justify-between py-4 px-5 cursor-pointer transition-colors ${tempChannelId === "__soleaspay__" ? "bg-green-50" : "active:bg-gray-50"}`}
                       onClick={() => setTempChannelId("__soleaspay__")}
                       data-testid="sheet-channel-soleaspay"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-blue-50 border border-blue-100 rounded-full flex items-center justify-center">
-                          <Smartphone className="w-5 h-5 text-blue-600" />
+                        <div className="w-9 h-9 bg-white border border-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                          <img src={robotpayIcon} alt={soleasChannelName} className="w-6 h-6 object-contain" />
                         </div>
                         <div>
-                          <p className="text-gray-900 font-bold text-sm">{soleasChannelName}</p>
-                          <p className="text-xs text-gray-400">Push Mobile Money</p>
+                          <p className={`font-bold text-sm ${tempChannelId === "__soleaspay__" ? "text-[#22c55e]" : "text-gray-900"}`}>{soleasChannelName}</p>
+                          <p className="text-xs text-gray-400">Mobile Money sécurisé</p>
                         </div>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === "__soleaspay__" ? "border-[#22c55e]" : "border-gray-300"}`}>
@@ -382,7 +382,7 @@ export default function DepositPage() {
                   {(channels as any[]).filter((ch: any) => ch.type !== "soleaspay").map((ch: any) => (
                     <div
                       key={ch.id}
-                      className="flex items-center justify-between py-4 px-5 cursor-pointer active:bg-gray-50"
+                      className={`flex items-center justify-between py-4 px-5 cursor-pointer transition-colors ${tempChannelId === ch.id ? "bg-green-50" : "active:bg-gray-50"}`}
                       onClick={() => setTempChannelId(ch.id)}
                       data-testid={`sheet-channel-${ch.id}`}
                     >
@@ -391,7 +391,7 @@ export default function DepositPage() {
                           {channelIcon(ch.type)}
                         </div>
                         <div>
-                          <p className="text-gray-900 font-bold text-sm">{ch.name}</p>
+                          <p className={`font-bold text-sm ${tempChannelId === ch.id ? "text-[#22c55e]" : "text-gray-900"}`}>{ch.name}</p>
                           <p className="text-xs text-gray-400">{channelLabel(ch.type)}</p>
                         </div>
                       </div>
