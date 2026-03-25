@@ -294,7 +294,7 @@ export default function DepositPage() {
 
       {/* SoleasPay form bottom sheet */}
       {showSoleasForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
+        <div className="fixed inset-0 bg-black/60 z-[200] flex items-end">
           <div className="bg-white w-full rounded-t-3xl flex flex-col" style={{ maxHeight: "92vh" }}>
             {/* Header fixe */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
@@ -400,7 +400,7 @@ export default function DepositPage() {
       {/* Method bottom sheet — channels list */}
       {showMethodSheet && (
         <div
-          className="fixed inset-0 z-50 flex items-end overlay-fade-in"
+          className="fixed inset-0 z-[200] flex items-end overlay-fade-in"
           onClick={() => setShowMethodSheet(false)}
         >
           <div className="absolute inset-0 bg-black/50" />
@@ -481,7 +481,7 @@ export default function DepositPage() {
 
       {/* Link Payment Form bottom sheet */}
       {showLinkForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
+        <div className="fixed inset-0 bg-black/60 z-[200] flex items-end">
           <div className="bg-white w-full rounded-t-3xl flex flex-col" style={{ maxHeight: "92vh" }}>
             {/* Header fixe */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
