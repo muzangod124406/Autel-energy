@@ -21,7 +21,7 @@ export default function DepositPage() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [linkFormData, setLinkFormData] = useState({
     accountName: "",
-    phoneNumber: user?.phone || "",
+    phoneNumber: "",
     paymentMethod: "",
     country: user?.country || "",
   });
@@ -477,15 +477,18 @@ export default function DepositPage() {
       {/* Link Payment Form bottom sheet */}
       {showLinkForm && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-3xl p-5" style={{ maxHeight: "90vh", overflowY: "auto" }}>
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white w-full rounded-t-3xl flex flex-col" style={{ maxHeight: "92vh" }}>
+            {/* Header fixe */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
               <h3 className="font-bold text-base">Informations de paiement</h3>
               <button onClick={() => setShowLinkForm(false)} data-testid="btn-close-link-form"><X className="w-5 h-5" /></button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">
-              Canal: <strong>{selectedChannel?.name}</strong> | Montant: <strong>{parseInt(amount).toLocaleString()} FCFA</strong>
-            </p>
-            <div className="space-y-4">
+
+            {/* Corps scrollable */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4" style={{ paddingBottom: "1rem" }}>
+              <p className="text-sm text-gray-500">
+                Canal: <strong>{selectedChannel?.name}</strong> | Montant: <strong>{parseInt(amount || "0").toLocaleString()} FCFA</strong>
+              </p>
               {[
                 { key: "accountName", label: "Nom du compte de paiement", placeholder: "Votre nom", type: "text", testId: "input-link-account-name" },
                 { key: "phoneNumber", label: "Numéro de téléphone de paiement", placeholder: "Ex: 0701234567", type: "tel", testId: "input-link-phone" },
@@ -515,11 +518,15 @@ export default function DepositPage() {
                   {countriesList.map((c: any) => <option key={c.id} value={c.slug}>{c.name}</option>)}
                 </select>
               </div>
+            </div>
+
+            {/* Bouton fixe en bas */}
+            <div className="flex-shrink-0 px-5 py-4 bg-white border-t border-gray-100">
               <button
                 data-testid="button-link-proceed"
                 onClick={handleLinkDeposit}
                 disabled={depositMutation.isPending}
-                className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base mt-2 disabled:opacity-60"
+                className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
               >
                 {depositMutation.isPending ? "En cours..." : "Procéder au paiement →"}
               </button>
