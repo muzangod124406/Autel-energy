@@ -149,8 +149,15 @@ export default function DepositPage() {
       toast({ title: "Erreur", description: `Montant minimum: ${formatCFA(depositMinAmount)}`, variant: "destructive" });
       return;
     }
-    if (!selectedChannelId && (channels as any[]).length > 0) {
+    if (!selectedChannelId && ((channels as any[]).length > 0 || showSoleasPay)) {
       toast({ title: "Erreur", description: "Veuillez choisir une méthode de recharge", variant: "destructive" });
+      return;
+    }
+
+    // SoleasPay virtual channel
+    if (selectedChannelId === "__soleaspay__") {
+      setShowSoleasForm(true);
+      setSoleasSuccess(false);
       return;
     }
 
@@ -231,66 +238,42 @@ export default function DepositPage() {
           </p>
         </div>
 
-        {/* SoleasPay section — shown if user's country uses SoleasPay */}
-        {showSoleasPay && (
-          <div className="border-b border-gray-100 pb-5 mb-5">
-            <p className="font-bold text-gray-900 text-base mb-3">Paiement Mobile Money direct</p>
+        {/* Méthode de recharge — toujours visible */}
+        <div
+          className="flex items-center justify-between py-4 border-b border-gray-100 cursor-pointer"
+          onClick={() => { setTempChannelId(selectedChannelId); setShowMethodSheet(true); }}
+          data-testid="button-choose-method"
+        >
+          <p className="text-gray-700 font-medium text-sm">Méthode de recharge</p>
+          <div className="flex items-center gap-1">
+            <span className="text-gray-400 text-sm">
+              {selectedChannelId === "__soleaspay__"
+                ? soleasChannelName
+                : selectedChannel
+                ? selectedChannel.name
+                : "Veuillez choisir une méthode de recharge"}
+            </span>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+          </div>
+        </div>
 
-            {soleasSuccess ? (
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                <p className="text-green-700 font-bold text-sm">✓ Demande envoyée !</p>
-                <p className="text-green-600 text-xs mt-1">Confirmez le paiement sur votre téléphone. Le crédit sera ajouté automatiquement.</p>
-              </div>
-            ) : (
-              <button
-                data-testid="button-soleaspay-open"
-                onClick={() => { setShowSoleasForm(true); setSoleasSuccess(false); }}
-                className="w-full flex items-center justify-between py-3 px-4 border border-gray-200 rounded-xl"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-blue-50 rounded-full flex items-center justify-center">
-                    <Smartphone className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-gray-900 font-bold text-sm">{soleasChannelName}</p>
-                    <p className="text-xs text-gray-400">Push Mobile Money — confirmation sur votre téléphone</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </button>
-            )}
+        {soleasSuccess && selectedChannelId === "__soleaspay__" && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center mt-3">
+            <p className="text-green-700 font-bold text-sm">✓ Demande envoyée !</p>
+            <p className="text-green-600 text-xs mt-1">Confirmez le paiement sur votre téléphone. Le crédit sera ajouté automatiquement.</p>
           </div>
         )}
 
-        {/* Channel method selection — shown if country uses WestPay or both */}
-        {(showWestPay || (!showSoleasPay && !showWestPay)) && (
-          <>
-            <div
-              className="flex items-center justify-between py-4 border-b border-gray-100 cursor-pointer"
-              onClick={() => { setTempChannelId(selectedChannelId); setShowMethodSheet(true); }}
-              data-testid="button-choose-method"
-            >
-              <p className="text-gray-700 font-medium text-sm">Méthode de recharge</p>
-              <div className="flex items-center gap-1">
-                <span className="text-gray-400 text-sm">
-                  {selectedChannel ? selectedChannel.name : "Veuillez choisir une méthode de recharge"}
-                </span>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </div>
-            </div>
-
-            <div className="pt-6">
-              <button
-                data-testid="button-deposit-now"
-                onClick={handleRecharge}
-                disabled={isPending}
-                className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
-              >
-                {isRedirecting ? "Redirection vers WestPay..." : isPending ? "En cours..." : "Recharger"}
-              </button>
-            </div>
-          </>
-        )}
+        <div className="pt-6">
+          <button
+            data-testid="button-deposit-now"
+            onClick={handleRecharge}
+            disabled={isPending}
+            className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
+          >
+            {isRedirecting ? "Redirection..." : isPending ? "En cours..." : "Recharger"}
+          </button>
+        </div>
 
         {/* Instructions */}
         <div className="pt-6">
@@ -436,30 +419,55 @@ export default function DepositPage() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
-              {(channels as any[]).length === 0 ? (
+              {(channels as any[]).filter((c: any) => c.type !== "soleaspay").length === 0 && !showSoleasPay ? (
                 <p className="text-center text-gray-400 text-sm py-8">Aucune méthode disponible</p>
               ) : (
-                (channels as any[]).map((ch: any) => (
-                  <div
-                    key={ch.id}
-                    className="flex items-center justify-between py-4 px-5 cursor-pointer active:bg-gray-50"
-                    onClick={() => setTempChannelId(ch.id)}
-                    data-testid={`sheet-channel-${ch.id}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-white border border-gray-100 rounded-full flex items-center justify-center">
-                        {channelIcon(ch.type)}
+                <>
+                  {/* SoleasPay virtual channel */}
+                  {showSoleasPay && (
+                    <div
+                      className="flex items-center justify-between py-4 px-5 cursor-pointer active:bg-gray-50"
+                      onClick={() => setTempChannelId("__soleaspay__")}
+                      data-testid="sheet-channel-soleaspay"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-blue-50 border border-blue-100 rounded-full flex items-center justify-center">
+                          <Smartphone className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-gray-900 font-bold text-sm">{soleasChannelName}</p>
+                          <p className="text-xs text-gray-400">Push Mobile Money</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-gray-900 font-bold text-sm">{ch.name}</p>
-                        <p className="text-xs text-gray-400">{channelLabel(ch.type)}</p>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === "__soleaspay__" ? "border-[#22c55e]" : "border-gray-300"}`}>
+                        {tempChannelId === "__soleaspay__" && <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />}
                       </div>
                     </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === ch.id ? "border-[#22c55e]" : "border-gray-300"}`}>
-                      {tempChannelId === ch.id && <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />}
+                  )}
+
+                  {/* Regular channels — exclude soleaspay type (handled by virtual item above) */}
+                  {(channels as any[]).filter((ch: any) => ch.type !== "soleaspay").map((ch: any) => (
+                    <div
+                      key={ch.id}
+                      className="flex items-center justify-between py-4 px-5 cursor-pointer active:bg-gray-50"
+                      onClick={() => setTempChannelId(ch.id)}
+                      data-testid={`sheet-channel-${ch.id}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 bg-white border border-gray-100 rounded-full flex items-center justify-center">
+                          {channelIcon(ch.type)}
+                        </div>
+                        <div>
+                          <p className="text-gray-900 font-bold text-sm">{ch.name}</p>
+                          <p className="text-xs text-gray-400">{channelLabel(ch.type)}</p>
+                        </div>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === ch.id ? "border-[#22c55e]" : "border-gray-300"}`}>
+                        {tempChannelId === ch.id && <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </>
               )}
             </div>
           </div>
