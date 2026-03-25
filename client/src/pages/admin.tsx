@@ -1659,6 +1659,80 @@ export default function AdminPage() {
                 </p>
               </Card>
 
+              {/* Activation WestPay par pays */}
+              <Card className="p-4 space-y-3">
+                <div>
+                  <h3 className="font-bold text-sm mb-1 flex items-center gap-2">
+                    <ToggleRight className="w-4 h-4 text-green-500" /> Activation WestPay par pays
+                  </h3>
+                  <p className="text-xs text-gray-500">Choisissez sur quels pays WestPay s'affiche comme canal de recharge.</p>
+                </div>
+
+                {(() => {
+                  const SP_OPS: Record<string, boolean> = {
+                    cameroun: true, benin: true, togo: true,
+                    cote_divoire: true, burkina_faso: true, senegal: true, congo: true, gabon: true,
+                  };
+                  return (
+                    <div className="space-y-2">
+                      {(adminCountries as any[]).length === 0 ? (
+                        <p className="text-center text-gray-400 text-sm py-4">Aucun pays configuré.</p>
+                      ) : (
+                        (adminCountries as any[]).map((c: any) => {
+                          const provider: string = c.paymentProvider || "westpay";
+                          const wpActive = provider === "westpay" || provider === "both";
+                          const spSupported = !!SP_OPS[c.slug];
+                          const canDisable = spSupported;
+
+                          return (
+                            <div key={c.id} className={`border rounded-xl p-3 ${wpActive ? "border-green-200 bg-green-50" : "border-gray-100 bg-white"}`}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xl">{c.flag}</span>
+                                  <div>
+                                    <p className="font-semibold text-sm text-gray-900">{c.name}</p>
+                                    <p className="text-xs text-gray-400">
+                                      {wpActive ? "WestPay activé" : "WestPay désactivé"}
+                                      {!canDisable && wpActive && <span className="ml-1 text-orange-500">(seul canal disponible)</span>}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {wpActive && (
+                                    <Badge className="bg-green-100 text-green-700 text-xs hidden sm:flex">Actif</Badge>
+                                  )}
+                                  <button
+                                    data-testid={`btn-wp-toggle-${c.id}`}
+                                    disabled={updateCountryMutation.isPending || (!wpActive ? false : !canDisable)}
+                                    onClick={() => {
+                                      let newProvider: string;
+                                      if (wpActive) {
+                                        newProvider = provider === "both" ? "soleaspay" : "soleaspay";
+                                      } else {
+                                        newProvider = provider === "soleaspay" ? "both" : "westpay";
+                                      }
+                                      updateCountryMutation.mutate({ id: c.id, paymentProvider: newProvider });
+                                    }}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-40 ${wpActive ? "bg-green-500" : "bg-gray-200"}`}
+                                  >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${wpActive ? "translate-x-6" : "translate-x-1"}`} />
+                                  </button>
+                                </div>
+                              </div>
+                              {wpActive && !canDisable && (
+                                <p className="text-xs text-orange-500 mt-1.5">
+                                  Pour désactiver WestPay, activez d'abord SoleasPay sur ce pays.
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  );
+                })()}
+              </Card>
+
               {/* Soldes WestPay */}
               <Card className="p-4">
                 <div className="flex items-center justify-between mb-3">
