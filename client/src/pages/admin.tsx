@@ -1751,23 +1751,109 @@ export default function AdminPage() {
               </div>
             </Card>
 
-            <Card className="p-4 space-y-2">
-              <h4 className="font-semibold text-sm text-gray-800">Pays compatibles SoleasPay</h4>
-              <p className="text-xs text-gray-500 mb-2">Pour activer SoleasPay sur un pays, allez dans l'onglet "Pays" et modifiez le fournisseur de paiement du pays concerné.</p>
-              <div className="space-y-1">
-                {[
-                  { name: "Côte d'Ivoire", ops: ["MTN CI", "Moov CI", "Wave CI", "Orange CI"] },
-                  { name: "Cameroun", ops: ["MTN CM", "Orange CM"] },
-                  { name: "Burkina Faso", ops: ["Moov BF", "Orange BF"] },
-                  { name: "Bénin", ops: ["MTN BJ", "Moov BJ"] },
-                  { name: "Togo", ops: ["Flooz TG", "T-Money TG"] },
-                ].map(p => (
-                  <div key={p.name} className="flex items-center justify-between py-1.5 border-b border-gray-50">
-                    <span className="text-sm text-gray-800 font-medium">{p.name}</span>
-                    <span className="text-xs text-gray-400">{p.ops.join(", ")}</span>
-                  </div>
-                ))}
+            <Card className="p-4 space-y-3">
+              <div>
+                <h4 className="font-semibold text-sm text-gray-800 mb-1">Activation SoleasPay par pays</h4>
+                <p className="text-xs text-gray-500">Activez SoleasPay comme canal de recharge pour chaque pays. Les utilisateurs de ce pays verront l'option SoleasPay à la recharge.</p>
               </div>
+
+              {(() => {
+                // SoleasPay operator support per country slug
+                const SP_OPS: Record<string, string[]> = {
+                  cameroun:     ["MTN Mobile Money", "Orange Money"],
+                  benin:        ["MTN", "Moov Money"],
+                  togo:         ["T-Money", "Moov Money"],
+                  cote_divoire: ["Orange Money", "MTN Mobile Money", "Moov Money", "Wave"],
+                  burkina_faso: ["Moov Money", "Orange Money"],
+                  senegal:      ["Orange Money", "Wave", "Free Money"],
+                  congo:        ["MTN Mobile Money", "Airtel Money"],
+                  gabon:        ["Airtel Money"],
+                };
+
+                return (
+                  <div className="space-y-2">
+                    {(adminCountries as any[]).length === 0 ? (
+                      <p className="text-center text-gray-400 text-sm py-4">Aucun pays configuré. Ajoutez des pays dans l'onglet "Pays".</p>
+                    ) : (
+                      (adminCountries as any[]).map((c: any) => {
+                        const provider: string = c.paymentProvider || "westpay";
+                        const spActive = provider === "soleaspay" || provider === "both";
+                        const ops = SP_OPS[c.slug] || [];
+                        const supported = ops.length > 0;
+
+                        return (
+                          <div key={c.id} className={`border rounded-xl p-3 ${spActive ? "border-blue-200 bg-blue-50" : "border-gray-100 bg-white"}`}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className="text-xl flex-shrink-0">{c.flag}</span>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-sm text-gray-900">{c.name}</p>
+                                  {supported ? (
+                                    <p className="text-xs text-gray-400 truncate">{ops.join(", ")}</p>
+                                  ) : (
+                                    <p className="text-xs text-orange-500">Non supporté par SoleasPay</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                {spActive && (
+                                  <Badge className="bg-blue-100 text-blue-700 text-xs hidden sm:flex">Actif</Badge>
+                                )}
+                                {supported ? (
+                                  <div className="flex gap-1">
+                                    {/* Toggle SoleasPay only */}
+                                    <button
+                                      data-testid={`btn-sp-toggle-${c.id}`}
+                                      onClick={() => {
+                                        let newProvider: string;
+                                        if (!spActive) {
+                                          // Activer SoleasPay — garder WestPay si il y avait des canaux WestPay
+                                          newProvider = provider === "westpay" ? "both" : "soleaspay";
+                                        } else {
+                                          // Désactiver SoleasPay
+                                          newProvider = provider === "both" ? "westpay" : "westpay";
+                                        }
+                                        updateCountryMutation.mutate({ id: c.id, paymentProvider: newProvider });
+                                      }}
+                                      disabled={updateCountryMutation.isPending}
+                                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${spActive ? "bg-blue-500" : "bg-gray-200"}`}
+                                    >
+                                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${spActive ? "translate-x-6" : "translate-x-1"}`} />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <Badge className="bg-gray-100 text-gray-400 text-xs">Indisponible</Badge>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Mode selector — shown only when SoleasPay is active */}
+                            {spActive && supported && (
+                              <div className="mt-2 pt-2 border-t border-blue-100 flex gap-2">
+                                <button
+                                  data-testid={`btn-sp-mode-both-${c.id}`}
+                                  onClick={() => updateCountryMutation.mutate({ id: c.id, paymentProvider: "both" })}
+                                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${provider === "both" ? "bg-blue-500 text-white" : "bg-white border border-blue-200 text-blue-600"}`}
+                                >
+                                  WestPay + SoleasPay
+                                </button>
+                                <button
+                                  data-testid={`btn-sp-mode-solo-${c.id}`}
+                                  onClick={() => updateCountryMutation.mutate({ id: c.id, paymentProvider: "soleaspay" })}
+                                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${provider === "soleaspay" ? "bg-blue-500 text-white" : "bg-white border border-blue-200 text-blue-600"}`}
+                                >
+                                  SoleasPay uniquement
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                );
+              })()}
             </Card>
           </div>
         )}
