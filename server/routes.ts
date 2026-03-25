@@ -12,6 +12,7 @@ import bcrypt from "bcryptjs";
 import multer from "multer";
 import path from "path";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
 import {
   buildWestpayPaymentUrl, verifyWestpaySignature, westpayTransfer,
   slugToWestpayCountry, buildMsisdn, WESTPAY_ENABLED,
@@ -74,6 +75,31 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 },
     })
   );
+
+  // ── Protection anti-DDoS (rate limiting) ────────────────────────────────
+  // Limite globale : 300 requêtes / 15 min par IP
+  const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Trop de requêtes. Veuillez réessayer dans quelques minutes." },
+    skip: (req) => {
+      // Exclure les webhooks et les assets statiques
+      return req.path.startsWith("/assets") || req.path === "/api/westpay/webhook";
+    },
+  });
+
+  // Limite stricte pour l'authentification : 15 tentatives / 15 min par IP
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 15,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Trop de tentatives de connexion. Réessayez dans 15 minutes." },
+  });
+
+  app.use(globalLimiter);
 
   // Seed countries if empty
   try {
@@ -159,7 +185,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/auth/register", async (req: Request, res: Response) => {
+  app.post("/api/auth/register", authLimiter, async (req: Request, res: Response) => {
     try {
       const { phone, password, confirmPassword, country, inviteCode, nickname, otp } = req.body;
       if (!phone || !password || !country) return res.status(400).json({ message: "Champs requis manquants" });
@@ -206,7 +232,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
-  app.post("/api/auth/login", async (req: Request, res: Response) => {
+  app.post("/api/auth/login", authLimiter, async (req: Request, res: Response) => {
     try {
       const { phone, password, country } = req.body;
       if (!phone || !password || !country) return res.status(400).json({ message: "Champs requis manquants" });
@@ -645,7 +671,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Settings
   app.get("/api/settings", async (req: Request, res: Response) => {
     const s = await storage.getSettings();
-    res.json(s);
+    // Masquer la clé OpenAI dans la réponse publique
+    const { openaiApiKey, ...safeSettings } = s;
+    res.json({
+      ...safeSettings,
+      openaiApiKey: openaiApiKey ? `${openaiApiKey.slice(0, 8)}${"*".repeat(20)}` : "",
+    });
   });
 
   // User settings update
@@ -902,8 +933,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.put("/api/admin/settings", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-      const s = await storage.updateSettings(req.body);
-      res.json(s);
+      const data = { ...req.body };
+      // Ne pas écraser la vraie clé si on reçoit une valeur masquée
+      if (data.openaiApiKey && data.openaiApiKey.includes("*")) {
+        delete data.openaiApiKey;
+      }
+      const s = await storage.updateSettings(data);
+      const { openaiApiKey, ...safeSettings } = s;
+      res.json({
+        ...safeSettings,
+        openaiApiKey: openaiApiKey ? `${openaiApiKey.slice(0, 8)}${"*".repeat(20)}` : "",
+      });
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }

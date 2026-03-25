@@ -148,9 +148,9 @@ export default function AdminPage() {
 
   // WestPay — toujours appelé (règle des hooks), activé uniquement sur l'onglet
   const { data: wpStatus } = useQuery<any>({ queryKey: ["/api/admin/westpay/status"], enabled: activeTab === "westpay" });
-  // Statut IA — vérifié uniquement sur l'onglet paramètres
+  // Statut IA — uniquement sur demande (bouton "Tester l'IA"), jamais automatique
   const { data: aiStatus, refetch: refetchAiStatus, isFetching: aiChecking } = useQuery<any>({
-    queryKey: ["/api/admin/ai-status"], enabled: activeTab === "settings", refetchOnWindowFocus: false,
+    queryKey: ["/api/admin/ai-status"], enabled: false, refetchOnWindowFocus: false,
   });
   const { data: wpBalances, refetch: refetchBalances, isFetching: balFetching } = useQuery<any[]>({
     queryKey: ["/api/admin/westpay/balances"], enabled: false,
