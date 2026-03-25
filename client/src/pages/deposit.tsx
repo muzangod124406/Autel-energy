@@ -4,7 +4,7 @@ import { BKAPAY_KEY, formatCFA } from "@/lib/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ChevronRight, X, Zap, Link2, CreditCard } from "lucide-react";
+import { ArrowLeft, ChevronRight, X, Zap, Link2, Smartphone } from "lucide-react";
 import { useLocation } from "wouter";
 import robotpayIcon from "@assets/icon_2_1774133145999.png";
 
@@ -26,12 +26,35 @@ export default function DepositPage() {
     country: user?.country || "",
   });
 
+  // SoleasPay state
+  const [showSoleasForm, setShowSoleasForm] = useState(false);
+  const [soleasOperator, setSoleasOperator] = useState("");
+  const [soleasPhone, setSoleasPhone] = useState(user?.phone || "");
+  const [soleasSuccess, setSoleasSuccess] = useState(false);
+
   const { data: channels = [] } = useQuery<any[]>({ queryKey: ["/api/channels"] });
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
   const { data: countriesRaw = [] } = useQuery({ queryKey: ["/api/countries"] });
   const countriesList = countriesRaw as any[];
 
   const depositMinAmount = settings?.depositMinAmount || 1000;
+
+  // Find user's country info to get payment provider
+  const userCountryInfo = countriesList.find((c: any) => c.slug === user?.country);
+  const paymentProvider: string = userCountryInfo?.paymentProvider || "westpay";
+  const showSoleasPay = paymentProvider === "soleaspay" || paymentProvider === "both";
+  const showWestPay = paymentProvider === "westpay" || paymentProvider === "both";
+
+  // SoleasPay operators for user's country
+  const { data: soleasOperators = [] } = useQuery<string[]>({
+    queryKey: ["/api/soleaspay/operators", user?.country],
+    queryFn: async () => {
+      if (!user?.country || !showSoleasPay) return [];
+      const res = await fetch(`/api/soleaspay/operators/${user.country}`, { credentials: "include" });
+      return res.json();
+    },
+    enabled: showSoleasPay,
+  });
 
   const depositMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -65,6 +88,21 @@ export default function DepositPage() {
     }
   });
 
+  const soleasPayMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/user/deposit/soleaspay/init", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      setSoleasSuccess(true);
+      setShowSoleasForm(false);
+      toast({ title: "Demande envoyée !", description: "Confirmez le paiement sur votre téléphone." });
+    },
+    onError: (e: any) => {
+      toast({ title: e.message || "Erreur SoleasPay", variant: "destructive" });
+    }
+  });
+
   const selectedChannel = (channels as any[]).find((c: any) => c.id === selectedChannelId);
 
   const channelIcon = (type: string) => {
@@ -79,6 +117,23 @@ export default function DepositPage() {
     return "Paiement par lien";
   };
 
+  const handleSoleasDeposit = () => {
+    const amt = parseInt(amount);
+    if (!amt || amt < depositMinAmount) {
+      toast({ title: "Erreur", description: `Montant minimum: ${formatCFA(depositMinAmount)}`, variant: "destructive" });
+      return;
+    }
+    if (!soleasOperator) {
+      toast({ title: "Erreur", description: "Veuillez sélectionner un opérateur", variant: "destructive" });
+      return;
+    }
+    if (!soleasPhone) {
+      toast({ title: "Erreur", description: "Numéro de téléphone requis", variant: "destructive" });
+      return;
+    }
+    soleasPayMutation.mutate({ amount: amt, operator: soleasOperator, phoneNumber: soleasPhone });
+  };
+
   const handleRecharge = () => {
     const amt = parseInt(amount);
     if (!amt || amt < depositMinAmount) {
@@ -90,7 +145,6 @@ export default function DepositPage() {
       return;
     }
 
-    // WestPay channel: redirect to hosted payment page
     if (selectedChannel?.type === "westpay") {
       westpayMutation.mutate({
         amount: amt,
@@ -132,7 +186,7 @@ export default function DepositPage() {
     }
   };
 
-  const isPending = depositMutation.isPending || westpayMutation.isPending || isRedirecting;
+  const isPending = depositMutation.isPending || westpayMutation.isPending || soleasPayMutation.isPending || isRedirecting;
 
   return (
     <div className="bg-white">
@@ -168,32 +222,66 @@ export default function DepositPage() {
           </p>
         </div>
 
-        {/* Method selection row */}
-        <div
-          className="flex items-center justify-between py-4 border-b border-gray-100 cursor-pointer"
-          onClick={() => { setTempChannelId(selectedChannelId); setShowMethodSheet(true); }}
-          data-testid="button-choose-method"
-        >
-          <p className="text-gray-700 font-medium text-sm">Méthode de recharge</p>
-          <div className="flex items-center gap-1">
-            <span className="text-gray-400 text-sm">
-              {selectedChannel ? selectedChannel.name : "Veuillez choisir une méthode de recharge"}
-            </span>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-          </div>
-        </div>
+        {/* SoleasPay section — shown if user's country uses SoleasPay */}
+        {showSoleasPay && (
+          <div className="border-b border-gray-100 pb-5 mb-5">
+            <p className="font-bold text-gray-900 text-base mb-3">Paiement Mobile Money direct</p>
 
-        {/* Recharger button */}
-        <div className="pt-6">
-          <button
-            data-testid="button-deposit-now"
-            onClick={handleRecharge}
-            disabled={isPending}
-            className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
-          >
-            {isRedirecting ? "Redirection vers WestPay..." : isPending ? "En cours..." : "Recharger"}
-          </button>
-        </div>
+            {soleasSuccess ? (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                <p className="text-green-700 font-bold text-sm">✓ Demande envoyée !</p>
+                <p className="text-green-600 text-xs mt-1">Confirmez le paiement sur votre téléphone. Le crédit sera ajouté automatiquement.</p>
+              </div>
+            ) : (
+              <button
+                data-testid="button-soleaspay-open"
+                onClick={() => { setShowSoleasForm(true); setSoleasSuccess(false); }}
+                className="w-full flex items-center justify-between py-3 px-4 border border-gray-200 rounded-xl"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-blue-50 rounded-full flex items-center justify-center">
+                    <Smartphone className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-gray-900 font-bold text-sm">SoleasPay</p>
+                    <p className="text-xs text-gray-400">Push Mobile Money — confirmation sur votre téléphone</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Channel method selection — shown if country uses WestPay or both */}
+        {(showWestPay || (!showSoleasPay && !showWestPay)) && (
+          <>
+            <div
+              className="flex items-center justify-between py-4 border-b border-gray-100 cursor-pointer"
+              onClick={() => { setTempChannelId(selectedChannelId); setShowMethodSheet(true); }}
+              data-testid="button-choose-method"
+            >
+              <p className="text-gray-700 font-medium text-sm">Méthode de recharge</p>
+              <div className="flex items-center gap-1">
+                <span className="text-gray-400 text-sm">
+                  {selectedChannel ? selectedChannel.name : "Veuillez choisir une méthode de recharge"}
+                </span>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+
+            <div className="pt-6">
+              <button
+                data-testid="button-deposit-now"
+                onClick={handleRecharge}
+                disabled={isPending}
+                className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
+              >
+                {isRedirecting ? "Redirection vers WestPay..." : isPending ? "En cours..." : "Recharger"}
+              </button>
+            </div>
+          </>
+        )}
 
         {/* Instructions */}
         <div className="pt-6">
@@ -207,7 +295,79 @@ export default function DepositPage() {
         </div>
       </div>
 
-      {/* Method bottom sheet */}
+      {/* SoleasPay form bottom sheet */}
+      {showSoleasForm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
+          <div className="bg-white w-full rounded-t-3xl p-5" style={{ maxHeight: "90vh", overflowY: "auto" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-base flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-blue-600" /> Paiement SoleasPay
+              </h3>
+              <button onClick={() => setShowSoleasForm(false)} data-testid="btn-close-soleas-form"><X className="w-5 h-5" /></button>
+            </div>
+
+            <p className="text-sm text-gray-500 mb-5">
+              Montant : <strong>{parseInt(amount || "0").toLocaleString()} FCFA</strong>
+            </p>
+
+            {/* Operator selection */}
+            <div className="mb-4">
+              <p className="text-xs font-medium text-gray-600 mb-2">Sélectionnez votre opérateur</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(soleasOperators as string[]).map((op: string) => (
+                  <button
+                    key={op}
+                    data-testid={`btn-operator-${op}`}
+                    onClick={() => setSoleasOperator(op)}
+                    className={`py-3 px-3 rounded-xl border text-sm font-medium transition-all ${
+                      soleasOperator === op
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-200 text-gray-700"
+                    }`}
+                  >
+                    {op}
+                  </button>
+                ))}
+                {soleasOperators.length === 0 && (
+                  <p className="col-span-2 text-center text-sm text-gray-400 py-4">
+                    Aucun opérateur disponible pour votre pays
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Phone number */}
+            <div className="mb-5">
+              <label className="text-xs font-medium text-gray-600">Numéro Mobile Money</label>
+              <input
+                data-testid="input-soleas-phone"
+                type="tel"
+                placeholder="Ex: 0701234567"
+                value={soleasPhone}
+                onChange={e => setSoleasPhone(e.target.value)}
+                className="w-full mt-1 border-b border-gray-200 py-2 text-sm outline-none bg-transparent"
+              />
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-3 mb-5">
+              <p className="text-xs text-blue-700">
+                Après confirmation, vous recevrez une notification sur votre téléphone pour valider le paiement.
+              </p>
+            </div>
+
+            <button
+              data-testid="button-soleas-pay"
+              onClick={handleSoleasDeposit}
+              disabled={soleasPayMutation.isPending || !soleasOperator || !soleasPhone}
+              className="w-full py-4 bg-blue-600 text-white font-bold rounded-xl text-base disabled:opacity-60"
+            >
+              {soleasPayMutation.isPending ? "Envoi en cours..." : "Payer maintenant"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Method bottom sheet — channels list */}
       {showMethodSheet && (
         <div
           className="fixed inset-0 z-50 flex items-end overlay-fade-in"
@@ -219,12 +379,9 @@ export default function DepositPage() {
             style={{ minHeight: "52vh", maxHeight: "75vh" }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
-
-            {/* Title + Confirmer */}
             <div className="flex-shrink-0 flex items-center justify-between px-5 pt-3 pb-4 border-b border-gray-100">
               <p className="font-bold text-gray-900 text-base">Méthode de recharge</p>
               <button
@@ -236,8 +393,6 @@ export default function DepositPage() {
                 Confirmer
               </button>
             </div>
-
-            {/* Scrollable channel list */}
             <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
               {(channels as any[]).length === 0 ? (
                 <p className="text-center text-gray-400 text-sm py-8">Aucune méthode disponible</p>

@@ -73,6 +73,12 @@ app.use((req, res, next) => {
     log("Migration: settings.openai_api_key OK");
     await pool.query("ALTER TABLE settings ADD COLUMN IF NOT EXISTS westpay_api_keys jsonb DEFAULT '{}'::jsonb");
     log("Migration: settings.westpay_api_keys OK");
+    await pool.query("ALTER TABLE settings ADD COLUMN IF NOT EXISTS soleaspay_api_key text NOT NULL DEFAULT ''");
+    log("Migration: settings.soleaspay_api_key OK");
+    await pool.query("ALTER TABLE settings ADD COLUMN IF NOT EXISTS soleaspay_secret_hash text NOT NULL DEFAULT ''");
+    log("Migration: settings.soleaspay_secret_hash OK");
+    await pool.query("ALTER TABLE countries ADD COLUMN IF NOT EXISTS payment_provider text NOT NULL DEFAULT 'westpay'");
+    log("Migration: countries.payment_provider OK");
   } catch (e: any) {
     log(`Migration warning: ${e.message}`);
   }

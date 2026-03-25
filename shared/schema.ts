@@ -124,6 +124,8 @@ export const settings = pgTable("settings", {
   statsResetDate: timestamp("stats_reset_date"),
   openaiApiKey: text("openai_api_key").notNull().default(""),
   westpayApiKeys: jsonb("westpay_api_keys").default({}),
+  soleaspayApiKey: text("soleaspay_api_key").notNull().default(""),
+  soleaspaySecretHash: text("soleaspay_secret_hash").notNull().default(""),
 });
 
 export const countries = pgTable("countries", {
@@ -134,6 +136,7 @@ export const countries = pgTable("countries", {
   code: text("code").notNull().default(""),
   operators: text("operators").array().notNull().default(sql`'{}'::text[]`),
   isActive: boolean("is_active").notNull().default(true),
+  paymentProvider: text("payment_provider").notNull().default("westpay"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

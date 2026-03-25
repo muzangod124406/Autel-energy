@@ -119,11 +119,16 @@ export default function AdminPage() {
   // Country form state
   const [showCountryForm, setShowCountryForm] = useState(false);
   const [editingCountry, setEditingCountry] = useState<any>(null);
-  const [countryForm, setCountryForm] = useState({ name: "", flag: "", code: "", operators: "", isActive: true });
+  const [countryForm, setCountryForm] = useState({ name: "", flag: "", code: "", operators: "", isActive: true, paymentProvider: "westpay" });
 
   // Westpay API keys form state
   const [wpApiKeyInputs, setWpApiKeyInputs] = useState<Record<string, string>>({});
   const [wpApiKeyEditing, setWpApiKeyEditing] = useState<string | null>(null);
+
+  // SoleasPay credentials form state
+  const [spApiKey, setSpApiKey] = useState("");
+  const [spSecretHash, setSpSecretHash] = useState("");
+  const [spSaved, setSpSaved] = useState(false);
 
   // Stats date filter
   const [statsFrom, setStatsFrom] = useState("");
@@ -174,7 +179,7 @@ export default function AdminPage() {
 
   const createCountryMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/admin/countries", data).then(r => r.json()),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/countries"] }); queryClient.invalidateQueries({ queryKey: ["/api/countries"] }); setShowCountryForm(false); setEditingCountry(null); setCountryForm({ name: "", flag: "", code: "", operators: "", isActive: true }); toast({ title: "Pays créé" }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/countries"] }); queryClient.invalidateQueries({ queryKey: ["/api/countries"] }); setShowCountryForm(false); setEditingCountry(null); setCountryForm({ name: "", flag: "", code: "", operators: "", isActive: true, paymentProvider: "westpay" }); toast({ title: "Pays créé" }); },
     onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" }),
   });
   const updateCountryMutation = useMutation({
@@ -528,6 +533,7 @@ export default function AdminPage() {
     { key: "tickets", label: "Codes Cadeaux" },
     { key: "pays", label: "Pays" },
     { key: "westpay", label: "WestPay" },
+    { key: "soleaspay", label: "SoleasPay" },
     { key: "chat", label: totalUnread > 0 ? `Chat (${totalUnread})` : "Chat" },
     { key: "settings", label: "Paramètres" },
   ];
@@ -1417,7 +1423,7 @@ export default function AdminPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-gray-900">Gestion des Pays</h3>
-              <Button size="sm" onClick={() => { setEditingCountry(null); setCountryForm({ name: "", flag: "", code: "", operators: "", isActive: true }); setShowCountryForm(true); }} data-testid="button-add-country">
+              <Button size="sm" onClick={() => { setEditingCountry(null); setCountryForm({ name: "", flag: "", code: "", operators: "", isActive: true, paymentProvider: "westpay" }); setShowCountryForm(true); }} data-testid="button-add-country">
                 <Plus className="w-4 h-4 mr-1" /> Ajouter
               </Button>
             </div>
@@ -1452,6 +1458,19 @@ export default function AdminPage() {
                     data-testid="input-country-operators" />
                   <p className="text-xs text-gray-400 mt-1">Ces opérateurs apparaîtront dans le formulaire de carte bancaire des utilisateurs de ce pays</p>
                 </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-600">Fournisseur de paiement</label>
+                  <select
+                    data-testid="select-country-provider"
+                    value={countryForm.paymentProvider}
+                    onChange={e => setCountryForm(f => ({ ...f, paymentProvider: e.target.value }))}
+                    className="w-full mt-1 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
+                  >
+                    <option value="westpay">WestPay uniquement</option>
+                    <option value="soleaspay">SoleasPay uniquement</option>
+                    <option value="both">WestPay + SoleasPay</option>
+                  </select>
+                </div>
                 <div className="flex items-center gap-2">
                   <input type="checkbox" id="country-active" checked={countryForm.isActive}
                     onChange={e => setCountryForm(f => ({ ...f, isActive: e.target.checked }))}
@@ -1463,7 +1482,7 @@ export default function AdminPage() {
                   <Button size="sm" className="flex-1" data-testid="button-save-country"
                     disabled={createCountryMutation.isPending || updateCountryMutation.isPending}
                     onClick={() => {
-                      const payload = { name: countryForm.name, flag: countryForm.flag, code: countryForm.code, operators: countryForm.operators, isActive: countryForm.isActive };
+                      const payload = { name: countryForm.name, flag: countryForm.flag, code: countryForm.code, operators: countryForm.operators, isActive: countryForm.isActive, paymentProvider: countryForm.paymentProvider };
                       if (editingCountry) { updateCountryMutation.mutate({ id: editingCountry.id, ...payload }); }
                       else { createCountryMutation.mutate(payload); }
                     }}>
@@ -1490,7 +1509,14 @@ export default function AdminPage() {
                       <Badge className={c.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
                         {c.isActive ? "Actif" : "Inactif"}
                       </Badge>
-                      <button title="Modifier" onClick={() => { setEditingCountry(c); setCountryForm({ name: c.name, flag: c.flag || "", code: c.code || "", operators: (c.operators || []).join(", "), isActive: c.isActive }); setShowCountryForm(true); }}
+                      <Badge className={
+                        c.paymentProvider === "soleaspay" ? "bg-blue-100 text-blue-700" :
+                        c.paymentProvider === "both" ? "bg-purple-100 text-purple-700" :
+                        "bg-gray-100 text-gray-600"
+                      }>
+                        {c.paymentProvider === "soleaspay" ? "SoleasPay" : c.paymentProvider === "both" ? "WP+SP" : "WestPay"}
+                      </Badge>
+                      <button title="Modifier" onClick={() => { setEditingCountry(c); setCountryForm({ name: c.name, flag: c.flag || "", code: c.code || "", operators: (c.operators || []).join(", "), isActive: c.isActive, paymentProvider: c.paymentProvider || "westpay" }); setShowCountryForm(true); }}
                         data-testid={`button-edit-country-${c.id}`} className="p-1.5 rounded-lg hover:bg-gray-100 text-blue-600">
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -1661,6 +1687,90 @@ export default function AdminPage() {
             </div>
           );
         })()}
+
+        {/* ══════════ SOLEASPAY ══════════ */}
+        {activeTab === "soleaspay" && (
+          <div className="space-y-5">
+            <div>
+              <h3 className="font-bold text-gray-900 mb-1">Configuration SoleasPay</h3>
+              <p className="text-xs text-gray-500">Renseignez les identifiants de votre compte SoleasPay pour activer les dépôts Mobile Money via push.</p>
+            </div>
+
+            <Card className="p-4 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-gray-600">Clé API SoleasPay <span className="text-red-500">*</span></label>
+                <Input
+                  data-testid="input-soleaspay-apikey"
+                  className="mt-1 font-mono text-xs"
+                  placeholder="SP_BSnx7C0..."
+                  value={spApiKey}
+                  onChange={e => { setSpApiKey(e.target.value); setSpSaved(false); }}
+                  type="password"
+                />
+                <p className="text-xs text-gray-400 mt-1">Clé fournie par SoleasPay. Gardez-la confidentielle.</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-600">Secret Hash (webhook)</label>
+                <Input
+                  data-testid="input-soleaspay-secret"
+                  className="mt-1 font-mono text-xs"
+                  placeholder="Votre secret hash pour vérifier les callbacks"
+                  value={spSecretHash}
+                  onChange={e => { setSpSecretHash(e.target.value); setSpSaved(false); }}
+                  type="password"
+                />
+                <p className="text-xs text-gray-400 mt-1">Optionnel. Utilisé pour valider l'authenticité des webhooks SoleasPay.</p>
+              </div>
+              <Button
+                data-testid="button-save-soleaspay"
+                className="w-full"
+                disabled={updateSettingsMutation.isPending || !spApiKey}
+                onClick={async () => {
+                  const patch: any = { soleaspayApiKey: spApiKey };
+                  if (spSecretHash) patch.soleaspaySecretHash = spSecretHash;
+                  await saveSettings(patch);
+                  setSpSaved(true);
+                }}
+              >
+                {updateSettingsMutation.isPending ? "Enregistrement..." : spSaved ? "✓ Enregistré" : "Enregistrer les identifiants"}
+              </Button>
+            </Card>
+
+            <Card className="p-4 space-y-3">
+              <h4 className="font-semibold text-sm text-gray-800">URL de Webhook SoleasPay</h4>
+              <p className="text-xs text-gray-500">Configurez cette URL dans votre tableau de bord SoleasPay pour recevoir les notifications de paiement :</p>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex items-center justify-between">
+                <code className="text-xs text-blue-700 break-all">{window.location.origin}/api/webhook/soleaspay</code>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/api/webhook/soleaspay`); toast({ title: "URL copiée !" }); }}
+                  className="ml-2 text-xs text-blue-600 font-medium whitespace-nowrap"
+                  data-testid="button-copy-webhook-url"
+                >
+                  Copier
+                </button>
+              </div>
+            </Card>
+
+            <Card className="p-4 space-y-2">
+              <h4 className="font-semibold text-sm text-gray-800">Pays compatibles SoleasPay</h4>
+              <p className="text-xs text-gray-500 mb-2">Pour activer SoleasPay sur un pays, allez dans l'onglet "Pays" et modifiez le fournisseur de paiement du pays concerné.</p>
+              <div className="space-y-1">
+                {[
+                  { name: "Côte d'Ivoire", ops: ["MTN CI", "Moov CI", "Wave CI", "Orange CI"] },
+                  { name: "Cameroun", ops: ["MTN CM", "Orange CM"] },
+                  { name: "Burkina Faso", ops: ["Moov BF", "Orange BF"] },
+                  { name: "Bénin", ops: ["MTN BJ", "Moov BJ"] },
+                  { name: "Togo", ops: ["Flooz TG", "T-Money TG"] },
+                ].map(p => (
+                  <div key={p.name} className="flex items-center justify-between py-1.5 border-b border-gray-50">
+                    <span className="text-sm text-gray-800 font-medium">{p.name}</span>
+                    <span className="text-xs text-gray-400">{p.ops.join(", ")}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* ══════════ CHAT ══════════ */}
         {activeTab === "chat" && (

@@ -18,6 +18,10 @@ import {
   slugToWestpayCountry, buildMsisdn, WESTPAY_ENABLED,
   getCountryApiKeyStatus, westpayGetBalances,
 } from "./westpay";
+import {
+  soleasPayCollect, verifySoleasPayCallback,
+  getSoleasPayServiceId, getSoleasPayOperators, getSoleasPayCurrency,
+} from "./soleaspay";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -435,6 +439,110 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       }
       res.json({ ok: true });
     } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // ─── SoleasPay — Get operators for a country ─────────────────────────────
+  app.get("/api/soleaspay/operators/:countrySlug", requireAuth, async (req: Request, res: Response) => {
+    const operators = getSoleasPayOperators(req.params.countrySlug);
+    res.json(operators);
+  });
+
+  // ─── SoleasPay — Initiate Pay-In ─────────────────────────────────────────
+  app.post("/api/user/deposit/soleaspay/init", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
+
+      const s = await storage.getSettings();
+      const apiKey = s.soleaspayApiKey || process.env.SOLEASPAY_API_KEY;
+      if (!apiKey) return res.status(503).json({ message: "SoleasPay non configuré" });
+
+      const { amount, operator, phoneNumber } = req.body;
+      if (!amount || amount < 100) return res.status(400).json({ message: "Montant invalide" });
+      if (!operator) return res.status(400).json({ message: "Opérateur requis" });
+
+      const countrySlug = user.country || "";
+      const serviceId = getSoleasPayServiceId(countrySlug, operator);
+      if (!serviceId) return res.status(400).json({ message: `Opérateur non supporté: ${operator}` });
+
+      const currency = getSoleasPayCurrency(countrySlug);
+      const wallet = phoneNumber || user.phone;
+
+      const tx = await storage.createTransaction(userId, {
+        type: "deposit",
+        amount,
+        country: countrySlug,
+        paymentMethod: `SoleasPay - ${operator}`,
+        phoneNumber: wallet,
+        status: "pending",
+        channelName: "SoleasPay",
+      });
+
+      const origin = `${req.protocol}://${req.get("host")}`;
+
+      const result = await soleasPayCollect({
+        apiKey,
+        serviceId,
+        wallet,
+        amount,
+        currency,
+        orderId: tx.id,
+        description: `Dépôt #${tx.id}`,
+        payer: user.phone,
+        payerEmail: "",
+        successUrl: `${origin}/deposit-return?txId=${tx.id}`,
+        failureUrl: `${origin}/deposit?error=1`,
+      });
+
+      await storage.updateTransaction(tx.id, { externalRef: result.reference } as any);
+
+      res.json({ txId: tx.id, reference: result.reference, status: result.status });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // ─── SoleasPay — Webhook callback ────────────────────────────────────────
+  app.post("/api/webhook/soleaspay", async (req: Request, res: Response) => {
+    try {
+      const xPrivateKey = req.headers["x-private-key"] as string || "";
+      const rawBody = ((req as any).rawBody as Buffer)?.toString("utf8") || JSON.stringify(req.body);
+
+      const s = await storage.getSettings();
+      if (s.soleaspaySecretHash) {
+        if (!verifySoleasPayCallback(rawBody, xPrivateKey, s.soleaspaySecretHash)) {
+          return res.status(401).json({ message: "Signature invalide" });
+        }
+      }
+
+      const payload = req.body as any;
+      if (!payload.success || payload.status !== "SUCCESS") {
+        return res.json({ received: true });
+      }
+
+      const orderId = payload.data?.external_reference;
+      if (!orderId) return res.json({ received: true });
+
+      const tx = await storage.updateTransaction(orderId, { status: "approved" } as any);
+      if (tx) {
+        await storage.updateUser(tx.userId, {
+          depositBalance: undefined,
+        });
+        const user = await storage.getUser(tx.userId);
+        if (user) {
+          await storage.updateUser(tx.userId, {
+            depositBalance: user.depositBalance + tx.amount,
+            balance: user.balance + tx.amount,
+          });
+        }
+      }
+
+      res.json({ received: true });
+    } catch (e: any) {
+      console.error("[SoleasPay webhook error]", e.message);
       res.status(500).json({ message: e.message });
     }
   });
@@ -1196,12 +1304,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.patch("/api/admin/countries/:id", requireAdmin, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const { name, flag, code, operators, isActive } = req.body;
+      const { name, flag, code, operators, isActive, paymentProvider } = req.body;
       const update: any = {};
       if (name !== undefined) update.name = name.trim();
       if (flag !== undefined) update.flag = flag.trim();
       if (code !== undefined) update.code = code.trim();
       if (isActive !== undefined) update.isActive = isActive;
+      if (paymentProvider !== undefined) update.paymentProvider = paymentProvider;
       if (operators !== undefined) {
         update.operators = Array.isArray(operators) ? operators : operators.split(",").map((o: string) => o.trim()).filter(Boolean);
       }
