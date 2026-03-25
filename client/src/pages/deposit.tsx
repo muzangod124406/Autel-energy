@@ -30,6 +30,9 @@ export default function DepositPage() {
   const [soleasOperator, setSoleasOperator] = useState("");
   const [soleasPhone, setSoleasPhone] = useState("");
   const [soleasCountry, setSoleasCountry] = useState(user?.country || "");
+  // SoleasPay confirmation popup
+  const [showSoleasPending, setShowSoleasPending] = useState(false);
+  const [soleasPendingStatus, setSoleasPendingStatus] = useState<"pending" | "success" | "error">("pending");
 
   const { data: channels = [] } = useQuery<any[]>({ queryKey: ["/api/channels"] });
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
@@ -65,15 +68,23 @@ export default function DepositPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Dépôt enregistré", description: "Votre dépôt est en attente de validation" });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       refreshUser();
       setShowLinkForm(false);
       setSoleasPhone("");
       setSoleasOperator("");
+      if (showSoleasPending) {
+        setSoleasPendingStatus("success");
+      } else {
+        toast({ title: "Dépôt enregistré", description: "Votre dépôt est en attente de validation" });
+      }
     },
     onError: (e: any) => {
-      toast({ title: e.message || "Erreur", variant: "destructive" });
+      if (showSoleasPending) {
+        setSoleasPendingStatus("error");
+      } else {
+        toast({ title: e.message || "Erreur", variant: "destructive" });
+      }
     }
   });
 
@@ -120,12 +131,14 @@ export default function DepositPage() {
       return;
     }
 
-    // SoleasPay virtual channel — submit inline form directly
+    // SoleasPay virtual channel — submit inline form and show confirmation popup
     if (selectedChannelId === "__soleaspay__") {
       if (!soleasCountry || !soleasOperator || !soleasPhone) {
         toast({ title: "Erreur", description: "Veuillez choisir le pays, l'opérateur et entrer votre numéro", variant: "destructive" });
         return;
       }
+      setSoleasPendingStatus("pending");
+      setShowSoleasPending(true);
       depositMutation.mutate({
         amount: amt,
         country: soleasCountry,
@@ -534,6 +547,73 @@ export default function DepositPage() {
                 {depositMutation.isPending ? "En cours..." : "Procéder au paiement →"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* SoleasPay — Popup de confirmation paiement */}
+      {showSoleasPending && (
+        <div className="fixed inset-0 bg-black/60 z-[300] flex items-end">
+          <div className="bg-white w-full rounded-t-3xl px-6 pt-6 pb-10 modal-zoom-in">
+            {soleasPendingStatus === "pending" && (
+              <div className="flex flex-col items-center text-center py-4">
+                {/* Spinner animé */}
+                <div className="relative w-20 h-20 mb-5">
+                  <div className="absolute inset-0 rounded-full border-4 border-gray-100" />
+                  <div className="absolute inset-0 rounded-full border-4 border-t-[#22c55e] border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <img src={robotpayIcon} alt="pay" className="w-9 h-9 object-contain" />
+                  </div>
+                </div>
+                <p className="font-bold text-gray-900 text-lg mb-2">Paiement en cours...</p>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  Veuillez confirmer le paiement sur votre téléphone.
+                </p>
+                <p className="text-gray-400 text-xs mt-2">
+                  {soleasOperator} · {soleasPhone}
+                </p>
+              </div>
+            )}
+
+            {soleasPendingStatus === "success" && (
+              <div className="flex flex-col items-center text-center py-4">
+                <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-5">
+                  <svg className="w-10 h-10 text-[#22c55e]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="font-bold text-gray-900 text-lg mb-2">Demande enregistrée !</p>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  Votre dépôt est en attente de validation.{"\n"}Le crédit sera ajouté automatiquement.
+                </p>
+                <button
+                  onClick={() => { setShowSoleasPending(false); setSoleasPendingStatus("pending"); }}
+                  className="mt-6 w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base"
+                  data-testid="btn-soleas-close-success"
+                >
+                  OK
+                </button>
+              </div>
+            )}
+
+            {soleasPendingStatus === "error" && (
+              <div className="flex flex-col items-center text-center py-4">
+                <div className="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mb-5">
+                  <X className="w-10 h-10 text-red-500" />
+                </div>
+                <p className="font-bold text-gray-900 text-lg mb-2">Échec du paiement</p>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  Une erreur s'est produite. Vérifiez vos informations et réessayez.
+                </p>
+                <button
+                  onClick={() => { setShowSoleasPending(false); setSoleasPendingStatus("pending"); }}
+                  className="mt-6 w-full py-4 bg-red-500 text-white font-bold rounded-xl text-base"
+                  data-testid="btn-soleas-close-error"
+                >
+                  Réessayer
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
