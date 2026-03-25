@@ -123,6 +123,7 @@ export const settings = pgTable("settings", {
   referralCommission3: integer("referral_commission3").notNull().default(2),
   statsResetDate: timestamp("stats_reset_date"),
   openaiApiKey: text("openai_api_key").notNull().default(""),
+  westpayApiKeys: jsonb("westpay_api_keys").default({}),
 });
 
 export const countries = pgTable("countries", {

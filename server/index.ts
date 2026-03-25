@@ -71,6 +71,8 @@ app.use((req, res, next) => {
     log("Migration: investments.product_id OK");
     await pool.query("ALTER TABLE settings ADD COLUMN IF NOT EXISTS openai_api_key text NOT NULL DEFAULT ''");
     log("Migration: settings.openai_api_key OK");
+    await pool.query("ALTER TABLE settings ADD COLUMN IF NOT EXISTS westpay_api_keys jsonb DEFAULT '{}'::jsonb");
+    log("Migration: settings.westpay_api_keys OK");
   } catch (e: any) {
     log(`Migration warning: ${e.message}`);
   }

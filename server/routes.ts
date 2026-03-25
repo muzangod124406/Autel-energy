@@ -52,9 +52,11 @@ function requireAdmin(req: Request, res: Response, next: any) {
 }
 
 const INITIAL_COUNTRIES = [
-  { name: "Cameroun",     slug: "cameroun",     flag: "🇨🇲", code: "+237", operators: ["Orange Money", "MTN Mobile Money"], isActive: true },
-  { name: "Bénin",        slug: "benin",         flag: "🇧🇯", code: "+229", operators: ["Celtis", "Moov Money", "MTN", "Momo"], isActive: true },
-  { name: "Burkina Faso", slug: "burkina_faso",  flag: "🇧🇫", code: "+226", operators: ["Orange Money", "Moov Money"], isActive: true },
+  { name: "Cameroun",       slug: "cameroun",      flag: "🇨🇲", code: "+237", operators: ["Orange Money", "MTN Mobile Money"], isActive: true },
+  { name: "Bénin",          slug: "benin",          flag: "🇧🇯", code: "+229", operators: ["Celtis", "Moov Money", "MTN", "Momo"], isActive: true },
+  { name: "Burkina Faso",   slug: "burkina_faso",   flag: "🇧🇫", code: "+226", operators: ["Orange Money", "Moov Money"], isActive: true },
+  { name: "Togo",           slug: "togo",           flag: "🇹🇬", code: "+228", operators: ["Flooz", "T-Money"], isActive: true },
+  { name: "Côte d'Ivoire",  slug: "cote_divoire",   flag: "🇨🇮", code: "+225", operators: ["Orange Money", "Wave", "MTN Mobile Money"], isActive: true },
 ];
 
 function toSlug(name: string): string {
@@ -101,11 +103,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.use(globalLimiter);
 
-  // Seed countries if empty
+  // Seed countries — insert missing ones by slug
   try {
     const existing = await storage.getCountries();
-    if (existing.length === 0) {
-      for (const c of INITIAL_COUNTRIES) await storage.createCountry(c);
+    const existingSlugs = new Set(existing.map((c: any) => c.slug));
+    for (const c of INITIAL_COUNTRIES) {
+      if (!existingSlugs.has(c.slug)) await storage.createCountry(c);
     }
   } catch {}
 
@@ -890,14 +893,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           if (user && tx.phoneNumber && tx.country) {
             const countrySlug = user.country || tx.country;
             const msisdn = buildMsisdn(tx.phoneNumber, countrySlug);
-            const nameParts = (tx.accountName || user.firstName || "Client").split(" ");
+            const nameParts = (tx.accountName || "Client").split(" ");
+            const appSettings = await storage.getSettings();
+            const dbKeys = (appSettings.westpayApiKeys as Record<string, string>) || {};
             await westpayTransfer({
               country: slugToWestpayCountry(countrySlug),
               countrySlug,
               msisdn,
               amount: tx.netAmount || tx.amount,
               firstName: nameParts[0] || "Client",
-              lastName: nameParts.slice(1).join(" ") || user.lastName || ".",
+              lastName: nameParts.slice(1).join(" ") || ".",
+              dbKeys,
             });
           }
         } catch (wpErr: any) {
@@ -1218,12 +1224,39 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ─── WestPay Admin ───────────────────────────────────────────────────────
   app.get("/api/admin/westpay/status", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    const s = await storage.getSettings();
+    const dbKeys = (s.westpayApiKeys as Record<string, string>) || {};
+    const envKeys = getCountryApiKeyStatus();
+    const mergedKeys: Record<string, boolean> = {};
+    for (const k of Object.keys(envKeys)) {
+      mergedKeys[k] = envKeys[k] || !!dbKeys[k];
+    }
     res.json({
       enabled: WESTPAY_ENABLED,
       merchantSlug: process.env.WESTPAY_MERCHANT_SLUG || null,
       webhookSecretConfigured: !!process.env.WESTPAY_WEBHOOK_SECRET,
-      countryApiKeys: getCountryApiKeyStatus(),
+      countryApiKeys: mergedKeys,
+      dbCountryApiKeys: Object.fromEntries(Object.keys(dbKeys).map(k => [k, !!dbKeys[k]])),
     });
+  });
+
+  app.post("/api/admin/westpay/api-keys", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const { countrySlug, apiKey } = req.body as { countrySlug: string; apiKey: string };
+      if (!countrySlug) return res.status(400).json({ message: "countrySlug requis" });
+      const s = await storage.getSettings();
+      const existing = (s.westpayApiKeys as Record<string, string>) || {};
+      const updated = { ...existing };
+      if (apiKey) {
+        updated[countrySlug.toUpperCase()] = apiKey;
+      } else {
+        delete updated[countrySlug.toUpperCase()];
+      }
+      await storage.updateSettings({ westpayApiKeys: updated } as any);
+      res.json({ success: true });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
   });
 
   app.get("/api/admin/westpay/balances", requireAuth, requireAdmin, async (req: Request, res: Response) => {

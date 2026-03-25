@@ -32,9 +32,10 @@ export async function getWestpayToken(): Promise<string> {
 }
 
 // Returns the X-API-KEY for a given country slug (optional but required for some endpoints)
-export function getCountryApiKey(countrySlug: string): string | undefined {
+// dbKeys: optional map of stored keys from the settings table (slug → key)
+export function getCountryApiKey(countrySlug: string, dbKeys?: Record<string, string>): string | undefined {
   const slug = countrySlug.toUpperCase().replace(/-/g, "_");
-  return process.env[`WESTPAY_API_KEY_${slug}`] || undefined;
+  return process.env[`WESTPAY_API_KEY_${slug}`] || dbKeys?.[slug] || undefined;
 }
 
 // Returns status of all configured country API keys (without exposing values)
@@ -70,9 +71,10 @@ export async function westpayTransfer(params: {
   amount: number;
   firstName: string;
   lastName: string;
+  dbKeys?: Record<string, string>;
 }): Promise<{ reference: string; status: string; fees: number }> {
   const token = await getWestpayToken();
-  const apiKey = getCountryApiKey(params.countrySlug);
+  const apiKey = getCountryApiKey(params.countrySlug, params.dbKeys);
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",

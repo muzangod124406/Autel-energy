@@ -121,6 +121,10 @@ export default function AdminPage() {
   const [editingCountry, setEditingCountry] = useState<any>(null);
   const [countryForm, setCountryForm] = useState({ name: "", flag: "", code: "", operators: "", isActive: true });
 
+  // Westpay API keys form state
+  const [wpApiKeyInputs, setWpApiKeyInputs] = useState<Record<string, string>>({});
+  const [wpApiKeyEditing, setWpApiKeyEditing] = useState<string | null>(null);
+
   // Stats date filter
   const [statsFrom, setStatsFrom] = useState("");
   const [appliedStatsFrom, setAppliedStatsFrom] = useState("");
@@ -154,6 +158,18 @@ export default function AdminPage() {
   });
   const { data: wpBalances, refetch: refetchBalances, isFetching: balFetching } = useQuery<any[]>({
     queryKey: ["/api/admin/westpay/balances"], enabled: false,
+  });
+
+  const saveWpApiKeyMutation = useMutation({
+    mutationFn: (data: { countrySlug: string; apiKey: string }) =>
+      apiRequest("POST", "/api/admin/westpay/api-keys", data).then(r => r.json()),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/westpay/status"] });
+      setWpApiKeyEditing(null);
+      setWpApiKeyInputs(prev => ({ ...prev, [vars.countrySlug]: "" }));
+      toast({ title: vars.apiKey ? "Clé API sauvegardée" : "Clé API supprimée" });
+    },
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" }),
   });
 
   const createCountryMutation = useMutation({
@@ -1544,29 +1560,76 @@ export default function AdminPage() {
               {/* Clés API par pays */}
               <Card className="p-4">
                 <h3 className="font-bold text-sm mb-1 flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-green-500" /> Clés API par pays
+                  <Key className="w-4 h-4 text-green-500" /> Clés API par pays
                 </h3>
                 <p className="text-xs text-gray-500 mb-3">
-                  Chaque pays actif nécessite une clé API séparée. Ajoutez-les dans les <strong>Secrets Replit</strong> avec les noms ci-dessous.
+                  Saisissez la clé API WestPay pour chaque pays directement ici, ou via les Secrets Replit (variable <code className="bg-gray-100 px-1 rounded">WESTPAY_API_KEY_PAYS</code>).
                 </p>
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {COUNTRY_KEYS.map(ck => {
                     const configured = wpStatus?.countryApiKeys?.[ck.slug];
+                    const isEditing = wpApiKeyEditing === ck.slug;
                     return (
-                      <div key={ck.slug} className="flex items-center justify-between py-2 border-b border-gray-50">
-                        <div>
+                      <div key={ck.slug} className="border border-gray-100 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium">{ck.label}</span>
-                          <p className="text-xs font-mono text-gray-400">{ck.envVar}</p>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={configured ? "default" : "secondary"} className={configured ? "bg-green-500 text-xs" : "text-xs"}>
+                              {configured ? "✓ Configurée" : "Manquante"}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs h-7 px-2"
+                              onClick={() => {
+                                setWpApiKeyEditing(isEditing ? null : ck.slug);
+                                setWpApiKeyInputs(prev => ({ ...prev, [ck.slug]: "" }));
+                              }}
+                              data-testid={`btn-edit-wpkey-${ck.slug}`}
+                            >
+                              {isEditing ? "Annuler" : configured ? "Modifier" : "Ajouter"}
+                            </Button>
+                          </div>
                         </div>
-                        <Badge variant={configured ? "default" : "secondary"} className={configured ? "bg-green-500 text-xs" : "text-xs"}>
-                          {configured ? "✓ OK" : "Manquant"}
-                        </Badge>
+                        {isEditing && (
+                          <div className="flex gap-2 mt-2">
+                            <Input
+                              placeholder={`Clé API pour ${ck.label}...`}
+                              value={wpApiKeyInputs[ck.slug] || ""}
+                              onChange={e => setWpApiKeyInputs(prev => ({ ...prev, [ck.slug]: e.target.value }))}
+                              className="text-xs h-8 font-mono flex-1"
+                              data-testid={`input-wpkey-${ck.slug}`}
+                            />
+                            <Button
+                              size="sm"
+                              className="h-8 text-xs bg-green-600 hover:bg-green-700 text-white"
+                              disabled={saveWpApiKeyMutation.isPending}
+                              onClick={() => saveWpApiKeyMutation.mutate({ countrySlug: ck.slug, apiKey: wpApiKeyInputs[ck.slug] || "" })}
+                              data-testid={`btn-save-wpkey-${ck.slug}`}
+                            >
+                              Sauvegarder
+                            </Button>
+                            {configured && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 text-xs text-red-500 border-red-200"
+                                disabled={saveWpApiKeyMutation.isPending}
+                                onClick={() => saveWpApiKeyMutation.mutate({ countrySlug: ck.slug, apiKey: "" })}
+                                data-testid={`btn-delete-wpkey-${ck.slug}`}
+                              >
+                                Supprimer
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                        <p className="text-xs font-mono text-gray-400 mt-1">{ck.envVar}</p>
                       </div>
                     );
                   })}
                 </div>
                 <p className="text-xs text-gray-400 mt-3">
-                  Trouvez vos clés dans le dashboard WestPay → onglet <strong>"Clés API"</strong>. Format : CMR-xxxxxx...
+                  Trouvez vos clés dans le dashboard WestPay → onglet <strong>"Clés API"</strong>.
                 </p>
               </Card>
 
