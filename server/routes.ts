@@ -1333,18 +1333,28 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ─── WestPay Admin ───────────────────────────────────────────────────────
   app.get("/api/admin/westpay/status", requireAuth, requireAdmin, async (req: Request, res: Response) => {
-    const s = await storage.getSettings();
-    const dbKeys = (s.westpayApiKeys as Record<string, string>) || {};
-    const envKeys = getCountryApiKeyStatus();
-    const mergedKeys: Record<string, boolean> = {};
-    for (const k of Object.keys(envKeys)) {
-      mergedKeys[k] = envKeys[k] || !!dbKeys[k];
+    // Use raw SQL to guarantee we get the jsonb column, bypassing any ORM mapping issues
+    const row = await pool.query("SELECT westpay_api_keys FROM settings WHERE id = 'main'");
+    const dbKeys: Record<string, string> = row.rows[0]?.westpay_api_keys || {};
+
+    const countries = ["CAMEROUN", "BENIN", "BURKINA_FASO", "TOGO", "SENEGAL", "COTE_DIVOIRE", "MALI", "CONGO", "GABON"];
+    const countryApiKeys: Record<string, boolean> = {};
+    const countryApiKeyPreviews: Record<string, string> = {};
+
+    for (const c of countries) {
+      const envVal = process.env[`WESTPAY_API_KEY_${c}`] || "";
+      const dbVal = dbKeys[c] || "";
+      const val = envVal || dbVal;
+      countryApiKeys[c] = !!val;
+      if (val) countryApiKeyPreviews[c] = val.slice(0, 8) + "•••";
     }
+
     res.json({
       enabled: WESTPAY_ENABLED,
       merchantSlug: process.env.WESTPAY_MERCHANT_SLUG || null,
       webhookSecretConfigured: !!process.env.WESTPAY_WEBHOOK_SECRET,
-      countryApiKeys: mergedKeys,
+      countryApiKeys,
+      countryApiKeyPreviews,
       dbCountryApiKeys: Object.fromEntries(Object.keys(dbKeys).map(k => [k, !!dbKeys[k]])),
     });
   });

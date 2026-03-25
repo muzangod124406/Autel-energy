@@ -1538,13 +1538,15 @@ export default function AdminPage() {
 
         {activeTab === "westpay" && (() => {
           const COUNTRY_KEYS = [
-            { slug: "CAMEROUN", label: "🇨🇲 Cameroun", envVar: "WESTPAY_API_KEY_CAMEROUN" },
-            { slug: "BENIN", label: "🇧🇯 Bénin", envVar: "WESTPAY_API_KEY_BENIN" },
-            { slug: "BURKINA_FASO", label: "🇧🇫 Burkina Faso", envVar: "WESTPAY_API_KEY_BURKINA_FASO" },
-            { slug: "TOGO", label: "🇹🇬 Togo", envVar: "WESTPAY_API_KEY_TOGO" },
-            { slug: "SENEGAL", label: "🇸🇳 Sénégal", envVar: "WESTPAY_API_KEY_SENEGAL" },
-            { slug: "COTE_DIVOIRE", label: "🇨🇮 Côte d'Ivoire", envVar: "WESTPAY_API_KEY_COTE_DIVOIRE" },
-            { slug: "MALI", label: "🇲🇱 Mali", envVar: "WESTPAY_API_KEY_MALI" },
+            { slug: "CAMEROUN",     label: "🇨🇲 Cameroun",       envVar: "WESTPAY_API_KEY_CAMEROUN" },
+            { slug: "BENIN",        label: "🇧🇯 Bénin",           envVar: "WESTPAY_API_KEY_BENIN" },
+            { slug: "BURKINA_FASO", label: "🇧🇫 Burkina Faso",    envVar: "WESTPAY_API_KEY_BURKINA_FASO" },
+            { slug: "TOGO",         label: "🇹🇬 Togo",            envVar: "WESTPAY_API_KEY_TOGO" },
+            { slug: "COTE_DIVOIRE", label: "🇨🇮 Côte d'Ivoire",  envVar: "WESTPAY_API_KEY_COTE_DIVOIRE" },
+            { slug: "SENEGAL",      label: "🇸🇳 Sénégal",         envVar: "WESTPAY_API_KEY_SENEGAL" },
+            { slug: "MALI",         label: "🇲🇱 Mali",            envVar: "WESTPAY_API_KEY_MALI" },
+            { slug: "CONGO",        label: "🇨🇬 Congo",            envVar: "WESTPAY_API_KEY_CONGO" },
+            { slug: "GABON",        label: "🇬🇦 Gabon",           envVar: "WESTPAY_API_KEY_GABON" },
           ];
 
           return (
@@ -1594,15 +1596,22 @@ export default function AdminPage() {
                 <div className="space-y-2">
                   {COUNTRY_KEYS.map(ck => {
                     const configured = wpStatus?.countryApiKeys?.[ck.slug];
+                    const preview = wpStatus?.countryApiKeyPreviews?.[ck.slug];
                     const isEditing = wpApiKeyEditing === ck.slug;
                     return (
-                      <div key={ck.slug} className="border border-gray-100 rounded-lg p-3">
+                      <div key={ck.slug} className={`border rounded-lg p-3 ${configured ? "border-green-100 bg-green-50/40" : "border-gray-100"}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium">{ck.label}</span>
                           <div className="flex items-center gap-2">
-                            <Badge variant={configured ? "default" : "secondary"} className={configured ? "bg-green-500 text-xs" : "text-xs"}>
-                              {configured ? "✓ Configurée" : "Manquante"}
-                            </Badge>
+                            {configured ? (
+                              <span className="font-mono text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                ✓ {preview || "Configurée"}
+                              </span>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs text-orange-600 bg-orange-50">
+                                Manquante
+                              </Badge>
+                            )}
                             <Button
                               size="sm"
                               variant="outline"
@@ -1649,7 +1658,7 @@ export default function AdminPage() {
                             )}
                           </div>
                         )}
-                        <p className="text-xs font-mono text-gray-400 mt-1">{ck.envVar}</p>
+                        <p className="text-xs font-mono text-gray-300 mt-1">{ck.envVar}</p>
                       </div>
                     );
                   })}
