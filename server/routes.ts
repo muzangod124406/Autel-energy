@@ -378,6 +378,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(txs);
   });
 
+  // ─── Single transaction status (for payment polling) ─────────────────────
+  app.get("/api/user/transaction/:id", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.session as any).userId;
+      const { rows } = await pool.query(
+        "SELECT id, status, amount, type FROM transactions WHERE id = $1 AND user_id = $2",
+        [req.params.id, userId]
+      );
+      if (!rows.length) return res.status(404).json({ message: "Transaction introuvable" });
+      res.json(rows[0]);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
   app.post("/api/user/deposit", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req.session as any).userId;

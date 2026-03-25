@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { BKAPAY_KEY, formatCFA } from "@/lib/constants";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -33,6 +33,9 @@ export default function DepositPage() {
   // SoleasPay confirmation popup
   const [showSoleasPending, setShowSoleasPending] = useState(false);
   const [soleasPendingStatus, setSoleasPendingStatus] = useState<"pending" | "success" | "error">("pending");
+  const [soleasTxId, setSoleasTxId] = useState<string | null>(null);
+  const [soleasErrorMsg, setSoleasErrorMsg] = useState("");
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { data: channels = [] } = useQuery<any[]>({ queryKey: ["/api/channels"] });
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
@@ -71,22 +74,81 @@ export default function DepositPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       refreshUser();
       setShowLinkForm(false);
-      setSoleasPhone("");
-      setSoleasOperator("");
-      if (showSoleasPending) {
-        setSoleasPendingStatus("success");
-      } else {
-        toast({ title: "Dépôt enregistré", description: "Votre dépôt est en attente de validation" });
-      }
+      toast({ title: "Dépôt enregistré", description: "Votre dépôt est en attente de validation" });
     },
     onError: (e: any) => {
-      if (showSoleasPending) {
-        setSoleasPendingStatus("error");
-      } else {
-        toast({ title: e.message || "Erreur", variant: "destructive" });
-      }
+      toast({ title: e.message || "Erreur", variant: "destructive" });
     }
   });
+
+  // ── Real SoleasPay mutation — calls the actual API that sends USSD push ──
+  const soleasMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/user/deposit/soleaspay/init", data);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Erreur SoleasPay");
+      }
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      // Got a txId — now poll for status change (webhook will update it)
+      setSoleasTxId(data.txId);
+    },
+    onError: (e: any) => {
+      setSoleasErrorMsg(e.message || "Erreur lors du lancement du paiement");
+      setSoleasPendingStatus("error");
+    }
+  });
+
+  // ── Poll transaction status after SoleasPay is initiated ─────────────────
+  useEffect(() => {
+    if (!soleasTxId) return;
+    if (pollingRef.current) clearInterval(pollingRef.current);
+
+    const startedAt = Date.now();
+    const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max
+
+    const poll = async () => {
+      // Timeout: stop after 5 minutes
+      if (Date.now() - startedAt > TIMEOUT_MS) {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        pollingRef.current = null;
+        setSoleasTxId(null);
+        setSoleasErrorMsg("Délai d'attente dépassé. Votre paiement est en cours de vérification, contactez le support si nécessaire.");
+        setSoleasPendingStatus("error");
+        return;
+      }
+      try {
+        const res = await fetch(`/api/user/transaction/${soleasTxId}`, { credentials: "include" });
+        if (!res.ok) return;
+        const tx = await res.json();
+        if (tx.status === "approved") {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          pollingRef.current = null;
+          setSoleasTxId(null);
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+          refreshUser();
+          setSoleasPhone("");
+          setSoleasOperator("");
+          setSoleasPendingStatus("success");
+        } else if (tx.status === "rejected" || tx.status === "failed") {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          pollingRef.current = null;
+          setSoleasTxId(null);
+          setSoleasErrorMsg("Paiement refusé ou échoué. Vérifiez votre solde Mobile Money.");
+          setSoleasPendingStatus("error");
+        }
+      } catch {
+        // ignore transient network errors during polling
+      }
+    };
+
+    pollingRef.current = setInterval(poll, 3000);
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [soleasTxId]);
 
   const westpayMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -131,21 +193,20 @@ export default function DepositPage() {
       return;
     }
 
-    // SoleasPay virtual channel — submit inline form and show confirmation popup
+    // SoleasPay virtual channel — call real SoleasPay API (USSD push) then poll for confirmation
     if (selectedChannelId === "__soleaspay__") {
       if (!soleasCountry || !soleasOperator || !soleasPhone) {
         toast({ title: "Erreur", description: "Veuillez choisir le pays, l'opérateur et entrer votre numéro", variant: "destructive" });
         return;
       }
+      setSoleasErrorMsg("");
       setSoleasPendingStatus("pending");
       setShowSoleasPending(true);
-      depositMutation.mutate({
+      soleasMutation.mutate({
         amount: amt,
         country: soleasCountry,
-        paymentMethod: soleasOperator,
+        operator: soleasOperator,
         phoneNumber: soleasPhone,
-        channelId: null,
-        channelName: soleasChannelName,
       });
       return;
     }
@@ -196,7 +257,7 @@ export default function DepositPage() {
     }
   };
 
-  const isPending = depositMutation.isPending || westpayMutation.isPending || isRedirecting;
+  const isPending = depositMutation.isPending || westpayMutation.isPending || soleasMutation.isPending || isRedirecting;
 
   return (
     <div className="bg-white">
@@ -565,13 +626,21 @@ export default function DepositPage() {
                     <img src={robotpayIcon} alt="pay" className="w-9 h-9 object-contain" />
                   </div>
                 </div>
-                <p className="font-bold text-gray-900 text-lg mb-2">Paiement en cours...</p>
+                <p className="font-bold text-gray-900 text-lg mb-2">
+                  {soleasMutation.isPending ? "Envoi de la demande..." : "En attente de confirmation"}
+                </p>
                 <p className="text-gray-500 text-sm leading-relaxed">
-                  Veuillez confirmer le paiement sur votre téléphone.
+                  {soleasMutation.isPending
+                    ? "Connexion à SoleasPay en cours..."
+                    : "Veuillez confirmer le paiement sur votre téléphone."
+                  }
                 </p>
                 <p className="text-gray-400 text-xs mt-2">
                   {soleasOperator} · {soleasPhone}
                 </p>
+                {!soleasMutation.isPending && (
+                  <p className="text-gray-300 text-xs mt-1">Vérification toutes les 3 secondes...</p>
+                )}
               </div>
             )}
 
@@ -603,10 +672,10 @@ export default function DepositPage() {
                 </div>
                 <p className="font-bold text-gray-900 text-lg mb-2">Échec du paiement</p>
                 <p className="text-gray-500 text-sm leading-relaxed">
-                  Une erreur s'est produite. Vérifiez vos informations et réessayez.
+                  {soleasErrorMsg || "Une erreur s'est produite. Vérifiez vos informations et réessayez."}
                 </p>
                 <button
-                  onClick={() => { setShowSoleasPending(false); setSoleasPendingStatus("pending"); }}
+                  onClick={() => { setShowSoleasPending(false); setSoleasPendingStatus("pending"); setSoleasErrorMsg(""); }}
                   className="mt-6 w-full py-4 bg-red-500 text-white font-bold rounded-xl text-base"
                   data-testid="btn-soleas-close-error"
                 >
