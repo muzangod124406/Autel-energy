@@ -614,8 +614,8 @@ export default function DepositPage() {
 
       {/* SoleasPay — Popup de confirmation paiement */}
       {showSoleasPending && (
-        <div className="fixed inset-0 bg-black/60 z-[300] flex items-end">
-          <div className="bg-white w-full rounded-t-3xl px-6 pt-6 pb-10 modal-zoom-in">
+        <div className="fixed inset-0 bg-black/60 z-[300] flex items-center justify-center px-5">
+          <div className="bg-white w-full max-w-sm rounded-3xl px-6 pt-8 pb-8 modal-pop-in shadow-2xl">
             {soleasPendingStatus === "pending" && (
               <div className="flex flex-col items-center text-center py-4">
                 {/* Spinner animé */}
