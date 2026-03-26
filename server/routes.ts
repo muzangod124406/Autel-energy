@@ -473,9 +473,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const s = await storage.getSettings();
       const apiKey = s.soleaspayApiKey || process.env.SOLEASPAY_API_KEY;
-      if (!apiKey) return res.status(503).json({ message: "SoleasPay non configuré" });
+      if (!apiKey) return res.status(503).json({ message: "Paiement Mobile Money non configuré. Contactez le support." });
 
-      const { amount, operator, phoneNumber, country } = req.body;
+      const { amount, operator, phoneNumber, country, channelName: clientChannelName } = req.body;
       if (!amount || amount < 100) return res.status(400).json({ message: "Montant invalide" });
       if (!operator) return res.status(400).json({ message: "Opérateur requis" });
 
@@ -487,14 +487,17 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const currency = getSoleasPayCurrency(countrySlug);
       const wallet = phoneNumber || user.phone;
 
+      // Use the custom channel name configured by admin (passed from client), hide payment provider identity
+      const txChannelName = clientChannelName || "Mobile Money";
+
       const tx = await storage.createTransaction(userId, {
         type: "deposit",
         amount,
         country: countrySlug,
-        paymentMethod: `SoleasPay - ${operator}`,
+        paymentMethod: operator,
         phoneNumber: wallet,
         status: "pending",
-        channelName: "SoleasPay",
+        channelName: txChannelName,
       });
 
       const result = await soleasPayCollect({

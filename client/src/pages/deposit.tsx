@@ -87,7 +87,7 @@ export default function DepositPage() {
       const res = await apiRequest("POST", "/api/user/deposit/soleaspay/init", data);
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "Erreur SoleasPay");
+        throw new Error(err.message || "Erreur de paiement Mobile Money");
       }
       return res.json();
     },
@@ -207,6 +207,7 @@ export default function DepositPage() {
         country: soleasCountry,
         operator: soleasOperator,
         phoneNumber: soleasPhone,
+        channelName: soleasChannelName,
       });
       return;
     }
@@ -631,7 +632,7 @@ export default function DepositPage() {
                 </p>
                 <p className="text-gray-500 text-sm leading-relaxed">
                   {soleasMutation.isPending
-                    ? "Connexion à SoleasPay en cours..."
+                    ? "Envoi de la demande en cours..."
                     : "Veuillez confirmer le paiement sur votre téléphone."
                   }
                 </p>
