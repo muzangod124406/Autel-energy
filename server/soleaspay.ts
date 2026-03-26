@@ -46,13 +46,8 @@ export async function soleasPayCollect(params: {
   amount: number;
   currency: string;
   orderId: string;
-  description: string;
-  payer: string;
-  payerEmail?: string;
-  successUrl: string;
-  failureUrl: string;
 }): Promise<{ reference: string; status: string }> {
-  const res = await fetch(`${BASE_URL}/api/agent/bills/V3`, {
+  const res = await fetch(`${BASE_URL}/api/agent/bills?from=SELF`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -65,17 +60,12 @@ export async function soleasPayCollect(params: {
       amount: params.amount,
       currency: params.currency,
       order_id: params.orderId,
-      description: params.description,
-      payer: params.payer,
-      payerEmail: params.payerEmail || "",
-      successUrl: params.successUrl,
-      failureUrl: params.failureUrl,
     }),
   });
 
   const data = await res.json() as any;
   if (!data.success) throw new Error(data.message || `SoleasPay error: ${res.status}`);
-  return { reference: data.data?.reference || "", status: data.status || "PROCESSING" };
+  return { reference: data.data?.reference || data.reference || "", status: data.status || "PROCESSING" };
 }
 
 export function verifySoleasPayCallback(rawBody: string, xPrivateKey: string, secretHash: string): boolean {

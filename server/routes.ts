@@ -497,8 +497,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         channelName: "SoleasPay",
       });
 
-      const origin = `${req.protocol}://${req.get("host")}`;
-
       const result = await soleasPayCollect({
         apiKey,
         serviceId,
@@ -506,11 +504,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         amount,
         currency,
         orderId: tx.id,
-        description: `Dépôt #${tx.id}`,
-        payer: user.phone,
-        payerEmail: "",
-        successUrl: `${origin}/deposit-return?txId=${tx.id}`,
-        failureUrl: `${origin}/deposit?error=1`,
       });
 
       await storage.updateTransaction(tx.id, { externalRef: result.reference } as any);
