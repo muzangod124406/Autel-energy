@@ -529,21 +529,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const orderId = payload.data?.external_reference;
       if (!orderId) return res.json({ received: true });
 
-      const tx = await storage.updateTransaction(orderId, { status: "approved" } as any);
-      if (tx) {
-        await storage.updateUser(tx.userId, {
-          depositBalance: undefined,
-        });
-        const user = await storage.getUser(tx.userId);
-        if (user) {
-          await storage.updateUser(tx.userId, {
-            depositBalance: user.depositBalance + tx.amount,
-            balance: user.balance + tx.amount,
-          });
-        }
+      // Récupérer la transaction AVANT de la modifier pour éviter le double crédit
+      const [existingTx] = await db.select().from(transactions).where(eq(transactions.id, orderId));
+      if (!existingTx) return res.json({ received: true, matched: false });
+
+      // Anti double-crédit : ignorer si déjà approuvée
+      if (existingTx.status === "approved") {
+        return res.json({ received: true, alreadyApproved: true });
       }
 
-      res.json({ received: true });
+      // Mettre à jour le statut
+      const tx = await storage.updateTransaction(orderId, { status: "approved" } as any);
+      if (tx) {
+        // Incrémenter uniquement depositBalance (atomique pour éviter les race conditions)
+        await db.update(users)
+          .set({ depositBalance: sql`${users.depositBalance} + ${tx.amount}` })
+          .where(eq(users.id, tx.userId));
+        console.log(`[SoleasPay webhook] Dépôt approuvé — userId=${tx.userId} +${tx.amount} FCFA`);
+      }
+
+      res.json({ received: true, matched: true });
     } catch (e: any) {
       console.error("[SoleasPay webhook error]", e.message);
       res.status(500).json({ message: e.message });
@@ -981,16 +986,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.put("/api/admin/transactions/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
       const { status } = req.body;
+
+      // Lire le statut AVANT la mise à jour pour éviter le double-crédit
+      const [prevTx] = await db.select().from(transactions).where(eq(transactions.id, req.params.id));
+      const wasAlreadyApproved = prevTx?.status === "approved";
+
       const tx = await storage.updateTransaction(req.params.id, { status });
 
-      // Dépôt approuvé → créditer le solde dépôt
-      if (tx && status === "approved" && tx.type === "deposit") {
-        const user = await storage.getUser(tx.userId);
-        if (user) {
-          await storage.updateUser(user.id, {
-            depositBalance: user.depositBalance + tx.amount
-          });
-        }
+      // Dépôt approuvé → créditer le solde dépôt (uniquement si pas déjà approuvé)
+      if (tx && status === "approved" && tx.type === "deposit" && !wasAlreadyApproved) {
+        await db.update(users)
+          .set({ depositBalance: sql`${users.depositBalance} + ${tx.amount}` })
+          .where(eq(users.id, tx.userId));
+        console.log(`[Admin] Dépôt approuvé manuellement — userId=${tx.userId} +${tx.amount} FCFA`);
       }
 
       // Retrait rejeté → rembourser le solde retrait (qui avait été débité à la demande)
@@ -1414,31 +1422,41 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const { txId: westpayTxId, amount, payer } = payload;
 
-      // Try to find by externalRef first
+      // Chercher parmi TOUS les dépôts (pending ET approved) pour éviter le double-crédit
+      const allDeposits = await storage.getPendingTransactions("deposit", undefined, "all");
       let tx: any = null;
+
+      // 1) Match par externalRef
       if (westpayTxId) {
-        const allPending = await storage.getPendingTransactions("deposit", undefined, "pending");
-        tx = allPending.find((t: any) => t.externalRef === westpayTxId);
-        // Fallback: match by payer phone and amount
-        if (!tx && payer && amount) {
-          const phone = String(payer).replace(/^\+/, "").replace(/\D/g, "");
-          tx = allPending.find((t: any) => {
-            const txPhone = String(t.phoneNumber || "").replace(/\D/g, "");
-            return txPhone.endsWith(phone.slice(-8)) && t.amount === amount;
-          });
-        }
+        tx = allDeposits.find((t: any) => t.externalRef === westpayTxId);
+      }
+
+      // 2) Fallback : match par téléphone + montant parmi les pending uniquement
+      if (!tx && payer && amount) {
+        const phone = String(payer).replace(/^\+/, "").replace(/\D/g, "");
+        tx = allDeposits.find((t: any) => {
+          if (t.status !== "pending") return false;
+          const txPhone = String(t.phoneNumber || "").replace(/\D/g, "");
+          return txPhone.endsWith(phone.slice(-8)) && t.amount === Number(amount);
+        });
       }
 
       if (!tx) {
+        console.warn(`[WestPay webhook] Transaction introuvable — txId=${westpayTxId} amount=${amount} payer=${payer}`);
         return res.json({ received: true, matched: false });
       }
 
-      // Auto-approve and credit user
-      await storage.updateTransaction(tx.id, { status: "approved", externalRef: westpayTxId } as any);
-      const user = await storage.getUser(tx.userId);
-      if (user) {
-        await storage.updateUser(user.id, { depositBalance: user.depositBalance + tx.amount });
+      // Anti double-crédit : si déjà approuvée, ne pas recréditer
+      if (tx.status === "approved") {
+        return res.json({ received: true, alreadyApproved: true, txId: tx.id });
       }
+
+      // Approuver et créditer de façon atomique
+      await storage.updateTransaction(tx.id, { status: "approved", externalRef: westpayTxId } as any);
+      await db.update(users)
+        .set({ depositBalance: sql`${users.depositBalance} + ${tx.amount}` })
+        .where(eq(users.id, tx.userId));
+      console.log(`[WestPay webhook] Dépôt approuvé — userId=${tx.userId} +${tx.amount} FCFA`);
 
       return res.json({ received: true, matched: true, txId: tx.id });
     } catch (e: any) {
