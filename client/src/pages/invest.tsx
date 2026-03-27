@@ -282,6 +282,14 @@ export default function InvestPage() {
                         ✓ Acheté
                       </span>
                     )}
+                    {remaining !== null && !alreadyOwned && (
+                      <span
+                        className="absolute bottom-1.5 left-0 right-0 mx-auto w-fit text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md"
+                        style={{ background: remaining <= 3 ? "#ef4444" : remaining <= 7 ? "#f97316" : "#16a34a" }}
+                      >
+                        {remaining} restante{remaining > 1 ? "s" : ""}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 pt-0.5">
                     <p className="font-bold text-gray-900 text-sm mb-1">{product.name}</p>
@@ -295,9 +303,12 @@ export default function InvestPage() {
                       Revenu total:<span className="font-semibold"> {product.totalGain.toLocaleString("fr-FR")}.00XAF</span>
                     </p>
                     {remaining !== null && (
-                      <p className="text-xs mt-1 font-semibold" style={{ color: remaining <= 5 ? "#ef4444" : "#f97316" }}>
-                        {remaining} place{remaining > 1 ? "s" : ""} restante{remaining > 1 ? "s" : ""}
-                      </p>
+                      <span
+                        className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-white text-[11px] font-bold"
+                        style={{ background: remaining <= 3 ? "#ef4444" : remaining <= 7 ? "#f97316" : "#16a34a" }}
+                      >
+                        🔥 {remaining} place{remaining > 1 ? "s" : ""} restante{remaining > 1 ? "s" : ""}
+                      </span>
                     )}
                   </div>
                 </div>
