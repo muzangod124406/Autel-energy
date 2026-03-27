@@ -249,9 +249,6 @@ export default function InvestPage() {
             const isBuying = investMutation.isPending && buyingProductId === product.id;
             // Vérifier si l'utilisateur a acheté une activité depuis le dernier lancement
             const sessionStart = product.launchDate ? new Date(product.launchDate) : new Date(product.createdAt);
-            const boughtInSession = (userInvestments as any[]).some(
-              (i: any) => i.planType === "activity" && new Date(i.startDate) >= sessionStart
-            );
             const alreadyOwned = (userInvestments as any[]).some(
               (i: any) => i.productId === product.id && i.planType === "activity" && new Date(i.startDate) >= sessionStart
             );
@@ -308,10 +305,6 @@ export default function InvestPage() {
                   ) : !hasActiveFixed ? (
                     <div className="w-full py-3 bg-orange-50 border border-orange-200 rounded-xl text-center text-xs text-orange-600 font-medium flex items-center justify-center gap-1">
                       <Lock className="w-3 h-3" /> Plan Fixe 120J requis
-                    </div>
-                  ) : boughtInSession ? (
-                    <div className="w-full py-3 bg-green-50 border border-green-200 rounded-xl text-center text-xs text-green-700 font-semibold flex items-center justify-center gap-1">
-                      {alreadyOwned ? "✓ Cette activité est en cours" : "⏳ Activité déjà achetée ce lancement"}
                     </div>
                   ) : (
                     <button

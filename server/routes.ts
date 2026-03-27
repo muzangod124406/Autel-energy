@@ -304,15 +304,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         if (product.purchaseLimit > 0 && product.purchaseCount >= product.purchaseLimit) {
           return res.status(400).json({ message: "Limite d'achat atteinte pour ce produit" });
         }
-        // Un utilisateur ne peut acheter qu'une seule activité par session de lancement
-        const sessionStart = product.launchDate || product.createdAt;
-        const allInvestments = await storage.getUserInvestments(userId);
-        const boughtInSession = allInvestments.some(
-          (i: any) => i.planType === "activity" && new Date(i.startDate) >= new Date(sessionStart)
-        );
-        if (boughtInSession) {
-          return res.status(400).json({ message: "Vous avez déjà acheté une activité dans ce lancement. Attendez le prochain lancement pour en acheter une nouvelle." });
-        }
         await storage.incrementProductPurchaseCount(productId);
       }
 
