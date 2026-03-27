@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, pool } from "./db";
-import { users } from "@shared/schema";
+import { users, transactions } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { uploadToSupabase, BUCKETS } from "./supabase-storage";
 import { generateAIResponse, generateAIResponseOpenAI, checkOpenAIStatus } from "./ai-agent";
@@ -921,6 +921,24 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       await storage.addToUserBalance(req.params.id, credit, credit);
       const updated = await storage.getUser(req.params.id);
       res.json({ success: true, commissionBalance: updated?.commissionBalance, withdrawBalance: updated?.withdrawBalance });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // Re-créditer manuellement une transaction approuvée dont le solde n'a pas été crédité
+  app.post("/api/admin/transactions/:id/recredite", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      const [tx] = await db.select().from(transactions).where(eq(transactions.id, req.params.id));
+      if (!tx) return res.status(404).json({ message: "Transaction introuvable" });
+      if (tx.type !== "deposit") return res.status(400).json({ message: "Seulement les dépôts peuvent être re-crédités" });
+      if (tx.status !== "approved") return res.status(400).json({ message: "La transaction doit être approuvée" });
+
+      await db.update(users)
+        .set({ depositBalance: sql`${users.depositBalance} + ${tx.amount}` })
+        .where(eq(users.id, tx.userId));
+      console.log(`[Admin] Re-crédit forcé — userId=${tx.userId} +${tx.amount} FCFA (tx=${tx.id})`);
+      res.json({ success: true, amount: tx.amount });
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }

@@ -269,6 +269,18 @@ export default function AdminPage() {
     onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
   });
 
+  const recreditMutation = useMutation({
+    mutationFn: async (txId: string) => {
+      const res = await apiRequest("POST", `/api/admin/transactions/${txId}/recredite`, {});
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: `Solde re-crédité : +${data.amount?.toLocaleString("fr-FR")} FCFA` });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/transactions"] });
+    },
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" })
+  });
+
   const creditSpinMutation = useMutation({
     mutationFn: async ({ id, count }: { id: string; count: number }) => {
       const res = await apiRequest("POST", `/api/admin/users/${id}/credit-spin`, { count });
@@ -756,6 +768,14 @@ export default function AdminPage() {
                         <Ban className="w-4 h-4" />
                       </Button>
                     </div>
+                  )}
+                  {tx.status === "approved" && (
+                    <Button size="sm" variant="outline" className="w-full text-orange-600 border-orange-300 hover:bg-orange-50"
+                      onClick={() => recreditMutation.mutate(tx.id)}
+                      disabled={recreditMutation.isPending}
+                      data-testid={`btn-recredite-${tx.id}`}>
+                      ↩ Re-créditer le solde
+                    </Button>
                   )}
                 </Card>
               ))
