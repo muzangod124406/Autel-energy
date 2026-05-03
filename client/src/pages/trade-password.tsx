@@ -84,23 +84,20 @@ export default function TradePasswordPage() {
     setLoading(false);
   };
 
-  const inputCls = "flex items-center px-4 py-4 border-b border-gray-100 last:border-0";
+  const inputCls = "flex items-center px-4 py-4 border-b border-gray-50 last:border-0";
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-100">
-        <button onClick={() => window.history.back()} data-testid="button-back-trade-password">
-          <ArrowLeft className="w-6 h-6 text-gray-700" />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header gold */}
+      <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }} className="px-4 py-4 flex items-center gap-3">
+        <button onClick={() => window.history.back()} data-testid="button-back-trade-password" className="text-white">
+          <ArrowLeft className="w-6 h-6" />
         </button>
-        <div className="flex items-center gap-2">
-          <img src="/sinopec-logo.jpeg" alt="SINOPEC" className="w-7 h-7 rounded-full object-cover" />
-          <span className="text-[#22c55e] font-bold text-base">Mot de passe de retrait</span>
-        </div>
-        <div className="w-6" />
+        <h1 className="text-white font-bold text-base">Mot de passe de retrait</h1>
       </div>
 
-      <div className="px-4 pt-6 space-y-5">
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+      <div className="px-4 pt-5 space-y-4">
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
           {hasPassword && (
             <div className={inputCls}>
               <Lock className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -131,7 +128,8 @@ export default function TradePasswordPage() {
                 disabled={otpLoading || countdown > 0}
                 onClick={handleSendOtp}
                 data-testid="button-send-otp-trade-password"
-                className={`text-sm font-bold whitespace-nowrap px-3 py-1.5 rounded-full ${countdown > 0 || otpLoading ? "text-gray-400 bg-gray-100" : "text-white bg-[#22c55e]"}`}>
+                className={`text-sm font-bold whitespace-nowrap px-3 py-1.5 rounded-full ${countdown > 0 || otpLoading ? "text-gray-400 bg-gray-100" : "text-black"}`}
+                style={!(countdown > 0 || otpLoading) ? { background: "linear-gradient(135deg, #F59E0B, #D97706)" } : {}}>
                 {countdown > 0 ? `${countdown}s` : otpLoading ? "..." : "Envoyer"}
               </button>
             </div>
@@ -167,7 +165,8 @@ export default function TradePasswordPage() {
           type="button"
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-[#22c55e] text-white font-bold text-base py-4 rounded-full shadow-md active:opacity-80 disabled:opacity-60"
+          className="w-full text-black font-bold text-base py-4 rounded-full shadow-md active:opacity-80 disabled:opacity-60"
+          style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
         >
           {loading ? "En cours..." : "Confirmer"}
         </button>

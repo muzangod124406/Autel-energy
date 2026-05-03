@@ -66,8 +66,9 @@ export default function PostBlogPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f0f0e4] pb-44">
-      <div className="bg-[#22c55e] px-4 pt-6 pb-5">
+    <div className="min-h-screen bg-gray-50 pb-44">
+      {/* Header gold */}
+      <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }} className="px-4 pt-6 pb-5">
         <div className="flex items-center">
           <button onClick={() => navigate("/billet")} className="text-white mr-4" data-testid="button-back">
             <ArrowLeft className="w-5 h-5" />
@@ -79,13 +80,13 @@ export default function PostBlogPage() {
       <div className="px-4 mt-4 space-y-4">
 
         {/* Conditions */}
-        <div className="bg-white rounded-2xl p-4">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <h3 className="font-bold text-gray-800 text-sm mb-3">Conditions pour publier</h3>
           <div className="space-y-2">
             {conditions.map((c, i) => (
               <div key={i} className="flex items-center gap-2">
                 {c.ok
-                  ? <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                  ? <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
                   : <XCircle className="w-4 h-4 text-red-400 shrink-0" />
                 }
                 <span className={`text-xs ${c.ok ? "text-gray-700" : "text-red-500"}`}>{c.text}</span>
@@ -94,8 +95,7 @@ export default function PostBlogPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 space-y-5">
-          {/* Contenu */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-5">
           <div>
             <h3 className="font-bold text-gray-800 text-base mb-2">Contenu (optionnel)</h3>
             <textarea
@@ -104,43 +104,40 @@ export default function PostBlogPage() {
               value={content}
               onChange={e => setContent(e.target.value)}
               rows={5}
-              className="w-full bg-[#f5f5f5] rounded-xl p-3 text-sm text-gray-700 placeholder-gray-400 resize-none outline-none border-none focus:ring-0"
+              className="w-full bg-gray-50 rounded-xl p-3 text-sm text-gray-700 placeholder-gray-400 resize-none outline-none border border-gray-100 focus:border-amber-300"
             />
           </div>
 
-          {/* 2 photos */}
           <div>
             <h3 className="font-bold text-gray-800 text-base mb-1">Captures d'écran <span className="text-red-500">*</span></h3>
             <p className="text-xs text-gray-500 mb-3">Importez 2 captures d'écran de votre retrait approuvé</p>
             <div className="grid grid-cols-2 gap-3">
-              {/* Image 1 */}
               <div>
                 <p className="text-xs text-gray-500 mb-1 text-center">Capture 1</p>
                 <input type="file" ref={fileRef1} accept="image/*" className="hidden" onChange={handleFile(1)} data-testid="input-file-1" />
                 <button
                   data-testid="button-upload-1"
                   onClick={() => fileRef1.current?.click()}
-                  className="w-full h-32 rounded-xl border-2 border-dashed border-gray-300 bg-[#f5f5f5] flex items-center justify-center overflow-hidden"
+                  className="w-full h-32 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden"
                 >
                   {preview1
                     ? <img src={preview1} alt="preview 1" className="w-full h-full object-cover rounded-xl" />
-                    : <ImageIcon className="w-8 h-8 text-teal-500" />
+                    : <ImageIcon className="w-8 h-8 text-amber-400" />
                   }
                 </button>
               </div>
 
-              {/* Image 2 */}
               <div>
                 <p className="text-xs text-gray-500 mb-1 text-center">Capture 2</p>
                 <input type="file" ref={fileRef2} accept="image/*" className="hidden" onChange={handleFile(2)} data-testid="input-file-2" />
                 <button
                   data-testid="button-upload-2"
                   onClick={() => fileRef2.current?.click()}
-                  className="w-full h-32 rounded-xl border-2 border-dashed border-gray-300 bg-[#f5f5f5] flex items-center justify-center overflow-hidden"
+                  className="w-full h-32 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden"
                 >
                   {preview2
                     ? <img src={preview2} alt="preview 2" className="w-full h-full object-cover rounded-xl" />
-                    : <ImageIcon className="w-8 h-8 text-teal-500" />
+                    : <ImageIcon className="w-8 h-8 text-amber-400" />
                   }
                 </button>
               </div>
@@ -149,12 +146,13 @@ export default function PostBlogPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 px-4 pb-6 bg-[#f0f0e4] pt-2">
+      <div className="fixed bottom-16 left-0 right-0 px-4 pb-6 bg-gray-50 pt-2">
         <button
           data-testid="button-publish"
           onClick={handlePublish}
           disabled={loading || !file1 || !file2}
-          className="w-full h-12 rounded-full bg-[#22c55e] text-white font-bold text-base disabled:opacity-50 shadow-lg"
+          className="w-full h-12 rounded-full text-black font-bold text-base disabled:opacity-50 shadow-lg"
+          style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
         >
           {loading ? "Publication..." : "Publier"}
         </button>

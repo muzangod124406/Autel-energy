@@ -23,20 +23,18 @@ export default function BilletPage() {
   const posts = tickets as any[];
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: "#f5f5f0" }}>
+    <div className="min-h-screen pb-24 bg-gray-50">
 
-      {/* ── Header vert ─────────────────────── */}
-      <div className="bg-[#22c55e] px-4 pt-6 pb-5">
+      {/* Header gold */}
+      <div className="px-4 pt-6 pb-5" style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}>
         <h1 className="text-white font-bold text-xl text-center mb-5">Blog</h1>
-
-        {/* Deux boutons d'action */}
         <div className="grid grid-cols-2 gap-3">
           <button
             data-testid="button-soumettre"
             onClick={() => navigate("/post-blog")}
             className="flex items-center gap-3 bg-white/20 rounded-2xl px-3 py-3 text-left"
           >
-            <div className="w-10 h-10 rounded-xl bg-blue-400 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
               <img src={submitIcon} alt="Publier" className="w-6 h-6 object-contain brightness-0 invert" />
             </div>
             <div className="flex-1 min-w-0">
@@ -51,7 +49,7 @@ export default function BilletPage() {
             onClick={() => setShowRules(true)}
             className="flex items-center gap-3 bg-white/20 rounded-2xl px-3 py-3 text-left"
           >
-            <div className="w-10 h-10 rounded-xl bg-orange-400 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shrink-0">
               <img src={rulesIcon} alt="Règles" className="w-6 h-6 object-contain brightness-0 invert" />
             </div>
             <div className="flex-1 min-w-0">
@@ -63,22 +61,19 @@ export default function BilletPage() {
         </div>
       </div>
 
-      {/* ── Indicateur de scroll ── */}
       <div className="flex justify-center py-2 bg-white">
-        <div className="w-10 h-1 rounded-full bg-[#22c55e]" />
+        <div className="w-10 h-1 rounded-full bg-amber-400" />
       </div>
 
-      {/* ── Liste des posts ───────────────────── */}
+      {/* Posts list */}
       <div className="px-3 pt-2 space-y-3">
         {posts.length === 0 ? (
           <EmptyState text="Aucune publication" subtext="Il n'y a pas encore de publication disponible." />
         ) : (
           posts.map((post: any) => (
-            <div key={post.id} className="bg-white rounded-2xl p-4 shadow-sm">
-
-              {/* En-tête post */}
+            <div key={post.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl border-2 border-[#22c55e] bg-white flex items-center justify-center shrink-0 overflow-hidden">
+                <div className="w-12 h-12 rounded-xl border-2 border-amber-200 bg-white flex items-center justify-center shrink-0 overflow-hidden">
                   <img src="/sinopec-logo.jpeg" alt="SINOPEC" className="w-full h-full object-cover" />
                 </div>
                 <p className="text-gray-800 font-semibold text-sm">
@@ -86,12 +81,10 @@ export default function BilletPage() {
                 </p>
               </div>
 
-              {/* Description */}
               {post.description && (
                 <p className="text-sm text-gray-700 mb-3 leading-relaxed">{post.description}</p>
               )}
 
-              {/* Image(s) */}
               {(post.imageUrl || post.imageUrl2) && (
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {post.imageUrl && (
@@ -103,9 +96,8 @@ export default function BilletPage() {
                 </div>
               )}
 
-              {/* Pied de post */}
               <div className="flex items-center justify-between mt-1 pt-2 border-t border-gray-50">
-                <span className={`font-bold text-sm ${post.bonus > 0 ? "text-orange-500" : "text-transparent"}`}>
+                <span className={`font-bold text-sm ${post.bonus > 0 ? "text-amber-500" : "text-transparent"}`}>
                   FCFA {post.bonus > 0 ? post.bonus.toLocaleString("fr-FR") + ".00" : "0"}
                 </span>
                 <span className="text-gray-400 text-xs">
@@ -120,7 +112,7 @@ export default function BilletPage() {
         )}
       </div>
 
-      {/* ── Modal règles ─────────────────────── */}
+      {/* Modal règles */}
       {showRules && (
         <div className="fixed inset-0 z-50 flex items-end" onClick={() => setShowRules(false)}>
           <div className="absolute inset-0 bg-black/40" />
@@ -145,7 +137,8 @@ export default function BilletPage() {
             <button
               data-testid="button-compris"
               onClick={() => setShowRules(false)}
-              className="w-full h-12 rounded-full bg-[#22c55e] text-white font-bold text-base"
+              className="w-full h-12 rounded-full text-black font-bold text-base"
+              style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
             >
               J'ai compris
             </button>

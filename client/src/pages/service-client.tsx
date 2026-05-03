@@ -162,7 +162,7 @@ export default function ServiceClientPage() {
 
   return (
     <div
-      className="flex flex-col"
+      className="flex flex-col bg-gray-50"
       style={{
         position: "fixed",
         top: 0,
@@ -170,11 +170,10 @@ export default function ServiceClientPage() {
         right: 0,
         bottom: 0,
         overscrollBehavior: "none",
-        background: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2322c55e' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\") #f0fdf4",
       }}
     >
-      {/* ─── Header ─── */}
-      <div className="bg-[#22c55e] flex-shrink-0" style={{ paddingTop: "env(safe-area-inset-top, 12px)" }}>
+      {/* Header gold */}
+      <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)", paddingTop: "env(safe-area-inset-top, 12px)", flexShrink: 0 }}>
         <div className="flex items-center gap-3 px-3 py-2">
           <button
             onClick={() => window.history.back()}
@@ -190,7 +189,7 @@ export default function ServiceClientPage() {
               alt="Support"
               className="w-10 h-10 rounded-full object-cover border-2 border-white/40"
             />
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-300 border-2 border-[#22c55e] rounded-full" />
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-amber-500 rounded-full" />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -205,11 +204,11 @@ export default function ServiceClientPage() {
         </div>
       </div>
 
-      {/* ─── Messages ─── */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1" style={{ overscrollBehavior: "contain" }}>
         {isLoading && (
           <div className="flex justify-center pt-10">
-            <div className="w-5 h-5 border-2 border-[#22c55e] border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-amber-300 border-t-amber-500 rounded-full animate-spin" />
           </div>
         )}
 
@@ -218,9 +217,9 @@ export default function ServiceClientPage() {
             <img
               src={serviceImg}
               alt="Support"
-              className="w-20 h-20 rounded-full object-cover opacity-50 shadow"
+              className="w-20 h-20 rounded-full object-cover opacity-60 shadow"
             />
-            <div className="bg-white rounded-2xl px-4 py-3 shadow-sm max-w-xs text-center">
+            <div className="bg-white rounded-2xl px-4 py-3 shadow-sm max-w-xs text-center border border-gray-100">
               <p className="text-gray-500 text-sm">
                 Bonjour ! Comment puis-je vous aider aujourd'hui ?
               </p>
@@ -230,9 +229,8 @@ export default function ServiceClientPage() {
 
         {groupedByDate.map(({ label, msgs: dayMsgs }) => (
           <div key={label}>
-            {/* Date separator */}
             <div className="flex items-center justify-center my-3">
-              <span className="bg-white/80 text-gray-500 text-[11px] px-3 py-1 rounded-full shadow-sm border border-gray-100">
+              <span className="bg-white text-gray-400 text-[11px] px-3 py-1 rounded-full shadow-sm border border-gray-100">
                 {label}
               </span>
             </div>
@@ -248,7 +246,6 @@ export default function ServiceClientPage() {
                   key={msg.id}
                   className={`flex items-end gap-1.5 mb-1 ${isUser ? "flex-row-reverse" : "flex-row"}`}
                 >
-                  {/* Avatar côté admin */}
                   <div className="w-7 flex-shrink-0 flex items-end">
                     {!isUser && showAvatar ? (
                       <img
@@ -261,11 +258,9 @@ export default function ServiceClientPage() {
                     ) : null}
                   </div>
 
-                  <div
-                    className={`flex flex-col max-w-[75%] ${isUser ? "items-end" : "items-start"}`}
-                  >
+                  <div className={`flex flex-col max-w-[75%] ${isUser ? "items-end" : "items-start"}`}>
                     {showLabel && (
-                      <span className="text-[10px] text-[#22c55e] font-semibold ml-1 mb-0.5">
+                      <span className="text-[10px] text-amber-500 font-semibold ml-1 mb-0.5">
                         Clara
                       </span>
                     )}
@@ -275,9 +270,7 @@ export default function ServiceClientPage() {
                         <img
                           src={msg.imageUrl}
                           alt="image"
-                          className={`rounded-2xl max-h-52 object-cover shadow ${
-                            isUser ? "rounded-br-sm" : "rounded-bl-sm"
-                          }`}
+                          className={`rounded-2xl max-h-52 object-cover shadow ${isUser ? "rounded-br-sm" : "rounded-bl-sm"}`}
                         />
                       </a>
                     )}
@@ -286,21 +279,14 @@ export default function ServiceClientPage() {
                       <div
                         className={`relative px-3 py-2 shadow-sm ${
                           isUser
-                            ? "bg-[#22c55e] text-white rounded-t-2xl rounded-bl-2xl rounded-br-sm"
+                            ? "text-white rounded-t-2xl rounded-bl-2xl rounded-br-sm"
                             : "bg-white text-gray-800 rounded-t-2xl rounded-br-2xl rounded-bl-sm border border-gray-100"
                         }`}
+                        style={isUser ? { background: "linear-gradient(135deg, #F59E0B, #D97706)" } : {}}
                       >
                         <MessageContent text={msg.content} isUser={isUser} />
-                        <div
-                          className={`flex items-center gap-0.5 mt-0.5 ${
-                            isUser ? "justify-end" : "justify-end"
-                          }`}
-                        >
-                          <span
-                            className={`text-[10px] ${
-                              isUser ? "text-white/70" : "text-gray-400"
-                            }`}
-                          >
+                        <div className="flex items-center gap-0.5 mt-0.5 justify-end">
+                          <span className={`text-[10px] ${isUser ? "text-white/70" : "text-gray-400"}`}>
                             {formatTime(msg.createdAt)}
                           </span>
                           {isUser && (
@@ -319,7 +305,7 @@ export default function ServiceClientPage() {
                         </span>
                         {isUser && (
                           msg.isRead
-                            ? <CheckCheck className="w-3 h-3 text-[#22c55e]" />
+                            ? <CheckCheck className="w-3 h-3 text-amber-500" />
                             : <Check className="w-3 h-3 text-gray-400" />
                         )}
                       </div>
@@ -334,7 +320,7 @@ export default function ServiceClientPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* ─── Input bar ─── */}
+      {/* Input bar */}
       <div className="flex-shrink-0 bg-white border-t border-gray-100 px-2 py-2" style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
         <div className="flex items-center gap-1.5">
           <button className="w-9 h-9 flex items-center justify-center text-gray-400">
@@ -353,14 +339,14 @@ export default function ServiceClientPage() {
             />
             <button
               onClick={() => fileRef.current?.click()}
-              className="text-gray-400 hover:text-[#22c55e] transition-colors"
+              className="text-gray-400"
               data-testid="btn-attach"
             >
               <Paperclip className="w-4 h-4" />
             </button>
             <button
               onClick={() => imageRef.current?.click()}
-              className="text-gray-400 hover:text-[#22c55e] transition-colors"
+              className="text-gray-400"
               data-testid="btn-attach-image"
             >
               <Image className="w-4 h-4" />
@@ -375,7 +361,7 @@ export default function ServiceClientPage() {
             onClick={handleSend}
             disabled={sendMutation.isPending || !text.trim()}
             className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50 transition-opacity flex-shrink-0"
-            style={{ background: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)" }}
+            style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}
           >
             <Send className="w-4 h-4 text-white" />
           </button>

@@ -67,13 +67,14 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #0B0B14 0%, #0D0D1A 100%)" }}>
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-amber-500/30 shadow-lg shadow-amber-500/10 mb-1">
+          <div className="w-20 h-20 rounded-3xl overflow-hidden shadow-lg mb-1">
             <img src="/sinopec-logo.jpeg" alt="SINOPEC" className="w-full h-full object-cover" />
           </div>
-          <div className="w-10 h-10 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
-          <p className="text-amber-500/60 text-sm font-medium">Chargement...</p>
+          <p className="text-amber-500 font-bold text-lg tracking-wide">SINOPEC</p>
+          <div className="w-8 h-8 border-2 border-amber-200 border-t-amber-500 rounded-full animate-spin" />
+          <p className="text-gray-400 text-sm">Chargement...</p>
         </div>
       </div>
     );
@@ -88,7 +89,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-24 bg-gray-50">
       <div key={location} className="animate-page-enter">
         <Switch>
           <Route path="/" component={HomePage} />

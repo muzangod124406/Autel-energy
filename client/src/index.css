@@ -2,54 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── DARK PREMIUM THEME ─────────────────────────────────── */
+/* ── LIGHT PREMIUM THEME ─────────────────────────────────── */
 :root {
-  --button-outline: rgba(245,158,11, .20);
-  --badge-outline: rgba(245,158,11, .10);
+  --button-outline: rgba(245,158,11, .25);
+  --badge-outline: rgba(245,158,11, .12);
   --opaque-button-border-intensity: 8;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .08);
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .06);
 
-  /* Dark navy base */
-  --background: 240 28% 5%;
-  --foreground: 240 15% 93%;
-  --border: 240 18% 14%;
-  --card: 240 24% 8%;
-  --card-foreground: 240 15% 93%;
-  --card-border: 240 18% 12%;
-  --sidebar: 240 24% 7%;
-  --sidebar-foreground: 240 15% 93%;
-  --sidebar-border: 240 18% 12%;
+  /* Light base */
+  --background: 220 20% 97%;
+  --foreground: 220 20% 12%;
+  --border: 220 13% 91%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 20% 12%;
+  --card-border: 220 13% 92%;
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 220 20% 12%;
+  --sidebar-border: 220 13% 90%;
 
   /* Gold primary */
   --primary: 38 93% 51%;
-  --primary-foreground: 240 28% 5%;
+  --primary-foreground: 0 0% 0%;
   --sidebar-primary: 38 93% 51%;
-  --sidebar-primary-foreground: 240 28% 5%;
-  --sidebar-primary-border: hsl(38 93% 45%);
-  --sidebar-accent: 240 20% 12%;
-  --sidebar-accent-foreground: 240 15% 80%;
-  --sidebar-accent-border: hsl(240 20% 16%);
+  --sidebar-primary-foreground: 0 0% 0%;
+  --sidebar-primary-border: hsl(38 93% 43%);
+  --sidebar-accent: 220 20% 95%;
+  --sidebar-accent-foreground: 220 20% 25%;
+  --sidebar-accent-border: hsl(220 13% 88%);
   --sidebar-ring: 38 93% 51%;
 
-  --popover: 240 24% 9%;
-  --popover-foreground: 240 15% 93%;
-  --popover-border: 240 18% 14%;
-  --secondary: 240 20% 13%;
-  --secondary-foreground: 240 15% 93%;
-  --muted: 240 18% 16%;
-  --muted-foreground: 240 12% 58%;
-  --accent: 240 20% 14%;
-  --accent-foreground: 240 15% 93%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 20% 12%;
+  --popover-border: 220 13% 91%;
+  --secondary: 220 14% 95%;
+  --secondary-foreground: 220 20% 25%;
+  --muted: 220 14% 94%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 220 14% 93%;
+  --accent-foreground: 220 20% 12%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
-  --input: 240 18% 20%;
+  --input: 220 13% 91%;
   --ring: 38 93% 51%;
 
-  --chart-1: 38 93% 55%;
+  --chart-1: 38 93% 51%;
   --chart-2: 25 85% 55%;
-  --chart-3: 185 70% 50%;
-  --chart-4: 265 65% 60%;
+  --chart-3: 185 70% 42%;
+  --chart-4: 265 65% 58%;
   --chart-5: 340 75% 55%;
 
   --font-sans: 'Poppins', sans-serif;
@@ -57,47 +57,42 @@
   --font-mono: Menlo, monospace;
   --radius: .75rem;
 
-  --shadow-2xs: 0px 2px 8px 0px hsl(240 28% 3% / 0.40);
-  --shadow-xs:  0px 2px 8px 0px hsl(240 28% 3% / 0.50);
-  --shadow-sm:  0px 4px 12px 0px hsl(240 28% 3% / 0.50);
-  --shadow:     0px 4px 16px 0px hsl(240 28% 3% / 0.55);
-  --shadow-md:  0px 6px 20px 0px hsl(240 28% 3% / 0.60);
-  --shadow-lg:  0px 8px 28px 0px hsl(240 28% 3% / 0.65);
-  --shadow-xl:  0px 12px 36px 0px hsl(240 28% 3% / 0.70);
-  --shadow-2xl: 0px 20px 48px 0px hsl(240 28% 3% / 0.75);
+  --shadow-2xs: 0px 1px 3px 0px rgba(0,0,0,0.06);
+  --shadow-xs:  0px 1px 4px 0px rgba(0,0,0,0.08);
+  --shadow-sm:  0px 2px 8px 0px rgba(0,0,0,0.08);
+  --shadow:     0px 4px 12px 0px rgba(0,0,0,0.10);
+  --shadow-md:  0px 4px 16px 0px rgba(0,0,0,0.12);
+  --shadow-lg:  0px 8px 24px 0px rgba(0,0,0,0.12);
+  --shadow-xl:  0px 12px 32px 0px rgba(0,0,0,0.14);
+  --shadow-2xl: 0px 20px 48px 0px rgba(0,0,0,0.16);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
   --primary-border: hsl(38 93% 43%);
-  --secondary-border: hsl(240 20% 17%);
-  --muted-border: hsl(240 18% 20%);
-  --accent-border: hsl(240 20% 18%);
+  --secondary-border: hsl(220 13% 87%);
+  --muted-border: hsl(220 13% 89%);
+  --accent-border: hsl(220 13% 88%);
   --destructive-border: hsl(0 72% 44%);
 }
 
 .dark {
-  --button-outline: rgba(245,158,11, .18);
-  --badge-outline: rgba(245,158,11, .08);
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
-  --background: 240 28% 5%;
-  --foreground: 240 15% 93%;
-  --border: 240 18% 14%;
-  --card: 240 24% 8%;
-  --card-foreground: 240 15% 93%;
-  --card-border: 240 18% 12%;
+  --background: 220 20% 97%;
+  --foreground: 220 20% 12%;
+  --border: 220 13% 91%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 20% 12%;
+  --card-border: 220 13% 92%;
   --primary: 38 93% 51%;
-  --primary-foreground: 240 28% 5%;
-  --secondary: 240 20% 13%;
-  --secondary-foreground: 240 15% 93%;
-  --muted: 240 18% 16%;
-  --muted-foreground: 240 12% 58%;
-  --accent: 240 20% 14%;
-  --accent-foreground: 240 15% 93%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 220 14% 95%;
+  --secondary-foreground: 220 20% 25%;
+  --muted: 220 14% 94%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 220 14% 93%;
+  --accent-foreground: 220 20% 12%;
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 98%;
-  --input: 240 18% 20%;
+  --input: 220 13% 91%;
   --ring: 38 93% 51%;
 }
 
@@ -108,12 +103,12 @@
 
 /* ── Gold glow on focus ─────────────────────────────────── */
 input:focus, textarea:focus {
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 /* ── Button press ───────────────────────────────────────── */
-button:active:not(:disabled) { opacity: 0.75; }
+button:active:not(:disabled) { opacity: 0.78; }
 
 /* ── Elevation system ───────────────────────────────────── */
 @layer utilities {
@@ -205,7 +200,7 @@ button:active:not(:disabled) { opacity: 0.75; }
   100% { background-position: 400px 0; }
 }
 .animate-shimmer {
-  background: linear-gradient(90deg, #1a1a2a 25%, #222235 50%, #1a1a2a 75%);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
 }

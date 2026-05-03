@@ -14,12 +14,11 @@ export default function OrdersPage() {
   const totalDaily = active.reduce((sum: number, inv: any) => sum + inv.dailyGain, 0);
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-10">
+    <div className="min-h-screen bg-gray-50 pb-10">
 
-      {/* ── Header vert ─────────────────────────── */}
-      <div className="bg-[#22c55e] px-4 pt-8 pb-6">
-
-        <div className="flex items-center gap-3 mb-6">
+      {/* Header gold */}
+      <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }} className="px-4 pt-8 pb-6">
+        <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => navigate("/account")}
             data-testid="button-back-orders"
@@ -30,7 +29,6 @@ export default function OrdersPage() {
           <h1 className="text-white font-bold text-xl">Mes Produits</h1>
         </div>
 
-        {/* Stats */}
         <div className="flex items-center">
           <div className="flex-1">
             <p className="text-white/70 text-xs mb-0.5">Sortie quotidienne</p>
@@ -44,12 +42,12 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* ── Cartes produits ─────────────────────── */}
+      {/* Products */}
       <div className="px-4 mt-4 space-y-3">
         {isLoading ? (
           <>
             {[1, 2].map(i => (
-              <div key={i} className="bg-white rounded-2xl h-44 animate-pulse shadow-sm" />
+              <div key={i} className="bg-white rounded-2xl h-44 animate-pulse shadow-sm border border-gray-100" />
             ))}
           </>
         ) : list.length === 0 ? (
@@ -62,26 +60,21 @@ export default function OrdersPage() {
               : `SINOPEC S${inv.vipLevel}`;
 
             return (
-              <div key={inv.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+              <div key={inv.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                 <div className="flex gap-3 p-3">
-                  {/* Image */}
                   <img
                     src={autelImg}
                     alt={planName}
                     className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
                   />
-
-                  {/* Infos */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
                       <p className="font-bold text-gray-900 text-sm">{planName}</p>
-                      <span className={`text-xs font-bold ${isActive ? "text-[#22c55e]" : "text-gray-400"}`}>
+                      <span className={`text-xs font-bold ${isActive ? "text-emerald-600" : "text-gray-400"}`}>
                         {isActive ? "Actif" : "Terminé"}
                       </span>
                     </div>
                     <p className="text-gray-400 text-xs mb-3">Prix: {formatCFA(inv.amount)}</p>
-
-                    {/* 3 stats */}
                     <div className="flex text-center">
                       <div className="flex-1">
                         <p className="text-gray-400 text-[10px]">Cycle</p>
@@ -98,12 +91,11 @@ export default function OrdersPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Bouton */}
                 <button
                   onClick={() => navigate("/invest")}
                   data-testid={`button-investir-plus-${inv.id}`}
-                  className="w-full bg-[#22c55e] text-white font-bold text-sm py-3 text-center"
+                  className="w-full text-black font-bold text-sm py-3 text-center"
+                  style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
                 >
                   Investir plus
                 </button>
