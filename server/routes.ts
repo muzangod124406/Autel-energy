@@ -96,10 +96,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     },
   });
 
-  // Limite stricte pour l'authentification : 15 tentatives / 15 min par IP
+  // Limite pour l'authentification : 100 tentatives / 15 min par IP
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 15,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
     message: { message: "Trop de tentatives de connexion. Réessayez dans 15 minutes." },
