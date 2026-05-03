@@ -172,7 +172,7 @@ export default function DepositPage() {
   const channelIcon = (type: string) => {
     if (type === "leekpay") return <Zap className="w-4 h-4 text-yellow-500" />;
     if (type === "westpay") return <img src={robotpayIcon} alt="RobotPay" className="w-6 h-6 object-contain" />;
-    return <Link2 className="w-4 h-4 text-green-600" />;
+    return <Link2 className="w-4 h-4 text-amber-600" />;
   };
 
   const channelLabel = (type: string) => {
@@ -261,16 +261,16 @@ export default function DepositPage() {
   const isPending = depositMutation.isPending || westpayMutation.isPending || soleasMutation.isPending || isRedirecting;
 
   return (
-    <div className="bg-white">
-      {/* Green header */}
-      <div className="bg-[#22c55e] px-4 pt-6 pb-6">
-        <div className="flex items-center justify-between mb-1">
-          <button onClick={() => navigate("/")} data-testid="button-back-deposit" className="text-white">
+    <div className="min-h-screen pb-28" style={{ background: "linear-gradient(160deg, #0B0B14 0%, #0D0D1A 100%)" }}>
+      {/* Header */}
+      <div className="px-4 pt-6 pb-5 border-b border-[#252538]" style={{ background: "#12121E" }}>
+        <div className="flex items-center justify-between">
+          <button onClick={() => navigate("/")} data-testid="button-back-deposit" className="text-amber-500">
             <ArrowLeft className="w-6 h-6" />
           </button>
           <h1 className="text-white font-bold text-lg">Recharger</h1>
-          <button onClick={() => navigate("/transactions")} className="text-white text-sm" data-testid="button-deposit-history">
-            Historique &gt;
+          <button onClick={() => navigate("/transactions")} className="text-amber-500 text-sm font-semibold" data-testid="button-deposit-history">
+            Historique
           </button>
         </div>
       </div>
@@ -279,37 +279,37 @@ export default function DepositPage() {
       <div className="px-4 py-5 space-y-0">
 
         {/* Amount section */}
-        <div className="border-b border-gray-100 pb-5 mb-5">
-          <p className="font-bold text-gray-900 text-base mb-4">Montant de la recharge</p>
+        <div className="border-b border-[#252538] pb-5 mb-5">
+          <p className="font-bold text-white text-base mb-4">Montant de la recharge</p>
           <input
             data-testid="input-deposit-amount"
             type="number"
             placeholder="Entrez le montant"
             value={amount}
             onChange={e => setAmount(e.target.value)}
-            className="w-full text-gray-500 text-base outline-none pb-2 border-b border-gray-200 bg-transparent placeholder-gray-300"
+            className="w-full text-white text-base outline-none pb-2 border-b border-[#252538] bg-transparent placeholder-[#555570]"
           />
-          <p className="text-gray-500 text-sm mt-3">
-            Montant minimum de recharge : <span className="font-semibold">{depositMinAmount.toFixed(2)}</span>
+          <p className="text-[#888899] text-sm mt-3">
+            Montant minimum de recharge : <span className="font-semibold text-amber-500">{depositMinAmount.toFixed(2)}</span>
           </p>
         </div>
 
         {/* Méthode de recharge — toujours visible */}
         <div
-          className="flex items-center justify-between py-4 border-b border-gray-100 cursor-pointer"
+          className="flex items-center justify-between py-4 border-b border-[#252538] cursor-pointer"
           onClick={() => { setTempChannelId(selectedChannelId); setShowMethodSheet(true); }}
           data-testid="button-choose-method"
         >
-          <p className="text-gray-700 font-medium text-sm">Méthode de recharge</p>
+          <p className="text-white font-medium text-sm">Méthode de recharge</p>
           <div className="flex items-center gap-1">
-            <span className={`text-sm font-medium ${selectedChannelId ? "text-[#22c55e]" : "text-gray-400"}`}>
+            <span className={`text-sm font-medium ${selectedChannelId ? "text-amber-500" : "text-[#555570]"}`}>
               {selectedChannelId === "__soleaspay__"
                 ? soleasChannelName
                 : selectedChannel
                 ? selectedChannel.name
                 : "Veuillez choisir"}
             </span>
-            <ChevronRight className={`w-4 h-4 ${selectedChannelId ? "text-[#22c55e]" : "text-gray-400"}`} />
+            <ChevronRight className={`w-4 h-4 ${selectedChannelId ? "text-amber-500" : "text-[#555570]"}`} />
           </div>
         </div>
 
@@ -323,7 +323,7 @@ export default function DepositPage() {
                 data-testid="select-soleas-country-inline"
                 value={soleasCountry}
                 onChange={e => { setSoleasCountry(e.target.value); setSoleasOperator(""); }}
-                className={`w-full border rounded-xl py-3 px-4 text-sm outline-none bg-white transition-colors ${soleasCountry ? "border-[#22c55e] text-gray-900" : "border-gray-200 text-gray-400"}`}
+                className={`w-full border rounded-xl py-3 px-4 text-sm outline-none bg-white transition-colors ${soleasCountry ? "border-amber-500 text-gray-900" : "border-gray-200 text-gray-400"}`}
               >
                 <option value="">Sélectionner un pays</option>
                 {countriesList.filter((c: any) => c.isActive).map((c: any) => (
@@ -348,7 +348,7 @@ export default function DepositPage() {
                         onClick={() => setSoleasOperator(op)}
                         className={`py-3 px-3 rounded-xl border text-sm font-medium transition-all ${
                           soleasOperator === op
-                            ? "border-green-500 bg-green-50 text-green-700"
+                            ? "border-amber-500 bg-amber-500/10 text-amber-600"
                             : "border-gray-200 text-gray-700"
                         }`}
                       >
@@ -370,7 +370,7 @@ export default function DepositPage() {
                   placeholder="Ex: 0701234567"
                   value={soleasPhone}
                   onChange={e => setSoleasPhone(e.target.value)}
-                  className={`w-full border rounded-xl py-3 px-4 text-sm outline-none bg-white transition-colors ${soleasPhone ? "border-[#22c55e]" : "border-gray-200"}`}
+                  className={`w-full border rounded-xl py-3 px-4 text-sm outline-none bg-white transition-colors ${soleasPhone ? "border-amber-500" : "border-gray-200"}`}
                 />
               </div>
             )}
@@ -382,7 +382,7 @@ export default function DepositPage() {
             data-testid="button-deposit-now"
             onClick={handleRecharge}
             disabled={isPending}
-            className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-60"
+            className="w-full py-4 bg-amber-500 text-white font-bold rounded-xl text-base disabled:opacity-60"
           >
             {isRedirecting ? "Redirection..." : isPending ? "En cours..." : "Recharger"}
           </button>
@@ -390,8 +390,8 @@ export default function DepositPage() {
 
         {/* Instructions */}
         <div className="pt-6">
-          <p className="font-bold text-gray-900 text-base mb-3">Instructions de recharge</p>
-          <div className="space-y-2 text-gray-500 text-sm leading-relaxed">
+          <p className="font-bold text-white text-base mb-3">Instructions de recharge</p>
+          <div className="space-y-2 text-[#888899] text-sm leading-relaxed">
             <p>1. Entrez le montant et choisissez votre méthode de recharge</p>
             <p>2. Remplissez vos informations de paiement si demandé</p>
             <p>3. Dépôt traité sous 5 minutes, contactez le service client si nécessaire</p>
@@ -408,47 +408,47 @@ export default function DepositPage() {
         >
           <div className="absolute inset-0 bg-black/50" />
           <div
-            className="relative w-full bg-white rounded-t-3xl flex flex-col modal-zoom-in"
-            style={{ minHeight: "52vh", maxHeight: "75vh" }}
+            className="relative w-full rounded-t-3xl flex flex-col modal-zoom-in"
+            style={{ minHeight: "52vh", maxHeight: "75vh", background: "#12121E" }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 bg-gray-200 rounded-full" />
+              <div className="w-10 h-1 bg-[#252538] rounded-full" />
             </div>
-            <div className="flex-shrink-0 flex items-center justify-between px-5 pt-3 pb-4 border-b border-gray-100">
-              <p className="font-bold text-gray-900 text-base">Méthode de recharge</p>
+            <div className="flex-shrink-0 flex items-center justify-between px-5 pt-3 pb-4 border-b border-[#252538]">
+              <p className="font-bold text-white text-base">Méthode de recharge</p>
               <button
                 onClick={() => { setSelectedChannelId(tempChannelId); setShowMethodSheet(false); }}
                 disabled={!tempChannelId}
-                className="text-[#22c55e] font-bold text-base disabled:text-gray-300"
+                className="text-amber-500 font-bold text-base disabled:text-[#555570]"
                 data-testid="button-confirm-method"
               >
                 Confirmer
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+            <div className="flex-1 overflow-y-auto divide-y divide-[#252538]">
               {(channels as any[]).filter((c: any) => c.type !== "soleaspay").length === 0 && !showSoleasPay ? (
-                <p className="text-center text-gray-400 text-sm py-8">Aucune méthode disponible</p>
+                <p className="text-center text-[#888899] text-sm py-8">Aucune méthode disponible</p>
               ) : (
                 <>
                   {/* SoleasPay virtual channel */}
                   {showSoleasPay && (
                     <div
-                      className={`flex items-center justify-between py-4 px-5 cursor-pointer transition-colors ${tempChannelId === "__soleaspay__" ? "bg-green-50" : "active:bg-gray-50"}`}
+                      className={`flex items-center justify-between py-4 px-5 cursor-pointer transition-colors ${tempChannelId === "__soleaspay__" ? "bg-amber-500/10" : "active:bg-[#1a1a28]"}`}
                       onClick={() => setTempChannelId("__soleaspay__")}
                       data-testid="sheet-channel-soleaspay"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-white border border-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                        <div className="w-9 h-9 bg-[#1a1a28] border border-[#252538] rounded-full flex items-center justify-center overflow-hidden">
                           <img src={robotpayIcon} alt={soleasChannelName} className="w-6 h-6 object-contain" />
                         </div>
                         <div>
-                          <p className={`font-bold text-sm ${tempChannelId === "__soleaspay__" ? "text-[#22c55e]" : "text-gray-900"}`}>{soleasChannelName}</p>
-                          <p className="text-xs text-gray-400">Mobile Money sécurisé</p>
+                          <p className={`font-bold text-sm ${tempChannelId === "__soleaspay__" ? "text-amber-500" : "text-white"}`}>{soleasChannelName}</p>
+                          <p className="text-xs text-[#888899]">Mobile Money sécurisé</p>
                         </div>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === "__soleaspay__" ? "border-[#22c55e]" : "border-gray-300"}`}>
-                        {tempChannelId === "__soleaspay__" && <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />}
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === "__soleaspay__" ? "border-amber-500" : "border-gray-300"}`}>
+                        {tempChannelId === "__soleaspay__" && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
                       </div>
                     </div>
                   )}
@@ -457,21 +457,21 @@ export default function DepositPage() {
                   {(channels as any[]).filter((ch: any) => ch.type !== "soleaspay").map((ch: any) => (
                     <div
                       key={ch.id}
-                      className={`flex items-center justify-between py-4 px-5 cursor-pointer transition-colors ${tempChannelId === ch.id ? "bg-green-50" : "active:bg-gray-50"}`}
+                      className={`flex items-center justify-between py-4 px-5 cursor-pointer transition-colors ${tempChannelId === ch.id ? "bg-amber-500/10" : "active:bg-[#1a1a28]"}`}
                       onClick={() => setTempChannelId(ch.id)}
                       data-testid={`sheet-channel-${ch.id}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-white border border-gray-100 rounded-full flex items-center justify-center">
+                        <div className="w-9 h-9 bg-[#1a1a28] border border-[#252538] rounded-full flex items-center justify-center">
                           {channelIcon(ch.type)}
                         </div>
                         <div>
-                          <p className={`font-bold text-sm ${tempChannelId === ch.id ? "text-[#22c55e]" : "text-gray-900"}`}>{ch.name}</p>
-                          <p className="text-xs text-gray-400">{channelLabel(ch.type)}</p>
+                          <p className={`font-bold text-sm ${tempChannelId === ch.id ? "text-amber-500" : "text-white"}`}>{ch.name}</p>
+                          <p className="text-xs text-[#888899]">{channelLabel(ch.type)}</p>
                         </div>
                       </div>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === ch.id ? "border-[#22c55e]" : "border-gray-300"}`}>
-                        {tempChannelId === ch.id && <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />}
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${tempChannelId === ch.id ? "border-amber-500" : "border-gray-300"}`}>
+                        {tempChannelId === ch.id && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
                       </div>
                     </div>
                   ))}
@@ -485,16 +485,16 @@ export default function DepositPage() {
       {/* Link Payment Form bottom sheet */}
       {showLinkForm && (
         <div className="fixed inset-0 bg-black/60 z-[200] flex items-end">
-          <div className="bg-white w-full rounded-t-3xl flex flex-col" style={{ maxHeight: "92vh" }}>
+          <div className="w-full rounded-t-3xl flex flex-col" style={{ maxHeight: "92vh", background: "#12121E" }}>
             {/* Header fixe */}
-            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
-              <h3 className="font-bold text-base">Informations de paiement</h3>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#252538] flex-shrink-0">
+              <h3 className="font-bold text-white text-base">Informations de paiement</h3>
               <button onClick={() => setShowLinkForm(false)} data-testid="btn-close-link-form"><X className="w-5 h-5" /></button>
             </div>
 
             {/* Corps scrollable */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5" style={{ paddingBottom: "1rem" }}>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[#888899]">
                 Canal: <strong>{selectedChannelId === "__soleaspay__" ? soleasChannelName : selectedChannel?.name}</strong> | Montant: <strong>{parseInt(amount || "0").toLocaleString()} FCFA</strong>
               </p>
 
@@ -503,7 +503,7 @@ export default function DepositPage() {
                 <>
                   {/* Pays */}
                   <div>
-                    <label className="text-xs font-semibold text-gray-700">Pays de paiement</label>
+                    <label className="text-xs font-semibold text-amber-500/70">Pays de paiement</label>
                     <select
                       data-testid="select-soleas-country"
                       value={linkFormData.country}
@@ -523,7 +523,7 @@ export default function DepositPage() {
 
                   {/* Opérateur */}
                   <div>
-                    <label className="text-xs font-semibold text-gray-700">Opérateur Mobile Money</label>
+                    <label className="text-xs font-semibold text-amber-500/70">Opérateur Mobile Money</label>
                     {!linkFormData.country ? (
                       <p className="text-xs text-gray-400 mt-2">Sélectionnez d'abord un pays</p>
                     ) : (soleasOperators as string[]).length === 0 ? (
@@ -538,7 +538,7 @@ export default function DepositPage() {
                             onClick={() => setLinkFormData({ ...linkFormData, paymentMethod: op })}
                             className={`w-full py-3 px-4 rounded-xl border text-sm font-medium text-left transition-all ${
                               linkFormData.paymentMethod === op
-                                ? "border-green-500 bg-green-50 text-green-700"
+                                ? "border-amber-500 bg-amber-500/10 text-amber-600"
                                 : "border-gray-200 text-gray-700"
                             }`}
                           >
@@ -551,7 +551,7 @@ export default function DepositPage() {
 
                   {/* Téléphone */}
                   <div>
-                    <label className="text-xs font-semibold text-gray-700">Numéro de téléphone Mobile Money</label>
+                    <label className="text-xs font-semibold text-amber-500/70">Numéro de téléphone Mobile Money</label>
                     <input
                       data-testid="input-soleas-phone"
                       type="tel"
@@ -571,7 +571,7 @@ export default function DepositPage() {
                     { key: "paymentMethod", label: "Moyen de paiement", placeholder: "Ex: Wave, Orange Money, MTN...", type: "text", testId: "input-link-payment-method" },
                   ].map(f => (
                     <div key={f.key}>
-                      <label className="text-xs font-medium text-gray-600">{f.label}</label>
+                      <label className="text-xs font-medium text-amber-500/70">{f.label}</label>
                       <input
                         data-testid={f.testId}
                         type={f.type}
@@ -583,7 +583,7 @@ export default function DepositPage() {
                     </div>
                   ))}
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Pays</label>
+                    <label className="text-xs font-medium text-amber-500/70">Pays</label>
                     <select
                       data-testid="select-link-country"
                       value={linkFormData.country}
@@ -599,12 +599,12 @@ export default function DepositPage() {
             </div>
 
             {/* Bouton fixe en bas — toujours visible */}
-            <div className="flex-shrink-0 px-5 py-4 bg-white border-t border-gray-100">
+            <div className="flex-shrink-0 px-5 py-4 border-t border-[#252538]">
               <button
                 data-testid="button-link-proceed"
                 onClick={handleLinkDeposit}
                 disabled={depositMutation.isPending || (selectedChannelId === "__soleaspay__" && (!linkFormData.country || !linkFormData.paymentMethod || !linkFormData.phoneNumber))}
-                className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base disabled:opacity-50"
+                className="w-full py-4 font-bold rounded-xl text-base text-black disabled:opacity-50" style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}
               >
                 {depositMutation.isPending ? "En cours..." : "Procéder au paiement →"}
               </button>
@@ -648,7 +648,7 @@ export default function DepositPage() {
             {soleasPendingStatus === "success" && (
               <div className="flex flex-col items-center text-center py-4">
                 <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mb-5">
-                  <svg className="w-10 h-10 text-[#22c55e]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <svg className="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
@@ -658,7 +658,7 @@ export default function DepositPage() {
                 </p>
                 <button
                   onClick={() => { setShowSoleasPending(false); setSoleasPendingStatus("pending"); }}
-                  className="mt-6 w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base"
+                  className="mt-6 w-full py-4 bg-amber-500 text-white font-bold rounded-xl text-base"
                   data-testid="btn-soleas-close-success"
                 >
                   OK

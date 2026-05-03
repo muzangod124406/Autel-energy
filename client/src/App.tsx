@@ -67,10 +67,13 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
-        <div className="text-center text-white">
-          <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
-          <p className="font-semibold">Chargement...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(160deg, #0B0B14 0%, #0D0D1A 100%)" }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-amber-500/30 shadow-lg shadow-amber-500/10 mb-1">
+            <img src="/sinopec-logo.jpeg" alt="SINOPEC" className="w-full h-full object-cover" />
+          </div>
+          <div className="w-10 h-10 border-2 border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+          <p className="text-amber-500/60 text-sm font-medium">Chargement...</p>
         </div>
       </div>
     );

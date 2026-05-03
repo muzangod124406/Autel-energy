@@ -4,7 +4,7 @@ import { INVESTMENT_PLANS, formatCFA } from "@/lib/constants";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Calendar, ChevronRight, X, PackageX } from "lucide-react";
+import { Lock, Calendar, ChevronRight, X, PackageX, TrendingUp } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 
 const fixedPlan = INVESTMENT_PLANS.fix;
@@ -27,13 +27,8 @@ export default function InvestPage() {
   const [buyingProductId, setBuyingProductId] = useState<string | null>(null);
   const [confirmItem, setConfirmItem] = useState<ConfirmItem | null>(null);
 
-  const { data: adminProducts = [], isLoading: loadingProducts } = useQuery<any[]>({
-    queryKey: ["/api/products"],
-  });
-
-  const { data: userInvestments = [] } = useQuery<any[]>({
-    queryKey: ["/api/user/investments"],
-  });
+  const { data: adminProducts = [], isLoading: loadingProducts } = useQuery<any[]>({ queryKey: ["/api/products"] });
+  const { data: userInvestments = [] } = useQuery<any[]>({ queryKey: ["/api/user/investments"] });
 
   const hasActiveFixed = (userInvestments as any[]).some(
     (i: any) => i.status === "active" && i.planType === "fix"
@@ -63,43 +58,18 @@ export default function InvestPage() {
   const openConfirmFixed = (plan: any) => {
     if (!user) return;
     setConfirmItem({
-      type: "fix",
-      name: plan.name,
-      imageUrl: undefined,
-      price: plan.amount,
-      dailyGain: plan.dailyGain,
-      duration: fixedPlan.duration,
-      totalGain: plan.totalGain,
-      payload: {
-        planType: "fix",
-        vipLevel: plan.vip,
-        amount: plan.amount,
-        dailyGain: plan.dailyGain,
-        duration: fixedPlan.duration,
-        totalGain: plan.totalGain,
-      },
+      type: "fix", name: plan.name, imageUrl: undefined,
+      price: plan.amount, dailyGain: plan.dailyGain, duration: fixedPlan.duration, totalGain: plan.totalGain,
+      payload: { planType: "fix", vipLevel: plan.vip, amount: plan.amount, dailyGain: plan.dailyGain, duration: fixedPlan.duration, totalGain: plan.totalGain },
     });
   };
 
   const openConfirmProduct = (product: any) => {
     if (!user) return;
     setConfirmItem({
-      type: "activity",
-      name: product.name,
-      imageUrl: product.imageUrl,
-      price: product.price,
-      dailyGain: product.dailyGain,
-      duration: product.cycleDays,
-      totalGain: product.totalGain,
-      payload: {
-        planType: "activity",
-        vipLevel: 1,
-        amount: product.price,
-        dailyGain: product.dailyGain,
-        duration: product.cycleDays,
-        totalGain: product.totalGain,
-        productId: product.id,
-      },
+      type: "activity", name: product.name, imageUrl: product.imageUrl,
+      price: product.price, dailyGain: product.dailyGain, duration: product.cycleDays, totalGain: product.totalGain,
+      payload: { planType: "activity", vipLevel: 1, amount: product.price, dailyGain: product.dailyGain, duration: product.cycleDays, totalGain: product.totalGain, productId: product.id },
     });
     setBuyingProductId(product.id);
   };
@@ -119,44 +89,40 @@ export default function InvestPage() {
     return true;
   });
 
-  return (
-    <div className="bg-white min-h-screen pb-24">
+  const cardBase = "rounded-2xl overflow-hidden border border-[#252538] bg-[#12121E]";
+  const rowLabel = "text-[#888899] text-xs";
+  const rowValue = "text-white font-semibold text-xs";
 
-      {/* ── Bannière titre ─────────────────────── */}
-      <div className="mx-4 mt-4 mb-1 rounded-2xl overflow-hidden relative" style={{ background: "linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%)", minHeight: 86, fontFamily: "'Poppins', sans-serif" }}>
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 8px)", backgroundSize: "12px 12px" }} />
-        <div className="absolute top-2 right-3 w-10 h-10 rounded-lg bg-green-300 opacity-50 rotate-12" />
-        <div className="absolute bottom-2 right-8 w-6 h-6 rounded bg-emerald-200 opacity-60 -rotate-6" />
-        <div className="absolute top-4 right-14 w-5 h-5 rounded bg-white opacity-20 rotate-3" />
+  return (
+    <div className="min-h-screen pb-28" style={{ background: "linear-gradient(160deg, #0B0B14 0%, #0D0D1A 100%)" }}>
+
+      {/* ── Bannière titre ─────────────────────────── */}
+      <div className="mx-4 mt-4 mb-1 rounded-2xl overflow-hidden relative border border-amber-500/20"
+        style={{ background: "linear-gradient(135deg, #1a1000 0%, #2a1800 50%, #201200 100%)", minHeight: 86 }}>
+        <div className="absolute inset-0 opacity-8"
+          style={{ backgroundImage: "repeating-linear-gradient(45deg,#F59E0B 0,#F59E0B 1px,transparent 0,transparent 8px)", backgroundSize: "12px 12px" }} />
+        <div className="absolute -right-4 top-1/2 -translate-y-1/2 opacity-10">
+          <TrendingUp className="w-24 h-24 text-amber-500" />
+        </div>
         <div className="relative px-5 py-4">
-          <p className="text-white/80 font-semibold text-sm italic leading-tight drop-shadow">SINOPEC</p>
-          <p className="text-white font-extrabold text-2xl italic leading-tight drop-shadow tracking-wide">Liste des produits</p>
-          <p className="text-white/90 font-bold text-lg italic leading-tight drop-shadow">d'investissement</p>
+          <p className="text-amber-500/60 font-semibold text-xs uppercase tracking-widest">SINOPEC</p>
+          <p className="text-white font-extrabold text-2xl leading-tight">Liste des produits</p>
+          <p className="text-amber-400/80 font-bold text-lg leading-tight">d'investissement</p>
         </div>
       </div>
 
       {/* Tab switcher */}
       <div className="flex px-4 gap-3 pt-5 mb-4">
-        <button
-          data-testid="tab-fix"
-          onClick={() => setActiveTab("fix")}
+        <button data-testid="tab-fix" onClick={() => setActiveTab("fix")}
           className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${
-            activeTab === "fix"
-              ? "bg-[#22c55e] text-white shadow-sm"
-              : "bg-gray-100 text-gray-500"
-          }`}
-        >
+            activeTab === "fix" ? "bg-amber-500 text-black shadow-md shadow-amber-500/20" : "bg-[#1a1a28] text-[#888899] border border-[#252538]"
+          }`}>
           Fixe
         </button>
-        <button
-          data-testid="tab-activities"
-          onClick={() => setActiveTab("activities")}
+        <button data-testid="tab-activities" onClick={() => setActiveTab("activities")}
           className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${
-            activeTab === "activities"
-              ? "bg-[#22c55e] text-white shadow-sm"
-              : "bg-gray-100 text-gray-500"
-          }`}
-        >
+            activeTab === "activities" ? "bg-amber-500 text-black shadow-md shadow-amber-500/20" : "bg-[#1a1a28] text-[#888899] border border-[#252538]"
+          }`}>
           Activités
         </button>
       </div>
@@ -165,46 +131,39 @@ export default function InvestPage() {
       {activeTab === "fix" && (
         <div className="px-3 space-y-3">
           {fixedPlan.plans.map((plan) => (
-            <div
-              key={plan.vip}
-              data-testid={`plan-card-${plan.vip}`}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-            >
+            <div key={plan.vip} data-testid={`plan-card-${plan.vip}`} className={cardBase}>
               <div className="flex gap-3 p-3 pb-2">
                 <div className="relative flex-shrink-0">
-                  <img
-                    src="/sinopec-logo.jpeg"
-                    alt={plan.name}
-                    className="w-24 h-24 rounded-xl object-cover"
-                  />
-                  <span className="absolute top-1.5 left-1.5 bg-[#f97316] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                  <img src="/sinopec-logo.jpeg" alt={plan.name} className="w-24 h-24 rounded-xl object-cover" />
+                  <span className="absolute top-1.5 left-1.5 bg-amber-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-md">
                     120jours
                   </span>
                 </div>
-                <div className="flex-1 pt-0.5">
-                  <p className="font-bold text-gray-900 text-sm mb-1">{plan.name}</p>
-                  <p className="text-gray-700 text-xs">
-                    Prix:<span className="font-semibold"> {plan.amount.toLocaleString("fr-FR")}.00XAF</span>
-                  </p>
-                  <p className="text-gray-700 text-xs">
-                    Revenu journalier:<span className="font-semibold"> {plan.dailyGain.toLocaleString("fr-FR")}.00XAF</span>
-                  </p>
-                  <p className="text-gray-700 text-xs">
-                    Revenu total:<span className="font-semibold"> {plan.totalGain.toLocaleString("fr-FR")}.00XAF</span>
-                  </p>
+                <div className="flex-1 pt-0.5 space-y-1.5">
+                  <p className="font-bold text-white text-sm">{plan.name}</p>
+                  <div className="flex justify-between">
+                    <span className={rowLabel}>Prix:</span>
+                    <span className={rowValue}>{plan.amount.toLocaleString("fr-FR")}.00 XAF</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={rowLabel}>Revenu/jour:</span>
+                    <span className={rowValue}>{plan.dailyGain.toLocaleString("fr-FR")}.00 XAF</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className={rowLabel}>Revenu total:</span>
+                    <span className="text-amber-400 font-bold text-xs">{plan.totalGain.toLocaleString("fr-FR")}.00 XAF</span>
+                  </div>
                 </div>
               </div>
-              <div className="border-t border-gray-100 mx-3" />
-              <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
-                Gains bloqués pendant 120 jours. À la fin du cycle, <span className="font-semibold text-[#22c55e] not-italic">{plan.totalGain.toLocaleString("fr-FR")} FCFA</span> sont crédités sur votre solde retirable.
+              <div className="border-t border-[#252538] mx-3" />
+              <p className="text-[#888899] text-[11px] italic px-3 py-1.5">
+                Gains bloqués 120 jours. À la fin :{" "}
+                <span className="font-semibold text-amber-400 not-italic">{plan.totalGain.toLocaleString("fr-FR")} FCFA</span> sur solde retirable.
               </p>
               <div className="px-3 pb-3">
-                <button
-                  data-testid={`invest-vip-${plan.vip}`}
-                  onClick={() => openConfirmFixed(plan)}
-                  disabled={investMutation.isPending}
-                  className="w-full py-3 bg-[#22c55e] text-white font-bold rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-1"
-                >
+                <button data-testid={`invest-vip-${plan.vip}`} onClick={() => openConfirmFixed(plan)} disabled={investMutation.isPending}
+                  className="w-full py-3 font-bold rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-1 text-black"
+                  style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}>
                   ACHETER <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -213,20 +172,19 @@ export default function InvestPage() {
         </div>
       )}
 
-      {/* ── ACTIVITIES ──────────────────────────────── */}
+      {/* ── ACTIVITIES ───────────────────────────────── */}
       {activeTab === "activities" && (
         <div className="px-3 space-y-3">
-
           {loadingProducts && (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-3 animate-pulse">
+                <div key={i} className={`${cardBase} p-3 animate-pulse`}>
                   <div className="flex gap-3">
-                    <div className="w-24 h-24 bg-gray-200 rounded-xl" />
+                    <div className="w-24 h-24 bg-[#1a1a28] rounded-xl" />
                     <div className="flex-1 space-y-2 pt-1">
-                      <div className="h-3 bg-gray-200 rounded w-3/4" />
-                      <div className="h-2.5 bg-gray-100 rounded w-1/2" />
-                      <div className="h-2.5 bg-gray-100 rounded w-2/3" />
+                      <div className="h-3 bg-[#1a1a28] rounded w-3/4" />
+                      <div className="h-2.5 bg-[#252538] rounded w-1/2" />
+                      <div className="h-2.5 bg-[#252538] rounded w-2/3" />
                     </div>
                   </div>
                 </div>
@@ -236,82 +194,75 @@ export default function InvestPage() {
 
           {!loadingProducts && availableProducts.length === 0 && (
             <div className="px-4">
-              <EmptyState
-                text="Aucun produit disponible"
-                subtext="Les produits d'activité ne sont pas disponibles aujourd'hui, revenez plus tard."
-              />
+              <EmptyState text="Aucun produit disponible"
+                subtext="Les produits d'activité ne sont pas disponibles aujourd'hui, revenez plus tard." />
             </div>
           )}
 
           {!loadingProducts && availableProducts.map((product: any) => {
             const isLaunched = !product.launchDate || new Date(product.launchDate) <= new Date();
             const isBuying = investMutation.isPending && buyingProductId === product.id;
-            // Vérifier si l'utilisateur a acheté une activité depuis le dernier lancement
             const sessionStart = product.launchDate ? new Date(product.launchDate) : new Date(product.createdAt);
             const alreadyOwned = (userInvestments as any[]).some(
               (i: any) => i.productId === product.id && i.planType === "activity" && new Date(i.startDate) >= sessionStart
             );
-
             return (
-              <div
-                key={product.id}
-                data-testid={`product-card-${product.id}`}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-              >
+              <div key={product.id} data-testid={`product-card-${product.id}`} className={cardBase}>
                 <div className="flex gap-3 p-3 pb-2">
                   <div className="relative flex-shrink-0">
                     {product.imageUrl ? (
                       <img src={product.imageUrl} alt={product.name} className="w-24 h-24 rounded-xl object-cover" />
                     ) : (
-                      <div className="w-24 h-24 rounded-xl bg-gray-100 flex items-center justify-center">
-                        <PackageX className="w-8 h-8 text-gray-300" />
+                      <div className="w-24 h-24 rounded-xl bg-[#1a1a28] flex items-center justify-center">
+                        <PackageX className="w-8 h-8 text-[#555570]" />
                       </div>
                     )}
-                    <span className="absolute top-1.5 left-1.5 bg-[#f97316] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                    <span className="absolute top-1.5 left-1.5 bg-amber-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-md">
                       {product.cycleDays}jours
                     </span>
                     {alreadyOwned && (
-                      <span className="absolute top-1.5 right-1.5 bg-green-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                      <span className="absolute top-1.5 right-1.5 bg-emerald-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
                         ✓ Acheté
                       </span>
                     )}
                   </div>
-                  <div className="flex-1 pt-0.5">
-                    <p className="font-bold text-gray-900 text-sm mb-1">{product.name}</p>
-                    <p className="text-gray-700 text-xs">
-                      Prix:<span className="font-semibold"> {product.price.toLocaleString("fr-FR")}.00XAF</span>
-                    </p>
-                    <p className="text-gray-700 text-xs">
-                      Revenu journalier:<span className="font-semibold"> {product.dailyGain.toLocaleString("fr-FR")}.00XAF</span>
-                    </p>
-                    <p className="text-gray-700 text-xs">
-                      Revenu total:<span className="font-semibold"> {product.totalGain.toLocaleString("fr-FR")}.00XAF</span>
-                    </p>
+                  <div className="flex-1 pt-0.5 space-y-1.5">
+                    <p className="font-bold text-white text-sm">{product.name}</p>
+                    <div className="flex justify-between">
+                      <span className={rowLabel}>Prix:</span>
+                      <span className={rowValue}>{product.price.toLocaleString("fr-FR")}.00 XAF</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={rowLabel}>Revenu/jour:</span>
+                      <span className={rowValue}>{product.dailyGain.toLocaleString("fr-FR")}.00 XAF</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className={rowLabel}>Revenu total:</span>
+                      <span className="text-amber-400 font-bold text-xs">{product.totalGain.toLocaleString("fr-FR")}.00 XAF</span>
+                    </div>
                   </div>
                 </div>
-                <div className="border-t border-gray-100 mx-3" />
-                <p className="text-gray-400 text-[11px] italic px-3 py-1.5">
+                <div className="border-t border-[#252538] mx-3" />
+                <p className="text-[#888899] text-[11px] italic px-3 py-1.5">
                   {product.description
                     ? product.description
-                    : <>Gains crédités à la fin du cycle de {product.cycleDays} jours. Gain total : <span className="font-semibold text-[#22c55e] not-italic">{product.totalGain.toLocaleString("fr-FR")} FCFA</span> sur votre solde retirable.</>}
+                    : <>Gains crédités fin de cycle {product.cycleDays}j. Total : <span className="font-semibold text-amber-400 not-italic">{product.totalGain.toLocaleString("fr-FR")} FCFA</span>.</>}
                 </p>
                 <div className="px-3 pb-3">
                   {!isLaunched ? (
-                    <div className="w-full py-3 bg-gray-100 rounded-xl text-center text-xs text-gray-500 font-medium">
+                    <div className="w-full py-3 bg-[#1a1a28] rounded-xl text-center text-xs text-[#888899] font-medium border border-[#252538]">
                       <Calendar className="w-3 h-3 inline mr-1" />
                       Disponible le {new Date(product.launchDate).toLocaleDateString("fr-FR")}
                     </div>
                   ) : !hasActiveFixed ? (
-                    <div className="w-full py-3 bg-orange-50 border border-orange-200 rounded-xl text-center text-xs text-orange-600 font-medium flex items-center justify-center gap-1">
+                    <div className="w-full py-3 bg-amber-500/5 border border-amber-500/20 rounded-xl text-center text-xs text-amber-400 font-medium flex items-center justify-center gap-1">
                       <Lock className="w-3 h-3" /> Plan Fixe 120J requis
                     </div>
                   ) : (
-                    <button
-                      data-testid={`buy-product-${product.id}`}
-                      onClick={() => openConfirmProduct(product)}
+                    <button data-testid={`buy-product-${product.id}`} onClick={() => openConfirmProduct(product)}
                       disabled={isBuying || investMutation.isPending}
-                      className="w-full py-3 bg-[#22c55e] text-white font-bold rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-1"
-                    >
+                      className="w-full py-3 font-bold rounded-xl text-sm disabled:opacity-60 flex items-center justify-center gap-1 text-black"
+                      style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}>
                       {isBuying ? "Achat en cours..." : (<>ACHETER <ChevronRight className="w-4 h-4" /></>)}
                     </button>
                   )}
@@ -324,69 +275,57 @@ export default function InvestPage() {
 
       {/* ── MODAL DE CONFIRMATION ────────────────────── */}
       {confirmItem && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 px-4 pb-44">
-          <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl max-h-[80vh] overflow-y-auto">
-            {/* Image produit */}
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/75 px-4 pb-44 overlay-fade-in">
+          <div className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl border border-amber-500/20 max-h-[80vh] overflow-y-auto modal-zoom-in"
+            style={{ background: "linear-gradient(160deg, #12121E 0%, #1a1a2a 100%)" }}>
             <div className="relative w-full h-44">
               {confirmItem.imageUrl ? (
                 <img src={confirmItem.imageUrl} alt={confirmItem.name} className="w-full h-full object-cover" />
               ) : (
                 <img src="/sinopec-logo.jpeg" alt={confirmItem.name} className="w-full h-full object-cover" />
               )}
-              <button
-                data-testid="modal-close"
+              <button data-testid="modal-close"
                 onClick={() => { setConfirmItem(null); setBuyingProductId(null); }}
-                className="absolute top-3 right-3 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center"
-              >
+                className="absolute top-3 right-3 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center border border-white/20">
                 <X className="w-4 h-4 text-white" />
               </button>
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 to-transparent h-16" />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent h-16" />
             </div>
 
-            {/* Prix */}
-            <div className="bg-white pt-3 pb-1 text-center">
-              <p className="text-[#22c55e] font-black text-3xl tracking-tight">
+            <div className="pt-4 pb-2 text-center">
+              <p className="text-amber-400 font-black text-3xl tracking-tight">
                 FCFA {confirmItem.price.toLocaleString("fr-FR")}
               </p>
             </div>
 
-            {/* Bloc vert */}
-            <div className="bg-[#22c55e] mx-0 px-5 pt-3 pb-5">
-              <div className="space-y-2 mb-5">
+            <div className="mx-4 mb-4 rounded-2xl overflow-hidden border border-amber-500/20"
+              style={{ background: "linear-gradient(135deg, #1a1000 0%, #2a1800 100%)" }}>
+              <div className="px-5 pt-4 pb-3 space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-white/90 text-sm">Durée du cycle :</span>
+                  <span className="text-amber-400/70 text-sm">Durée du cycle :</span>
                   <span className="text-white font-bold text-sm">{confirmItem.duration} jours</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/90 text-sm">Gain/jour (indicatif) :</span>
+                  <span className="text-amber-400/70 text-sm">Gain/jour :</span>
                   <span className="text-white font-bold text-sm">FCFA {confirmItem.dailyGain.toLocaleString("fr-FR")}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/90 text-sm">Gain total à recevoir :</span>
-                  <span className="text-white font-bold text-sm">FCFA {confirmItem.totalGain.toLocaleString("fr-FR")}</span>
+                  <span className="text-amber-400/70 text-sm">Gain total :</span>
+                  <span className="text-amber-400 font-bold text-sm">FCFA {confirmItem.totalGain.toLocaleString("fr-FR")}</span>
                 </div>
-                <div className="border-t border-white/30 pt-2">
-                  <p className="text-white/80 text-xs text-center">
-                    ⏳ Gains crédités à la fin du cycle sur votre solde retirable
-                  </p>
+                <div className="border-t border-amber-500/20 pt-2">
+                  <p className="text-amber-400/50 text-xs text-center">⏳ Gains crédités à la fin du cycle sur solde retirable</p>
                 </div>
               </div>
-
-              {/* Boutons */}
-              <div className="flex gap-3">
-                <button
-                  data-testid="modal-cancel"
+              <div className="flex gap-3 px-5 pb-5 pt-2">
+                <button data-testid="modal-cancel"
                   onClick={() => { setConfirmItem(null); setBuyingProductId(null); }}
-                  className="flex-1 py-3 bg-gray-400 text-white font-bold rounded-2xl text-sm"
-                >
+                  className="flex-1 py-3 bg-[#1a1a28] border border-[#252538] text-[#888899] font-bold rounded-2xl text-sm">
                   Annuler
                 </button>
-                <button
-                  data-testid="modal-confirm"
-                  onClick={handleConfirm}
-                  disabled={investMutation.isPending}
-                  className="flex-1 py-3 bg-white text-[#22c55e] font-bold rounded-2xl text-sm disabled:opacity-60"
-                >
+                <button data-testid="modal-confirm" onClick={handleConfirm} disabled={investMutation.isPending}
+                  className="flex-1 py-3 font-bold rounded-2xl text-sm text-black disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}>
                   {investMutation.isPending ? "..." : "Confirmer"}
                 </button>
               </div>

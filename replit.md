@@ -15,7 +15,7 @@ Preferred communication style: Simple, everyday language.
 - **Routing**: Wouter (lightweight client-side router, not React Router)
 - **State Management**: TanStack React Query for server state; React Context for auth state (`AuthProvider` in `client/src/lib/auth.tsx`)
 - **UI Components**: shadcn/ui (new-york style) built on Radix UI primitives with Tailwind CSS
-- **Styling**: Tailwind CSS with CSS variables for theming (light/dark mode support), custom design tokens defined in `client/src/index.css`
+- **Styling**: Tailwind CSS with CSS variables for theming. **Dark premium theme** — fond `#0B0B14`, accent or/ambre `#F59E0B`, police Poppins, glassmorphism cards. Custom design tokens in `client/src/index.css`
 - **Path aliases**: `@/` maps to `client/src/`, `@shared/` maps to `shared/`
 - **Key pages**: auth, home, invest, invite (referrals), billet (tickets/support), account, game (spin wheel), deposit, withdraw, bank-card, settings, telegram, orders, transactions, balance, about, admin
 

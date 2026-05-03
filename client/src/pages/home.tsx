@@ -3,13 +3,8 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import rechargeIcon from "@assets/recharge_(1)_1773608231085.png";
-import withdrawIcon from "@assets/withdraw_1773608230743.png";
-import blogIcon from "@assets/blog_(1)_1773608231117.png";
-import telegramIcon from "@assets/telegram_(1)_1773608231149.png";
-import walletIcon from "@assets/3930266_1773614141608.png";
+import { ArrowDownToLine, ArrowUpFromLine, FileText, Headset, Wallet, Gift, TrendingUp, Zap } from "lucide-react";
 import rewardIcon from "@assets/reward_icon_1773608863536.png";
-import goBtn from "@assets/cjbtn_1774197553367.png";
 
 export default function HomePage() {
   const { user, refreshUser } = useAuth();
@@ -23,7 +18,7 @@ export default function HomePage() {
     onSuccess: async () => {
       await refreshUser();
       qc.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      toast({ title: "Bonus de connexion : 50 FCFA crédité sur votre solde de retrait !" });
+      toast({ title: "Bonus de connexion : 50 FCFA crédité !" });
     },
     onError: (err: any) => {
       try {
@@ -31,16 +26,13 @@ export default function HomePage() {
         const jsonStr = raw.substring(raw.indexOf("{"));
         const data = JSON.parse(jsonStr);
         toast({ title: data?.message || "Bonus déjà réclamé aujourd'hui" });
-      } catch {
-        toast({ title: "Bonus déjà réclamé aujourd'hui" });
-      }
+      } catch { toast({ title: "Bonus déjà réclamé aujourd'hui" }); }
     },
   });
 
   const todayClaimed = (() => {
     if (!user?.lastDailyBonus) return false;
-    const diffMs = Date.now() - new Date(user.lastDailyBonus).getTime();
-    return diffMs < 24 * 60 * 60 * 1000;
+    return Date.now() - new Date(user.lastDailyBonus).getTime() < 24 * 60 * 60 * 1000;
   })();
 
   if (!user) return null;
@@ -51,107 +43,136 @@ export default function HomePage() {
   };
 
   const ACTION_BUTTONS = [
-    { label: "Recharger", icon: rechargeIcon, onClick: () => navigate("/deposit"), testId: "button-recharge" },
-    { label: "Retrait", icon: withdrawIcon, onClick: () => navigate("/withdraw"), testId: "button-withdraw" },
-    { label: "Billet", icon: blogIcon, onClick: () => navigate("/billet"), testId: "button-billet" },
-    { label: "Service client", icon: telegramIcon, onClick: () => navigate("/service-client"), testId: "button-service-client" },
+    { label: "Recharger", icon: <ArrowDownToLine className="w-6 h-6" />, onClick: () => navigate("/deposit"), testId: "button-recharge", color: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/20 text-emerald-400" },
+    { label: "Retrait", icon: <ArrowUpFromLine className="w-6 h-6" />, onClick: () => navigate("/withdraw"), testId: "button-withdraw", color: "from-amber-500/20 to-amber-600/10 border-amber-500/20 text-amber-400" },
+    { label: "Billet", icon: <FileText className="w-6 h-6" />, onClick: () => navigate("/billet"), testId: "button-billet", color: "from-blue-500/20 to-blue-600/10 border-blue-500/20 text-blue-400" },
+    { label: "Support", icon: <Headset className="w-6 h-6" />, onClick: () => navigate("/service-client"), testId: "button-service-client", color: "from-purple-500/20 to-purple-600/10 border-purple-500/20 text-purple-400" },
   ];
 
   return (
-    <div className="min-h-screen bg-[#22c55e] pb-24">
-      <div className="px-4 pt-6 pb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-14 h-14 rounded-full border-2 border-white bg-white flex items-center justify-center overflow-hidden shrink-0">
-            <img src="/sinopec-logo.jpeg" alt="logo" className="w-full h-full object-cover" />
-          </div>
-        </div>
+    <div className="min-h-screen pb-28" style={{ background: "linear-gradient(160deg, #0B0B14 0%, #0D0D1A 60%, #0F0F1E 100%)" }}>
 
+      {/* ── Header ──────────────────────────────────── */}
+      <div className="px-5 pt-7 pb-6">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-8">
-            <div>
-              <p className="text-white/80 text-xs mb-1">Solde de recharge</p>
-              <p className="text-white font-bold text-lg" data-testid="text-deposit-balance">
-                FCFA{user.depositBalance.toFixed(2)}
-              </p>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl overflow-hidden border border-amber-500/30 shadow-md shadow-amber-500/10">
+              <img src="/sinopec-logo.jpeg" alt="logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-white/80 text-xs mb-1">Solde de retrait</p>
-              <p className="text-white font-bold text-lg" data-testid="text-withdraw-balance">
-                FCFA{user.withdrawBalance.toFixed(2)}
-              </p>
+              <p className="text-[#888899] text-xs">Bienvenue,</p>
+              <p className="text-white font-bold text-base">{user.nickname || user.phone}</p>
             </div>
           </div>
-          <div className="flex items-center shrink-0">
-            <button data-testid="button-wallet" onClick={handleTelegramGroup}
-              className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
-              <img src={walletIcon} alt="wallet" className="w-7 h-7 object-contain brightness-0 invert" />
-            </button>
+          <button data-testid="button-wallet" onClick={handleTelegramGroup}
+            className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+            <Wallet className="w-5 h-5 text-amber-500" />
+          </button>
+        </div>
+
+        {/* ── Balance card ─────────────────────────── */}
+        <div className="rounded-3xl p-5 mb-5 relative overflow-hidden border border-amber-500/20"
+          style={{ background: "linear-gradient(135deg, #1a1200 0%, #201800 50%, #1a1400 100%)" }}>
+          <div className="absolute inset-0 opacity-5"
+            style={{ backgroundImage: "repeating-linear-gradient(45deg,#F59E0B 0,#F59E0B 1px,transparent 0,transparent 10px)", backgroundSize: "16px 16px" }} />
+          <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-10"
+            style={{ background: "radial-gradient(circle, #F59E0B 0%, transparent 70%)" }} />
+          <div className="relative">
+            <p className="text-amber-500/60 text-xs uppercase tracking-widest mb-3">Mes Soldes</p>
+            <div className="flex gap-8">
+              <div>
+                <p className="text-amber-500/70 text-xs mb-0.5">Solde de recharge</p>
+                <p className="text-white font-bold text-xl" data-testid="text-deposit-balance">
+                  {user.depositBalance.toFixed(2)} <span className="text-amber-500 text-sm">XAF</span>
+                </p>
+              </div>
+              <div className="w-px bg-amber-500/20" />
+              <div>
+                <p className="text-amber-500/70 text-xs mb-0.5">Solde de retrait</p>
+                <p className="text-white font-bold text-xl" data-testid="text-withdraw-balance">
+                  {user.withdrawBalance.toFixed(2)} <span className="text-amber-500 text-sm">XAF</span>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* ── Action buttons ───────────────────────── */}
         <div className="grid grid-cols-4 gap-2">
           {ACTION_BUTTONS.map(btn => (
-            <button
-              key={btn.label}
-              data-testid={btn.testId}
-              onClick={btn.onClick}
-              className="flex flex-col items-center gap-2"
-            >
-              <img src={btn.icon} alt={btn.label} className="w-14 h-14 object-contain" />
-              <span className="text-white text-xs font-medium">{btn.label}</span>
+            <button key={btn.label} data-testid={btn.testId} onClick={btn.onClick}
+              className={`flex flex-col items-center gap-2 p-3 rounded-2xl bg-gradient-to-br border ${btn.color} transition-all active:scale-95`}>
+              {btn.icon}
+              <span className="text-[10px] font-semibold text-white/80">{btn.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="px-5 space-y-3">
 
-        {/* ── Bouton S'identifier ─────────────────────── */}
+        {/* ── Bonus connexion ──────────────────────── */}
         <button
           data-testid="button-daily-bonus"
           onClick={() => !dailyBonusMutation.isPending && dailyBonusMutation.mutate()}
           disabled={dailyBonusMutation.isPending || todayClaimed}
-          className="w-full mb-3 flex items-center justify-between rounded-full px-4 py-0 overflow-hidden shadow-lg"
+          className="w-full flex items-center justify-between rounded-2xl px-5 py-4 border transition-all disabled:opacity-60"
           style={{
-            background: "linear-gradient(90deg, #e03a1e 0%, #f97316 50%, #c57c00 100%)",
-            minHeight: 52,
-            opacity: todayClaimed ? 0.65 : 1,
+            background: todayClaimed
+              ? "linear-gradient(135deg, #1a1a28 0%, #1e1e30 100%)"
+              : "linear-gradient(135deg, #1a0a00 0%, #2a1200 50%, #1f0e00 100%)",
+            borderColor: todayClaimed ? "#252538" : "rgba(245,158,11,0.25)",
           }}
         >
-          <span className="text-white font-bold text-base">
-            {todayClaimed ? "Bonus de connexion réclamé ✓" : "Bonus de connexion  50 FCFA"}
-          </span>
-          <img src={goBtn} alt="GO" className="w-14 h-14 object-contain -my-1" />
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${todayClaimed ? "bg-[#252538]" : "bg-amber-500/20 border border-amber-500/30"}`}>
+              <Gift className={`w-5 h-5 ${todayClaimed ? "text-[#888899]" : "text-amber-500"}`} />
+            </div>
+            <div className="text-left">
+              <p className={`font-bold text-sm ${todayClaimed ? "text-[#888899]" : "text-amber-400"}`}>
+                {todayClaimed ? "Bonus réclamé ✓" : "Bonus de connexion"}
+              </p>
+              <p className="text-[#888899] text-xs">{todayClaimed ? "Revenez demain" : "+50 FCFA sur votre solde"}</p>
+            </div>
+          </div>
+          {!todayClaimed && (
+            <div className="flex items-center gap-1 bg-amber-500 text-black text-xs font-bold px-3 py-1.5 rounded-full">
+              <Zap className="w-3 h-3" />
+              Réclamer
+            </div>
+          )}
         </button>
 
-        <div
-          data-testid="game-card"
-          className="w-full rounded-2xl overflow-hidden relative shadow-xl"
-          style={{ background: "linear-gradient(135deg, #1a7a3c 0%, #14532d 50%, #0f3d22 100%)" }}
-        >
-          <div className="absolute inset-0 opacity-20"
-            style={{ background: "radial-gradient(circle at 70% 50%, #4ade80 0%, transparent 60%)" }}
-          />
-          <div className="relative z-10 flex items-center justify-between p-5">
+        {/* ── Investissement promo ─────────────────── */}
+        <div className="rounded-2xl overflow-hidden border border-amber-500/15"
+          style={{ background: "linear-gradient(135deg, #0d1117 0%, #0f1520 50%, #0d1117 100%)" }}>
+          <div className="absolute inset-0 opacity-5"
+            style={{ background: "radial-gradient(circle at 80% 50%, #F59E0B 0%, transparent 60%)" }} />
+          <div className="flex items-center p-5 gap-4">
             <div className="flex-1 space-y-2">
-              <p className="text-green-300 text-xs font-semibold uppercase tracking-wider">Jeu de récompenses</p>
-              <h3 className="text-white text-xl font-bold leading-tight">Roue de la Fortune</h3>
-              <p className="text-green-200 text-xs leading-relaxed">
-                Invitez des amis pour gagner des tours gratuits et remporter des récompenses !
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-amber-500" />
+                <p className="text-amber-500 text-xs font-semibold uppercase tracking-wider">Jeu de récompenses</p>
+              </div>
+              <h3 className="text-white text-lg font-bold leading-tight">Roue de la Fortune</h3>
+              <p className="text-[#888899] text-xs leading-relaxed">
+                Invitez des amis et gagnez des tours gratuits !
               </p>
               <button
                 onClick={() => navigate("/game")}
                 data-testid="button-play-game"
-                className="mt-2 inline-flex items-center gap-1 bg-[#22c55e] hover:bg-[#16a34a] text-white text-sm font-bold px-5 py-2 rounded-full transition-colors"
+                className="mt-1 inline-flex items-center gap-1 text-black text-xs font-bold px-4 py-2 rounded-full"
+                style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}
               >
-                Allez &gt;
+                Jouer maintenant →
               </button>
             </div>
-            <div className="ml-4 shrink-0">
-              <img src={rewardIcon} alt="cadeau" className="w-28 h-28 object-contain drop-shadow-lg" />
+            <div className="shrink-0">
+              <img src={rewardIcon} alt="cadeau" className="w-24 h-24 object-contain drop-shadow-lg" />
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
