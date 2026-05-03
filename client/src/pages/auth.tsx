@@ -101,6 +101,14 @@ export default function AuthPage() {
 
   const inputCls = "flex items-center bg-gray-100 rounded-2xl px-4 py-3.5 gap-3";
 
+  if (countries.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#22c55e]">
+        <p className="text-white font-semibold">Chargement...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#22c55e" }}>
 
