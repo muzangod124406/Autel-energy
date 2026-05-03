@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import autelLogo from "@assets/images_(11)_1774131992392.png";
 import rechargeIcon from "@assets/recharge_(1)_1773608231085.png";
 import withdrawIcon from "@assets/withdraw_1773608230743.png";
 import blogIcon from "@assets/blog_(1)_1773608231117.png";
@@ -63,7 +62,7 @@ export default function HomePage() {
       <div className="px-4 pt-6 pb-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-14 h-14 rounded-full border-2 border-white bg-white flex items-center justify-center overflow-hidden shrink-0">
-            <img src={autelLogo} alt="logo" className="w-full h-full object-cover" />
+            <img src="/sinopec-logo.jpeg" alt="logo" className="w-full h-full object-cover" />
           </div>
         </div>
 

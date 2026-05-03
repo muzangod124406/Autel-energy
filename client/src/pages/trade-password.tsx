@@ -4,7 +4,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, Shield, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
-import autelLogo from "@assets/images_(11)_1774131992392.png";
 
 export default function TradePasswordPage() {
   const { user, refreshUser } = useAuth();
@@ -94,7 +93,7 @@ export default function TradePasswordPage() {
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
         <div className="flex items-center gap-2">
-          <img src={autelLogo} alt="Autel" className="w-7 h-7 rounded-full object-cover" />
+          <img src="/sinopec-logo.jpeg" alt="SINOPEC" className="w-7 h-7 rounded-full object-cover" />
           <span className="text-[#22c55e] font-bold text-base">Mot de passe de retrait</span>
         </div>
         <div className="w-6" />

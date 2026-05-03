@@ -2,7 +2,7 @@
 
 ## Overview
 
-Red Bull Invest is a mobile-first investment platform targeting French-speaking West African countries (Togo, Bénin, Côte d'Ivoire, Sénégal, Cameroun). Users can register, deposit funds via mobile money payment methods, invest in tiered VIP plans with daily returns, withdraw earnings, refer others through a multi-level referral system, and play a spin-the-wheel game. The platform includes a full admin dashboard for managing users, transactions, investments, and settings.
+SINOPEC is a mobile-first investment platform targeting French-speaking West African countries (Togo, Bénin, Côte d'Ivoire, Sénégal, Cameroun). Users can register, deposit funds via mobile money payment methods, invest in tiered VIP plans with daily returns, withdraw earnings, refer others through a multi-level referral system, and play a spin-the-wheel game. The platform includes a full admin dashboard for managing users, transactions, investments, and settings.
 
 ## User Preferences
 

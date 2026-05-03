@@ -40,7 +40,7 @@ function NotificationPopup({ onClose }: { onClose: () => void }) {
 
         <div className="px-5 pb-5 text-[#93c5fd] text-sm leading-relaxed space-y-2">
           <p>
-            Bienvenue sur <span className="font-bold text-white">Autel Energy</span>, la plateforme d'investissement mobile pour l'Afrique francophone !
+            Bienvenue sur <span className="font-bold text-white">SINOPEC</span>, la plateforme d'investissement mobile pour l'Afrique francophone !
           </p>
           <p>
             Profitez de plans d'investissement fixes à revenus journaliers garantis, d'un système de parrainage multi-niveaux et de récompenses exclusives.
@@ -51,7 +51,7 @@ function NotificationPopup({ onClose }: { onClose: () => void }) {
         <div className="px-5 pb-6 flex flex-col gap-3">
           <button
             data-testid="button-join-channel"
-            onClick={() => window.open("https://t.me/autelenergy", "_blank")}
+            onClick={() => window.open("https://t.me/sinopecgroup", "_blank")}
             className="w-full py-3 rounded-xl font-bold text-white text-sm"
             style={{ background: "linear-gradient(90deg, #2563eb, #1d4ed8)" }}
           >

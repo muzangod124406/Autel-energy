@@ -12,13 +12,13 @@ const KB: Entry[] = [
     id: "greet",
     tags: ["bonjour", "bonsoir", "salut", "hello", "hi", "bonne nuit", "bonne matinée", "coucou", "hey"],
     phrases: [],
-    response: `Bonjour ! Bienvenue sur le service client Autel Energy. 😊 Comment puis-je vous assister aujourd'hui ?\n\nJe peux vous renseigner sur :\n• Les dépôts et retraits\n• Les plans d'investissement\n• Le parrainage et les commissions\n• Le fonctionnement de la plateforme\n• Et bien plus encore !`
+    response: `Bonjour ! Bienvenue sur le service client SINOPEC. 😊 Comment puis-je vous assister aujourd'hui ?\n\nJe peux vous renseigner sur :\n• Les dépôts et retraits\n• Les plans d'investissement\n• Le parrainage et les commissions\n• Le fonctionnement de la plateforme\n• Et bien plus encore !`
   },
   {
     id: "merci",
     tags: ["merci", "thank", "parfait", "super", "très bien", "ok merci", "d'accord merci", "bonne continuation"],
     phrases: [],
-    response: `Je vous en prie ! C'est un plaisir de vous accompagner. N'hésitez pas à revenir si vous avez d'autres questions. Bonne continuation sur Autel Energy ! 🌟`
+    response: `Je vous en prie ! C'est un plaisir de vous accompagner. N'hésitez pas à revenir si vous avez d'autres questions. Bonne continuation sur SINOPEC ! 🌟`
   },
   {
     id: "ok",
@@ -32,13 +32,13 @@ const KB: Entry[] = [
     id: "platform",
     tags: ["fonctionne", "comment ça marche", "c'est quoi", "plateforme", "autel", "expliquer", "principe", "concept"],
     phrases: ["comment fonctionne", "comment ca marche", "c est quoi", "qu est ce que", "presentation", "qu'est-ce que autel", "kesako"],
-    response: `**Autel Energy** est une plateforme d'investissement sécurisée. Voici comment elle fonctionne :\n\n**1. Rechargez votre compte** — Effectuez un dépôt via Mobile Money (Orange, MTN, Moov).\n\n**2. Investissez** — Choisissez un plan d'investissement fixe parmi nos 9 niveaux VIP. Chaque plan génère des gains journaliers automatiques pendant 120 jours.\n\n**3. Retirez vos gains** — Vos bénéfices s'accumulent sur votre solde de retrait, disponible à tout moment selon les horaires configurés.\n\n**4. Invitez des amis** — Parrainez vos proches et percevez des commissions sur leurs investissements.\n\nC'est simple, transparent et rentable ! 💰`
+    response: `**SINOPEC** est une plateforme d'investissement sécurisée. Voici comment elle fonctionne :\n\n**1. Rechargez votre compte** — Effectuez un dépôt via Mobile Money (Orange, MTN, Moov).\n\n**2. Investissez** — Choisissez un plan d'investissement fixe parmi nos 9 niveaux VIP. Chaque plan génère des gains journaliers automatiques pendant 120 jours.\n\n**3. Retirez vos gains** — Vos bénéfices s'accumulent sur votre solde de retrait, disponible à tout moment selon les horaires configurés.\n\n**4. Invitez des amis** — Parrainez vos proches et percevez des commissions sur leurs investissements.\n\nC'est simple, transparent et rentable ! 💰`
   },
   {
     id: "start",
     tags: ["commencer", "démarrer", "débuter", "première fois", "nouveau", "s'inscrire", "inscription", "créer compte"],
     phrases: ["comment commencer", "par où commencer", "je suis nouveau", "premiere fois"],
-    response: `Bienvenue ! Pour démarrer sur Autel Energy, suivez ces étapes simples :\n\n**Étape 1** — Créez votre compte en quelques secondes sur la page d'inscription.\n\n**Étape 2** — Effectuez votre premier dépôt via Mobile Money (min. 1 000 FCFA).\n\n**Étape 3** — Choisissez un plan d'investissement selon votre budget.\n\n**Étape 4** — Vos gains sont crédités automatiquement chaque jour ! 🎉\n\nSi vous avez un code de parrainage, saisissez-le dès l'inscription — il ne peut pas être ajouté après.`
+    response: `Bienvenue ! Pour démarrer sur SINOPEC, suivez ces étapes simples :\n\n**Étape 1** — Créez votre compte en quelques secondes sur la page d'inscription.\n\n**Étape 2** — Effectuez votre premier dépôt via Mobile Money (min. 1 000 FCFA).\n\n**Étape 3** — Choisissez un plan d'investissement selon votre budget.\n\n**Étape 4** — Vos gains sont crédités automatiquement chaque jour ! 🎉\n\nSi vous avez un code de parrainage, saisissez-le dès l'inscription — il ne peut pas être ajouté après.`
   },
 
   // ── DÉPÔT ──
@@ -88,7 +88,7 @@ const KB: Entry[] = [
     id: "invest_how",
     tags: ["investir", "investissement", "plan fixe", "souscrire", "acheter plan", "vip"],
     phrases: ["comment investir", "comment souscrire", "comment acheter un plan", "je veux investir"],
-    response: `Pour investir sur Autel Energy :\n\n**Étape 1** — Rechargez votre compte (si ce n'est pas déjà fait).\n\n**Étape 2** — Allez dans la section **"Investir"**.\n\n**Étape 3** — Choisissez votre **niveau VIP** (1 à 9) selon votre budget.\n\n**Étape 4** — Confirmez l'achat.\n\n✅ Vos gains journaliers sont automatiquement ajoutés à votre solde de retrait chaque jour pendant **120 jours**. Plus le niveau VIP est élevé, plus le rendement est important !`
+    response: `Pour investir sur SINOPEC :\n\n**Étape 1** — Rechargez votre compte (si ce n'est pas déjà fait).\n\n**Étape 2** — Allez dans la section **"Investir"**.\n\n**Étape 3** — Choisissez votre **niveau VIP** (1 à 9) selon votre budget.\n\n**Étape 4** — Confirmez l'achat.\n\n✅ Vos gains journaliers sont automatiquement ajoutés à votre solde de retrait chaque jour pendant **120 jours**. Plus le niveau VIP est élevé, plus le rendement est important !`
   },
   {
     id: "invest_gain",
@@ -108,7 +108,7 @@ const KB: Entry[] = [
     id: "referral_how",
     tags: ["parrainage", "parrain", "inviter", "invitation", "code parrainage", "filleul", "referencer", "lien invitation"],
     phrases: ["comment parrainer", "comment inviter", "code de parrainage", "mon lien invitation", "comment gagner avec parrainage"],
-    response: `Le programme de parrainage Autel Energy est très avantageux !\n\n**Comment ça marche :**\n📌 Partagez votre lien d'invitation depuis la section **"Inviter"**.\n\n**Commissions reçues :**\n🥇 **Niveau 1** (filleuls directs) — **20%** de commission\n🥈 **Niveau 2** — **3%** de commission\n🥉 **Niveau 3** — **2%** de commission\n\n⚠️ Ces commissions sont versées **une seule fois**, lors du premier investissement en plan fixe de votre filleul.\n\n🎰 De plus, vous recevez **1 ticket de roue de chance** pour chaque premier plan fixe d'un filleul !`
+    response: `Le programme de parrainage SINOPEC est très avantageux !\n\n**Comment ça marche :**\n📌 Partagez votre lien d'invitation depuis la section **"Inviter"**.\n\n**Commissions reçues :**\n🥇 **Niveau 1** (filleuls directs) — **20%** de commission\n🥈 **Niveau 2** — **3%** de commission\n🥉 **Niveau 3** — **2%** de commission\n\n⚠️ Ces commissions sont versées **une seule fois**, lors du premier investissement en plan fixe de votre filleul.\n\n🎰 De plus, vous recevez **1 ticket de roue de chance** pour chaque premier plan fixe d'un filleul !`
   },
   {
     id: "commission_missing",
@@ -192,15 +192,15 @@ const KB: Entry[] = [
     id: "security",
     tags: ["securite", "fiable", "arnaque", "legitime", "confiance", "serieux"],
     phrases: ["c'est fiable", "c'est une arnaque", "peut on faire confiance", "est ce serieux"],
-    response: `**Autel Energy** est une plateforme sécurisée et fiable. Vos données personnelles et financières sont protégées. Quelques conseils de sécurité :\n\n🔐 Ne partagez jamais vos identifiants\n🔐 Connectez-vous uniquement via le lien officiel\n🔐 Activez votre mot de passe de transaction pour sécuriser vos retraits`
+    response: `**SINOPEC** est une plateforme sécurisée et fiable. Vos données personnelles et financières sont protégées. Quelques conseils de sécurité :\n\n🔐 Ne partagez jamais vos identifiants\n🔐 Connectez-vous uniquement via le lien officiel\n🔐 Activez votre mot de passe de transaction pour sécuriser vos retraits`
   },
 
   // ── GROUPE COMMUNAUTAIRE TELEGRAM ──
   {
     id: "group",
-    tags: ["groupe", "group", "communaute", "rejoindre", "canal", "chaine", "telegram", "autelenergy", "rejoindre groupe", "lien groupe"],
+    tags: ["groupe", "group", "communaute", "rejoindre", "canal", "chaine", "telegram", "sinopec", "rejoindre groupe", "lien groupe"],
     phrases: ["rejoindre le groupe", "lien du groupe", "comment rejoindre", "comment acceder au groupe", "ou est le groupe", "groupe telegram", "canal telegram", "je veux rejoindre"],
-    response: `Rejoignez notre **communauté officielle Autel Energy** sur Telegram pour accéder aux actualités, bonus exclusifs, codes cadeaux et annonces importantes !\n\nPour rejoindre, cliquez sur le bouton ci-dessous. Assurez-vous d'utiliser uniquement **ce lien officiel** pour éviter les arnaques. [[GROUP]]`
+    response: `Rejoignez notre **communauté officielle SINOPEC** sur Telegram pour accéder aux actualités, bonus exclusifs, codes cadeaux et annonces importantes !\n\nPour rejoindre, cliquez sur le bouton ci-dessous. Assurez-vous d'utiliser uniquement **ce lien officiel** pour éviter les arnaques. [[GROUP]]`
   },
 
   // ── TELEGRAM SUPPORT ──
@@ -225,7 +225,7 @@ function normalize(text: string): string {
 }
 
 // ── Prompt système pour OpenAI ────────────────────────────────────────────
-const SYSTEM_PROMPT = `Tu es Clara, l'assistante virtuelle officielle de la plateforme d'investissement Autel Energy, spécialisée pour l'Afrique de l'Ouest francophone.
+const SYSTEM_PROMPT = `Tu es Clara, l'assistante virtuelle officielle de la plateforme d'investissement SINOPEC, spécialisée pour l'Afrique de l'Ouest francophone.
 
 Tu réponds UNIQUEMENT en français, de façon chaleureuse, claire et concise.
 
@@ -275,14 +275,14 @@ ROUE DE CHANCE :
 BONUS DE CONNEXION QUOTIDIEN :
 - Bonus accordé chaque jour en se connectant
 
-GROUPE OFFICIEL TELEGRAM : https://t.me/autelenergy
-SERVICE CLIENT : @claraautel0 sur Telegram
+GROUPE OFFICIEL TELEGRAM : https://t.me/sinopecgroup
+SERVICE CLIENT : @clara_sinopec sur Telegram
 
 RÈGLES :
-- Si quelqu'un demande à rejoindre le groupe, donne le lien : https://t.me/autelenergy et indique [[GROUP]]
+- Si quelqu'un demande à rejoindre le groupe, donne le lien : https://t.me/sinopecgroup et indique [[GROUP]]
 - Si quelqu'un a un problème technique ou bloqué, indique [[TELEGRAM]] pour contacter le support
 - Ne donne JAMAIS de faux chiffres ni d'informations hors plateforme
-- Reste toujours dans le contexte de la plateforme Autel Energy
+- Reste toujours dans le contexte de la plateforme SINOPEC
 - Maximum 3-4 phrases par réponse, claire et directe`;
 
 export async function generateAIResponseOpenAI(userMessage: string, apiKey: string): Promise<string> {

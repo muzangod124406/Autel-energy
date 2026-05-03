@@ -6,7 +6,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, Calendar, ChevronRight, X, PackageX } from "lucide-react";
 import EmptyState from "@/components/empty-state";
-import autelImg from "@assets/Autel-MaxiCharger-DC-Fast-60-240KW-EV-Charger-All-Security-Equ_1774131863511.jpg";
 
 const fixedPlan = INVESTMENT_PLANS.fix;
 
@@ -130,7 +129,7 @@ export default function InvestPage() {
         <div className="absolute bottom-2 right-8 w-6 h-6 rounded bg-emerald-200 opacity-60 -rotate-6" />
         <div className="absolute top-4 right-14 w-5 h-5 rounded bg-white opacity-20 rotate-3" />
         <div className="relative px-5 py-4">
-          <p className="text-white/80 font-semibold text-sm italic leading-tight drop-shadow">Autel Energy</p>
+          <p className="text-white/80 font-semibold text-sm italic leading-tight drop-shadow">SINOPEC</p>
           <p className="text-white font-extrabold text-2xl italic leading-tight drop-shadow tracking-wide">Liste des produits</p>
           <p className="text-white/90 font-bold text-lg italic leading-tight drop-shadow">d'investissement</p>
         </div>
@@ -174,7 +173,7 @@ export default function InvestPage() {
               <div className="flex gap-3 p-3 pb-2">
                 <div className="relative flex-shrink-0">
                   <img
-                    src={autelImg}
+                    src="/sinopec-logo.jpeg"
                     alt={plan.name}
                     className="w-24 h-24 rounded-xl object-cover"
                   />
@@ -332,7 +331,7 @@ export default function InvestPage() {
               {confirmItem.imageUrl ? (
                 <img src={confirmItem.imageUrl} alt={confirmItem.name} className="w-full h-full object-cover" />
               ) : (
-                <img src={autelImg} alt={confirmItem.name} className="w-full h-full object-cover" />
+                <img src="/sinopec-logo.jpeg" alt={confirmItem.name} className="w-full h-full object-cover" />
               )}
               <button
                 data-testid="modal-close"

@@ -2,7 +2,6 @@ import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Shield, ChevronRight } from "lucide-react";
-import autelLogo from "@assets/images_(11)_1774131992392.png";
 import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 import lockIcon from "@assets/19118881-verrouiller-l-etude-de-l-ecole-plat-couleur-icone-vec_1774169768536.jpg";
 import serviceClientIcon from "@assets/service-clients_1774171700016.png";
@@ -126,7 +125,7 @@ export default function AccountPage() {
         <div className="relative flex items-center justify-between">
           {/* Left: logo + name */}
           <div className="flex items-center gap-3">
-            <img src={autelLogo} alt="Autel" className="w-14 h-14 rounded-full border-2 border-white shadow-sm object-cover" />
+            <img src="/sinopec-logo.jpeg" alt="SINOPEC" className="w-14 h-14 rounded-full border-2 border-white shadow-sm object-cover" />
             <div>
               <p className="font-bold text-gray-800 text-base">{user.nickname || maskedPhone}</p>
               <p className="text-gray-500 text-xs mt-0.5">ID: {user.referralCode}</p>

@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Lock } from "lucide-react";
-import autelLogo from "@assets/images_(11)_1774131992392.png";
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -50,7 +49,7 @@ export default function SettingsPage() {
           <ArrowLeft className="w-6 h-6 text-gray-700" />
         </button>
         <div className="flex items-center gap-2">
-          <img src={autelLogo} alt="Autel" className="w-7 h-7 rounded-full object-cover" />
+          <img src="/sinopec-logo.jpeg" alt="SINOPEC" className="w-7 h-7 rounded-full object-cover" />
           <span className="text-[#22c55e] font-bold text-base">Modifier le mot de passe</span>
         </div>
         <div className="w-6" />

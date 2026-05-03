@@ -27,7 +27,7 @@ export default function InvitePage() {
 
   const shareInvite = () => {
     if (navigator.share) {
-      navigator.share({ title: "Autel Energy", text: "Rejoignez Autel Energy!", url: inviteLink });
+      navigator.share({ title: "SINOPEC", text: "Rejoignez SINOPEC !", url: inviteLink });
     } else {
       copyLink();
     }

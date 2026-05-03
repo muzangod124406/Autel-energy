@@ -4,7 +4,6 @@ import { useLocation } from "wouter";
 import { ArrowRight } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 import rewardIcon from "@assets/reward_icon_1773608863536.png";
-import autelLogo from "@assets/images_(11)_1774131992392.png";
 import submitIcon from "@assets/4245705_1774171951518.png";
 import rulesIcon from "@assets/loi_1774171951475.png";
 
@@ -80,7 +79,7 @@ export default function BilletPage() {
               {/* En-tête post */}
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-12 h-12 rounded-xl border-2 border-[#22c55e] bg-white flex items-center justify-center shrink-0 overflow-hidden">
-                  <img src={autelLogo} alt="logo" className="w-full h-full object-cover" />
+                  <img src="/sinopec-logo.jpeg" alt="SINOPEC" className="w-full h-full object-cover" />
                 </div>
                 <p className="text-gray-800 font-semibold text-sm">
                   {post.user?.phone ? maskPhone(post.user.phone) : "****"}

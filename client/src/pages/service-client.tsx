@@ -3,11 +3,10 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeft, Phone, MoreVertical, Smile, Paperclip, Image, Send, Check, CheckCheck } from "lucide-react";
-import autelLogo from "@assets/images_(11)_1774131992392.png";
 import serviceImg from "@assets/561c62c4e80617ebf5313bc562f02542_1774182788114.jpg";
 
-const TELEGRAM_SUPPORT_URL = "https://t.me/claraautel0";
-const TELEGRAM_GROUP_URL = "https://t.me/autelenergy";
+const TELEGRAM_SUPPORT_URL = "https://t.me/clara_sinopec";
+const TELEGRAM_GROUP_URL = "https://t.me/sinopecgroup";
 
 function TelegramIcon() {
   return (
@@ -49,7 +48,7 @@ function MessageContent({ text, isUser }: { text: string; isUser: boolean }) {
           data-testid="btn-telegram-support"
         >
           <TelegramIcon />
-          Service client @claraautel0
+          Service client @clara_sinopec
         </a>
       )}
       {hasGroup && (
@@ -61,7 +60,7 @@ function MessageContent({ text, isUser }: { text: string; isUser: boolean }) {
           data-testid="btn-telegram-group"
         >
           <TelegramIcon />
-          Rejoindre le groupe Autel Energy
+          Rejoindre le groupe SINOPEC
         </a>
       )}
     </div>
@@ -195,7 +194,7 @@ export default function ServiceClientPage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-white font-bold text-sm leading-tight">Clara autel service</p>
+            <p className="text-white font-bold text-sm leading-tight">Clara SINOPEC</p>
             <p className="text-white/80 text-xs">En ligne</p>
           </div>
 
@@ -253,7 +252,7 @@ export default function ServiceClientPage() {
                   <div className="w-7 flex-shrink-0 flex items-end">
                     {!isUser && showAvatar ? (
                       <img
-                        src={autelLogo}
+                        src="/sinopec-logo.jpeg"
                         alt="Admin"
                         className="w-7 h-7 rounded-full object-cover"
                       />

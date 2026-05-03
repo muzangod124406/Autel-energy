@@ -59,7 +59,7 @@ export default function OrdersPage() {
             const isActive = inv.status !== "completed" && new Date(inv.endDate) > new Date();
             const planName = inv.planType === "activity"
               ? (inv.productName || `Activité`)
-              : `Autel Energy S${inv.vipLevel}`;
+              : `SINOPEC S${inv.vipLevel}`;
 
             return (
               <div key={inv.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
