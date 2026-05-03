@@ -79,6 +79,16 @@ app.use((req, res, next) => {
     log("Migration: settings.soleaspay_secret_hash OK");
     await pool.query("ALTER TABLE countries ADD COLUMN IF NOT EXISTS payment_provider text NOT NULL DEFAULT 'westpay'");
     log("Migration: countries.payment_provider OK");
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "session" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+      )
+    `);
+    await pool.query(`CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire")`);
+    log("Migration: session table OK");
   } catch (e: any) {
     log(`Migration warning: ${e.message}`);
   }
