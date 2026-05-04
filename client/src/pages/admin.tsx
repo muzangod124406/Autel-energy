@@ -2263,7 +2263,13 @@ export default function AdminPage() {
                     onChange={e => set("serviceClient2", e.target.value)}
                     data-testid="admin-service-client2" />
                 </div>
-                <SaveBtn fields={["telegramGroup", "telegramChannel", "telegramService", "serviceClient1", "serviceClient2"]} />
+                <div>
+                  <label className="text-xs font-medium text-gray-700">Lien popup notification (WhatsApp/autre)</label>
+                  <Input className="mt-1" placeholder="https://whatsapp.com/channel/..." value={sf.popupLink || ""}
+                    onChange={e => set("popupLink", e.target.value)}
+                    data-testid="admin-popup-link" />
+                </div>
+                <SaveBtn fields={["telegramGroup", "telegramChannel", "telegramService", "serviceClient1", "serviceClient2", "popupLink"]} />
               </Card>
 
               {/* Intelligence Artificielle */}

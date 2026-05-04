@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { House, Package2, UserPlus, Ticket, UserCircle2 } from "lucide-react";
 
 type Tab = { path: string; label: string; Icon: any; };
@@ -20,7 +21,7 @@ function WhatsAppIcon() {
   );
 }
 
-function NotificationPopup({ onClose }: { onClose: () => void }) {
+function NotificationPopup({ onClose, link }: { onClose: () => void; link: string }) {
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center px-6"
@@ -68,7 +69,7 @@ function NotificationPopup({ onClose }: { onClose: () => void }) {
         <div className="px-5 pb-5 flex flex-col gap-2">
           <button
             data-testid="button-join-channel"
-            onClick={() => window.open("https://whatsapp.com/channel/sinopec", "_blank")}
+            onClick={() => window.open(link || "https://whatsapp.com/channel/0029VbCPaD2IiRokvjSXNN2p", "_blank")}
             className="w-full py-3 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
             style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)" }}
           >
@@ -98,6 +99,8 @@ function NotificationPopup({ onClose }: { onClose: () => void }) {
 export default function BottomNav() {
   const [location, navigate] = useLocation();
   const [showNotif, setShowNotif] = useState(false);
+  const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
+  const popupLink = (settings as any)?.popupLink || "https://whatsapp.com/channel/0029VbCPaD2IiRokvjSXNN2p";
 
   useEffect(() => { if (location === "/") setShowNotif(true); }, []);
 
@@ -111,7 +114,7 @@ export default function BottomNav() {
 
   return (
     <>
-      {showNotif && <NotificationPopup onClose={() => setShowNotif(false)} />}
+      {showNotif && <NotificationPopup onClose={() => setShowNotif(false)} link={popupLink} />}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-100 bg-white"
         data-testid="bottom-nav"

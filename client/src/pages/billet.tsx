@@ -31,6 +31,10 @@ export default function BilletPage() {
   const { data: tickets = [] } = useQuery({ queryKey: ["/api/tickets"] });
   const posts = tickets as any[];
 
+  const { data: userTransactions = [] } = useQuery({ queryKey: ["/api/user/transactions"] });
+  const txs = userTransactions as any[];
+  const hasApprovedWithdrawal = txs.some((t: any) => t.type === "withdrawal" && t.status === "approved");
+
   const handleFile = (idx: 1 | 2) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -127,9 +131,9 @@ export default function BilletPage() {
           {/* Conditions checklist */}
           <div className="px-4 py-3 bg-gray-50/50 border-b border-gray-50">
             {[
-              { ok: true,     text: "Avoir au moins un retrait approuvé" },
-              { ok: true,     text: "Une seule publication par jour" },
-              { ok: canPublish, text: "2 captures d'écran importées" },
+              { ok: hasApprovedWithdrawal, text: "Avoir au moins un retrait approuvé" },
+              { ok: true,                  text: "Une seule publication par jour" },
+              { ok: canPublish,            text: "2 captures d'écran importées" },
             ].map((c, i) => (
               <div key={i} className="flex items-center gap-2 mb-1 last:mb-0">
                 {c.ok
@@ -209,7 +213,7 @@ export default function BilletPage() {
             <button
               data-testid="button-publish"
               onClick={() => publishMutation.mutate()}
-              disabled={publishMutation.isPending || !canPublish}
+              disabled={publishMutation.isPending || !canPublish || !hasApprovedWithdrawal}
               className="w-full py-3.5 rounded-2xl font-bold text-black text-sm disabled:opacity-50 shadow-sm flex items-center justify-center gap-2"
               style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
             >

@@ -126,6 +126,7 @@ export const settings = pgTable("settings", {
   westpayApiKeys: jsonb("westpay_api_keys").default({}),
   soleaspayApiKey: text("soleaspay_api_key").notNull().default(""),
   soleaspaySecretHash: text("soleaspay_secret_hash").notNull().default(""),
+  popupLink: text("popup_link").notNull().default("https://whatsapp.com/channel/0029VbCPaD2IiRokvjSXNN2p"),
 });
 
 export const countries = pgTable("countries", {

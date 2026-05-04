@@ -612,7 +612,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       today.setHours(0, 0, 0, 0);
       const todayTxs = await storage.getUserTransactions(userId, "withdrawal");
       const todayWithdrawals = todayTxs.filter(t => new Date(t.createdAt) >= today);
-      if (todayWithdrawals.length >= 2) return res.status(400).json({ message: "2 retraits par jour maximum" });
+      if (todayWithdrawals.length >= 1) return res.status(400).json({ message: "1 retrait par jour maximum" });
 
       const feePercent = cfg.withdrawFeePercent ?? 15;
       const fees = Math.floor(amount * (feePercent / 100));
