@@ -698,8 +698,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!user) return res.status(404).json({ message: "Utilisateur non trouvé" });
       if (user.spinTickets <= 0) return res.status(400).json({ message: "Pas de tours disponibles" });
 
-      const prizes =   [50,   100,  200,  400,  600,  1000];
-      const weights =  [0.30, 0.22, 0.18, 0.12, 0.08, 0.10];
+      const prizes =   [50,  100,  200];
+      const weights =  [0.70, 0.20, 0.10];
       const r = Math.random();
       let cumulative = 0;
       let amount = 50;

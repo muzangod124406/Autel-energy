@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 
-const FALLBACK_METHODS = ["Orange Money", "MTN Mobile Money", "Moov Money", "Wave", "Celtis"];
+const FALLBACK_METHODS = ["Orange Money", "MTN Mobile Money", "Moov Money", "Wave", "Celtis", "Tmoney"];
 
 export default function BankCardPage() {
   const { user } = useAuth();

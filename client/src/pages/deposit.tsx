@@ -290,7 +290,7 @@ export default function DepositPage() {
               onChange={e => setLinkFormData({ ...linkFormData, paymentMethod: e.target.value })}
               className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-400 bg-white text-gray-700">
               <option value="">Choisir un opérateur</option>
-              {["Orange Money", "MTN Mobile Money", "Moov Money", "Wave"].map(op => (
+              {["Orange Money", "MTN Mobile Money", "Moov Money", "Wave", "Tmoney"].map(op => (
                 <option key={op} value={op}>{op}</option>
               ))}
             </select>
