@@ -3,11 +3,13 @@ import { formatCFA } from "@/lib/constants";
 import { ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import EmptyState from "@/components/empty-state";
-import autelImg from "@assets/Autel-MaxiCharger-DC-Fast-60-240KW-EV-Charger-All-Security-Equ_1774131863511.jpg";
 
 export default function OrdersPage() {
   const [, navigate] = useLocation();
   const { data: investments = [], isLoading } = useQuery({ queryKey: ["/api/user/investments"] });
+  const { data: products = [] } = useQuery<any[]>({ queryKey: ["/api/products"] });
+
+  const productMap = (products as any[]).reduce((acc: any, p: any) => { acc[p.id] = p; return acc; }, {});
 
   const list = investments as any[];
   const active = list.filter(inv => inv.status !== "completed" && new Date(inv.endDate) > new Date());
@@ -59,11 +61,14 @@ export default function OrdersPage() {
               ? (inv.productName || `Activité`)
               : `SINOPEC S${inv.vipLevel}`;
 
+            const productImg = inv.productId && productMap[inv.productId]?.imageUrl;
+            const imgSrc = productImg || "/sinopec-logo.jpeg";
+
             return (
               <div key={inv.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                 <div className="flex gap-3 p-3">
                   <img
-                    src={autelImg}
+                    src={imgSrc}
                     alt={planName}
                     className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
                   />
