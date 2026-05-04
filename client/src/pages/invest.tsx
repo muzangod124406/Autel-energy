@@ -30,9 +30,13 @@ export default function InvestPage() {
   const { data: adminProducts = [], isLoading: loadingProducts } = useQuery<any[]>({ queryKey: ["/api/products"] });
   const { data: userInvestments = [] } = useQuery<any[]>({ queryKey: ["/api/user/investments"] });
 
-  const hasActiveFixed = (userInvestments as any[]).some(
+  const activeFixedPlans = (userInvestments as any[]).filter(
     (i: any) => i.status === "active" && i.planType === "fix"
   );
+  const hasActiveFixed = activeFixedPlans.length > 0;
+  const maxVip = activeFixedPlans.reduce((m: number, i: any) => Math.max(m, i.vipLevel || 1), 0);
+  // VIP 1 → 2 first activities, VIP 2 → 4 first activities, VIP 3+ → all
+  const allowedActivityCount = maxVip === 0 ? 0 : maxVip === 1 ? 2 : maxVip === 2 ? 4 : Infinity;
 
   const investMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -83,11 +87,14 @@ export default function InvestPage() {
     investMutation.mutate(confirmItem.payload);
   };
 
-  const availableProducts = (adminProducts as any[]).filter((p: any) => {
-    if (!p.isActive) return false;
-    if (p.purchaseLimit > 0 && p.purchaseCount >= p.purchaseLimit) return false;
-    return true;
-  });
+  const availableProducts = (adminProducts as any[])
+    .filter((p: any) => p.isActive)
+    .sort((a: any, b: any) => a.price - b.price)
+    .map((p: any, idx: number) => ({
+      ...p,
+      isLimitReached: p.purchaseLimit > 0 && p.purchaseCount >= p.purchaseLimit,
+      isVipLocked: !hasActiveFixed || idx >= allowedActivityCount,
+    }));
 
   return (
     <div className="min-h-screen pb-28 bg-gray-50">
@@ -285,6 +292,15 @@ export default function InvestPage() {
                   ) : !hasActiveFixed ? (
                     <div className="w-full py-3 bg-amber-50 border border-amber-100 rounded-2xl text-center text-xs text-amber-600 font-medium flex items-center justify-center gap-1">
                       <Lock className="w-3.5 h-3.5" /> Plan Fixe 90J requis
+                    </div>
+                  ) : product.isVipLocked ? (
+                    <div className="w-full py-3 bg-gray-50 border border-gray-200 rounded-2xl text-center text-xs text-gray-500 font-medium flex items-center justify-center gap-1">
+                      <Lock className="w-3.5 h-3.5" />
+                      {maxVip === 1 ? "Plan Fixe S2 requis" : "Plan Fixe S3 requis"}
+                    </div>
+                  ) : product.isLimitReached ? (
+                    <div className="w-full py-3 bg-gray-50 rounded-2xl text-center text-xs text-gray-400 font-medium border border-gray-100">
+                      Limite atteinte
                     </div>
                   ) : (
                     <button data-testid={`buy-product-${product.id}`}

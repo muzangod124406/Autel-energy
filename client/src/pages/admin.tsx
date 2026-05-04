@@ -1997,7 +1997,7 @@ export default function AdminPage() {
 
         {/* ══════════ CHAT ══════════ */}
         {activeTab === "chat" && (
-          <div className="flex gap-3" style={{ height: "calc(100vh - 130px)" }}>
+          <div className="flex gap-3" style={{ height: "calc(100dvh - 168px)" }}>
             {/* Liste conversations */}
             <div className={`${chatUserId ? "hidden md:flex" : "flex"} flex-col w-full md:w-72 bg-white rounded-xl shadow overflow-hidden`}>
               <div className="px-4 py-3 border-b border-gray-100 font-bold text-sm text-gray-700">

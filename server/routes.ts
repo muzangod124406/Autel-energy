@@ -297,9 +297,23 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Activities require an active fixed plan
       if (planType === "activity") {
         const allInvestments = await storage.getUserInvestments(userId);
-        const hasActiveFixed = allInvestments.some(i => i.status === "active" && i.planType === "fix");
-        if (!hasActiveFixed) {
+        const activeFixed = allInvestments.filter(i => i.status === "active" && i.planType === "fix");
+        if (activeFixed.length === 0) {
           return res.status(400).json({ message: "Vous devez d'abord acheter le plan fixe 90J pour accéder aux produits d'activité" });
+        }
+
+        // Determine unlock level based on highest VIP active fixed plan
+        const maxVip = activeFixed.reduce((m: number, i: any) => Math.max(m, i.vipLevel || 1), 1);
+        const allowedCount = maxVip <= 1 ? 2 : maxVip === 2 ? 4 : Infinity;
+
+        if (productId && isFinite(allowedCount)) {
+          // Sort all active products by price ASC to determine position
+          const allProducts = await storage.getProducts(true);
+          const sorted = [...allProducts].sort((a, b) => a.price - b.price);
+          const idx = sorted.findIndex(p => p.id === productId);
+          if (idx >= allowedCount) {
+            return res.status(400).json({ message: `Ce produit nécessite un plan fixe de niveau supérieur pour être débloqué.` });
+          }
         }
       }
 

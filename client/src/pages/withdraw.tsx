@@ -205,7 +205,7 @@ export default function WithdrawPage() {
             <p className="text-gray-500">
               Montant minimum :{" "}
               <span className="text-amber-500 font-bold">{withdrawMinAmount.toLocaleString("fr-FR")} CFA</span>.
-              Frais de {withdrawFeePercent}% déduits. Maximum : 4 500 000 FCFA. 2 retraits/jour.
+              Frais de {withdrawFeePercent}% déduits. Maximum : 4 500 000 FCFA. 1 retrait/jour.
             </p>
           </div>
         </div>

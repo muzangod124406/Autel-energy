@@ -107,7 +107,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div key={location} className="animate-page-enter">
+      <div key={location}>
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/invest" component={InvestPage} />
