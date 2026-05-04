@@ -175,20 +175,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.post("/api/auth/set-transaction-password", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req.session as any).userId;
-      const { transactionPassword, currentTransactionPassword, otp } = req.body;
+      const { transactionPassword, currentTransactionPassword } = req.body;
       if (!transactionPassword) return res.status(400).json({ message: "Nouveau mot de passe requis" });
       const existing = await storage.getUser(userId);
       if (existing?.transactionPassword) {
         if (!currentTransactionPassword) return res.status(400).json({ message: "Mot de passe actuel requis" });
         const valid = await bcrypt.compare(currentTransactionPassword, existing.transactionPassword);
         if (!valid) return res.status(400).json({ message: "Mot de passe actuel incorrect" });
-      } else {
-        if (!otp) return res.status(400).json({ message: "Code OTP requis" });
-        const stored = otpStore.get(existing!.phone);
-        if (!stored || stored.code !== otp || stored.expires < Date.now()) {
-          return res.status(400).json({ message: "Code OTP invalide ou expiré" });
-        }
-        otpStore.delete(existing!.phone);
       }
       const hashed = await bcrypt.hash(transactionPassword, 10);
       const user = await storage.updateUser(userId, { transactionPassword: hashed });
