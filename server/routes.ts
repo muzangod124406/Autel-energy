@@ -1510,25 +1510,18 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const msg = await storage.createChatMessage({ userId, senderType: "user", content, imageUrl });
       res.json(msg);
 
-      // Réponse automatique IA (fire-and-forget, délai naturel de 1-2s)
+      // Message de bienvenue automatique uniquement si c'est le tout premier message de l'utilisateur
       if (content) {
-        const delay = 1000 + Math.floor(Math.random() * 1500);
         setTimeout(async () => {
           try {
-            const cfg = await storage.getSettings();
-            let aiReply: string;
-            if (cfg.openaiApiKey && cfg.openaiApiKey.trim() !== "") {
-              try {
-                aiReply = await generateAIResponseOpenAI(content, cfg.openaiApiKey);
-              } catch (_) {
-                aiReply = generateAIResponse(content);
-              }
-            } else {
-              aiReply = generateAIResponse(content);
+            const allMsgs = await storage.getChatMessages(userId);
+            const userMsgs = allMsgs.filter((m: any) => m.senderType === "user");
+            if (userMsgs.length === 1) {
+              const welcome = `Bonjour ! Bienvenue sur le service client SINOPEC. 😊 Comment puis-je vous assister aujourd'hui ?\n\nJe peux vous renseigner sur :\n• Les dépôts et retraits\n• Les plans d'investissement\n• Le parrainage et les commissions\n• Le fonctionnement de la plateforme\n• Et bien plus encore !`;
+              await storage.createChatMessage({ userId, senderType: "admin", content: welcome });
             }
-            await storage.createChatMessage({ userId, senderType: "admin", content: aiReply });
           } catch (_) {}
-        }, delay);
+        }, 1200);
       }
     } catch (e: any) {
       res.status(500).json({ message: e.message });
