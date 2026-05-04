@@ -114,7 +114,7 @@ export default function InvestPage() {
       <div className="px-4 pt-4 mb-4">
         <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-gray-100">
           {([
-            { key: "fix" as const, label: "Plan Fixe 120J", sub: "Revenus stables" },
+            { key: "fix" as const, label: "Plan Fixe 90J", sub: "Revenus stables" },
             { key: "activities" as const, label: "Activités", sub: "Produits spéciaux" },
           ]).map(t => (
             <button key={t.key} data-testid={`tab-${t.key}`}
@@ -144,7 +144,7 @@ export default function InvestPage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                 <div className="absolute top-2 left-2 text-white text-[10px] font-bold px-2.5 py-1 rounded-full"
                   style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}>
-                  120 jours
+                  90 jours
                 </div>
                 <div className="absolute bottom-2 left-3">
                   <p className="text-white font-extrabold text-lg leading-none">{plan.name}</p>
@@ -169,7 +169,7 @@ export default function InvestPage() {
 
               <div className="px-4 py-3">
                 <p className="text-gray-400 text-xs italic mb-3">
-                  Gains crédités à la fin des 120j sur solde retirable :{" "}
+                  Gains crédités à la fin des 90j sur solde retirable :{" "}
                   <span className="text-amber-500 font-semibold not-italic">{plan.totalGain.toLocaleString("fr-FR")} FCFA</span>
                 </p>
                 <button data-testid={`invest-vip-${plan.vip}`}
@@ -193,7 +193,7 @@ export default function InvestPage() {
               <Lock className="w-5 h-5 text-amber-500 shrink-0" />
               <div>
                 <p className="text-amber-700 font-bold text-sm">Plan Fixe requis</p>
-                <p className="text-amber-600 text-xs mt-0.5">Achetez d'abord le plan fixe 120J pour débloquer les activités.</p>
+                <p className="text-amber-600 text-xs mt-0.5">Achetez d'abord le plan fixe 90J pour débloquer les activités.</p>
               </div>
             </div>
           )}
@@ -284,7 +284,7 @@ export default function InvestPage() {
                     </div>
                   ) : !hasActiveFixed ? (
                     <div className="w-full py-3 bg-amber-50 border border-amber-100 rounded-2xl text-center text-xs text-amber-600 font-medium flex items-center justify-center gap-1">
-                      <Lock className="w-3.5 h-3.5" /> Plan Fixe 120J requis
+                      <Lock className="w-3.5 h-3.5" /> Plan Fixe 90J requis
                     </div>
                   ) : (
                     <button data-testid={`buy-product-${product.id}`}

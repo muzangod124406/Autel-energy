@@ -32,7 +32,7 @@ const KB: Entry[] = [
     id: "platform",
     tags: ["fonctionne", "comment ça marche", "c'est quoi", "plateforme", "autel", "expliquer", "principe", "concept"],
     phrases: ["comment fonctionne", "comment ca marche", "c est quoi", "qu est ce que", "presentation", "qu'est-ce que autel", "kesako"],
-    response: `**SINOPEC** est une plateforme d'investissement sécurisée. Voici comment elle fonctionne :\n\n**1. Rechargez votre compte** — Effectuez un dépôt via Mobile Money (Orange, MTN, Moov).\n\n**2. Investissez** — Choisissez un plan d'investissement fixe parmi nos 9 niveaux VIP. Chaque plan génère des gains journaliers automatiques pendant 120 jours.\n\n**3. Retirez vos gains** — Vos bénéfices s'accumulent sur votre solde de retrait, disponible à tout moment selon les horaires configurés.\n\n**4. Invitez des amis** — Parrainez vos proches et percevez des commissions sur leurs investissements.\n\nC'est simple, transparent et rentable ! 💰`
+    response: `**SINOPEC** est une plateforme d'investissement sécurisée. Voici comment elle fonctionne :\n\n**1. Rechargez votre compte** — Effectuez un dépôt via Mobile Money (Orange, MTN, Moov).\n\n**2. Investissez** — Choisissez un plan d'investissement fixe parmi nos 9 niveaux VIP. Chaque plan génère des gains journaliers automatiques pendant 90 jours.\n\n**3. Retirez vos gains** — Vos bénéfices s'accumulent sur votre solde de retrait, disponible à tout moment selon les horaires configurés.\n\n**4. Invitez des amis** — Parrainez vos proches et percevez des commissions sur leurs investissements.\n\nC'est simple, transparent et rentable ! 💰`
   },
   {
     id: "start",
@@ -88,7 +88,7 @@ const KB: Entry[] = [
     id: "invest_how",
     tags: ["investir", "investissement", "plan fixe", "souscrire", "acheter plan", "vip"],
     phrases: ["comment investir", "comment souscrire", "comment acheter un plan", "je veux investir"],
-    response: `Pour investir sur SINOPEC :\n\n**Étape 1** — Rechargez votre compte (si ce n'est pas déjà fait).\n\n**Étape 2** — Allez dans la section **"Investir"**.\n\n**Étape 3** — Choisissez votre **niveau VIP** (1 à 9) selon votre budget.\n\n**Étape 4** — Confirmez l'achat.\n\n✅ Vos gains journaliers sont automatiquement ajoutés à votre solde de retrait chaque jour pendant **120 jours**. Plus le niveau VIP est élevé, plus le rendement est important !`
+    response: `Pour investir sur SINOPEC :\n\n**Étape 1** — Rechargez votre compte (si ce n'est pas déjà fait).\n\n**Étape 2** — Allez dans la section **"Investir"**.\n\n**Étape 3** — Choisissez votre **niveau VIP** (1 à 9) selon votre budget.\n\n**Étape 4** — Confirmez l'achat.\n\n✅ Vos gains journaliers sont automatiquement ajoutés à votre solde de retrait chaque jour pendant **90 jours**. Plus le niveau VIP est élevé, plus le rendement est important !`
   },
   {
     id: "invest_gain",
@@ -231,22 +231,22 @@ Tu réponds UNIQUEMENT en français, de façon chaleureuse, claire et concise.
 
 Informations clés sur la plateforme :
 
-PLAN FIXE 120J (9 niveaux VIP) :
-- VIP1: 2500F → 500F/jour → Total 60 000F en 120 jours
-- VIP2: 5000F → 1100F/jour → Total 132 000F en 120 jours
-- VIP3: 10 000F → 2500F/jour → Total 300 000F en 120 jours
-- VIP4: 25 000F → 6500F/jour → Total 780 000F en 120 jours
-- VIP5: 50 000F → 14 000F/jour → Total 1 680 000F en 120 jours
-- VIP6: 100 000F → 30 000F/jour → Total 3 600 000F en 120 jours
-- VIP7: 250 000F → 80 000F/jour → Total 9 600 000F en 120 jours
-- VIP8: 500 000F → 170 000F/jour → Total 20 400 000F en 120 jours
-- VIP9: 900 000F → 320 000F/jour → Total 38 400 000F en 120 jours
-Les gains sont crédités à la FIN du cycle de 120 jours sur le solde retirable.
+PLAN FIXE 90J (9 niveaux VIP) :
+- VIP1: 2500F → 500F/jour → Total 60 000F en 90 jours
+- VIP2: 5000F → 1100F/jour → Total 132 000F en 90 jours
+- VIP3: 10 000F → 2500F/jour → Total 300 000F en 90 jours
+- VIP4: 25 000F → 6500F/jour → Total 780 000F en 90 jours
+- VIP5: 50 000F → 14 000F/jour → Total 1 680 000F en 90 jours
+- VIP6: 100 000F → 30 000F/jour → Total 3 600 000F en 90 jours
+- VIP7: 250 000F → 80 000F/jour → Total 9 600 000F en 90 jours
+- VIP8: 500 000F → 170 000F/jour → Total 20 400 000F en 90 jours
+- VIP9: 900 000F → 320 000F/jour → Total 38 400 000F en 90 jours
+Les gains sont crédités à la FIN du cycle de 90 jours sur le solde retirable.
 
 PRODUITS D'ACTIVITÉ :
 - Créés par l'administrateur selon les lancements
 - L'utilisateur ne peut acheter QU'UN SEUL produit d'activité par session de lancement
-- Nécessite d'avoir d'abord un plan fixe 120J actif
+- Nécessite d'avoir d'abord un plan fixe 90J actif
 
 DEUX PORTEFEUILLES :
 - Solde de recharge (dépôt) : utilisé uniquement pour acheter des investissements

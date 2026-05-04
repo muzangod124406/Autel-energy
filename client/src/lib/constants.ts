@@ -16,8 +16,8 @@ export const BKAPAY_KEY = "pk_live_d1ed8abc-648a-46a3-901e-cff82daf6b25";
 
 export const INVESTMENT_PLANS = {
   fix: {
-    name: "Fixé 120J",
-    duration: 120,
+    name: "Fixé 90J",
+    duration: 90,
     plans: [
       { vip: 1, name: "SINOPEC S1", amount: 2500,   dailyGain: 500,    totalGain: 60000    },
       { vip: 2, name: "SINOPEC S2", amount: 5000,   dailyGain: 1100,   totalGain: 132000   },

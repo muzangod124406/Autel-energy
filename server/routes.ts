@@ -299,7 +299,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         const allInvestments = await storage.getUserInvestments(userId);
         const hasActiveFixed = allInvestments.some(i => i.status === "active" && i.planType === "fix");
         if (!hasActiveFixed) {
-          return res.status(400).json({ message: "Vous devez d'abord acheter le plan fixe 120J pour accéder aux produits d'activité" });
+          return res.status(400).json({ message: "Vous devez d'abord acheter le plan fixe 90J pour accéder aux produits d'activité" });
         }
       }
 
@@ -588,7 +588,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const activeInvestments = await storage.getUserInvestments(userId);
       const hasFixedPlan = activeInvestments.some(i => i.status === "active" && i.planType === "fix");
-      if (!hasFixedPlan) return res.status(400).json({ message: "Vous devez avoir acheté un plan Fixé 120J pour pouvoir retirer" });
+      if (!hasFixedPlan) return res.status(400).json({ message: "Vous devez avoir acheté un plan Fixé 90J pour pouvoir retirer" });
 
       const cfg = await storage.getSettings();
       const { amount, country, paymentMethod, phoneNumber, accountName, transactionPassword } = req.body;
@@ -1284,15 +1284,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.post("/api/admin/seed-products", async (req: Request, res: Response) => {
   const autelProducts = [
-      { name: "SINOPEC S1", price: 2500,   dailyGain: 500,    totalGain: 60000,    cycleDays: 120, purchaseLimit: 0, isActive: true },
-      { name: "SINOPEC S2", price: 5000,   dailyGain: 1100,   totalGain: 132000,   cycleDays: 120, purchaseLimit: 0, isActive: true },
-      { name: "SINOPEC S3", price: 10000,  dailyGain: 2500,   totalGain: 300000,   cycleDays: 120, purchaseLimit: 0, isActive: true },
-      { name: "SINOPEC S4", price: 25000,  dailyGain: 6500,   totalGain: 780000,   cycleDays: 120, purchaseLimit: 0, isActive: true },
-      { name: "SINOPEC S5", price: 50000,  dailyGain: 14000,  totalGain: 1680000,  cycleDays: 120, purchaseLimit: 0, isActive: true },
-      { name: "SINOPEC S6", price: 100000, dailyGain: 30000,  totalGain: 3600000,  cycleDays: 120, purchaseLimit: 0, isActive: true },
-      { name: "SINOPEC S7", price: 250000, dailyGain: 80000,  totalGain: 9600000,  cycleDays: 120, purchaseLimit: 0, isActive: true },
-      { name: "SINOPEC S8", price: 500000, dailyGain: 170000, totalGain: 20400000, cycleDays: 120, purchaseLimit: 0, isActive: true },
-      { name: "SINOPEC S9", price: 900000, dailyGain: 320000, totalGain: 38400000, cycleDays: 120, purchaseLimit: 0, isActive: true },
+      { name: "SINOPEC S1", price: 2500,   dailyGain: 500,    totalGain: 60000,    cycleDays: 90, purchaseLimit: 0, isActive: true },
+      { name: "SINOPEC S2", price: 5000,   dailyGain: 1100,   totalGain: 132000,   cycleDays: 90, purchaseLimit: 0, isActive: true },
+      { name: "SINOPEC S3", price: 10000,  dailyGain: 2500,   totalGain: 300000,   cycleDays: 90, purchaseLimit: 0, isActive: true },
+      { name: "SINOPEC S4", price: 25000,  dailyGain: 6500,   totalGain: 780000,   cycleDays: 90, purchaseLimit: 0, isActive: true },
+      { name: "SINOPEC S5", price: 50000,  dailyGain: 14000,  totalGain: 1680000,  cycleDays: 90, purchaseLimit: 0, isActive: true },
+      { name: "SINOPEC S6", price: 100000, dailyGain: 30000,  totalGain: 3600000,  cycleDays: 90, purchaseLimit: 0, isActive: true },
+      { name: "SINOPEC S7", price: 250000, dailyGain: 80000,  totalGain: 9600000,  cycleDays: 90, purchaseLimit: 0, isActive: true },
+      { name: "SINOPEC S8", price: 500000, dailyGain: 170000, totalGain: 20400000, cycleDays: 90, purchaseLimit: 0, isActive: true },
+      { name: "SINOPEC S9", price: 900000, dailyGain: 320000, totalGain: 38400000, cycleDays: 90, purchaseLimit: 0, isActive: true },
     ];
     try {
       const existing = await storage.getProducts(false);
@@ -1585,7 +1585,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           type: "gain",
           amount: inv.totalGain,
           status: "approved",
-          description: `Gain fin de cycle — ${inv.planType === "fix" ? "Plan Fixe 120J" : "Activité"} — ${inv.duration} jours`,
+          description: `Gain fin de cycle — ${inv.planType === "fix" ? "Plan Fixe 90J" : "Activité"} — ${inv.duration} jours`,
         });
         console.log(`[Gains] Investissement ${inv.id} complété : +${inv.totalGain} FCFA crédités à l'utilisateur ${user.id}`);
       }
