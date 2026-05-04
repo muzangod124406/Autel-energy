@@ -317,6 +317,18 @@ export default function AdminPage() {
     }
   });
 
+  const deleteTicketMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("DELETE", `/api/admin/tickets/${id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Billet supprimé" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/tickets"] });
+    },
+    onError: (e: any) => toast({ title: e.message || "Erreur", variant: "destructive" }),
+  });
+
   const resetStatsMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/admin/reset-stats", {});
@@ -557,8 +569,7 @@ export default function AdminPage() {
     { key: "billets", label: "Billets" },
     { key: "tickets", label: "Codes Cadeaux" },
     { key: "pays", label: "Pays" },
-    { key: "westpay", label: "WestPay" },
-    { key: "soleaspay", label: "SoleasPay" },
+    { key: "sendavapay", label: "Sendavapay" },
     { key: "chat", label: totalUnread > 0 ? `Chat (${totalUnread})` : "Chat" },
     { key: "settings", label: "Paramètres" },
   ];
@@ -1320,10 +1331,10 @@ export default function AdminPage() {
         {activeTab === "billets" && (
           <div className="space-y-3">
             <p className="text-xs text-gray-400 text-center">
-              {(pendingTickets as any[]).length} billet(s) en attente
+              {(pendingTickets as any[]).length} billet(s) au total
             </p>
             {(pendingTickets as any[]).length === 0 ? (
-              <Card className="p-6 text-center text-gray-400 text-sm">Aucun billet en attente</Card>
+              <Card className="p-6 text-center text-gray-400 text-sm">Aucun billet</Card>
             ) : (
               (pendingTickets as any[]).map((t: any) => (
                 <Card key={t.id} className="p-4 space-y-3" data-testid={`card-ticket-${t.id}`}>
@@ -1332,11 +1343,18 @@ export default function AdminPage() {
                       <p className="font-semibold text-sm">{t.user?.phone || t.userId}</p>
                       <p className="text-xs text-gray-400">{new Date(t.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                     </div>
-                    <Badge className={
-                      t.status === "pending" ? "bg-yellow-100 text-yellow-800 border-0 text-xs" :
-                      t.status === "approved" ? "bg-green-100 text-green-800 border-0 text-xs" :
-                      "bg-red-100 text-red-700 border-0 text-xs"
-                    }>{t.status === "pending" ? "En attente" : t.status === "approved" ? "Approuvé" : "Refusé"}</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge className={
+                        t.status === "pending" ? "bg-yellow-100 text-yellow-800 border-0 text-xs" :
+                        t.status === "approved" ? "bg-green-100 text-green-800 border-0 text-xs" :
+                        "bg-red-100 text-red-700 border-0 text-xs"
+                      }>{t.status === "pending" ? "En attente" : t.status === "approved" ? "Approuvé" : "Refusé"}</Badge>
+                      <Button size="sm" variant="destructive" className="h-6 w-6 p-0"
+                        onClick={() => { if (confirm("Supprimer ce billet ?")) deleteTicketMutation.mutate(t.id); }}
+                        data-testid={`btn-delete-ticket-${t.id}`}>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
 
                   {t.description && (
@@ -1346,29 +1364,31 @@ export default function AdminPage() {
                     <img src={t.imageUrl} alt="Capture" className="rounded-lg w-full max-h-48 object-contain bg-gray-100" />
                   )}
 
-                  <div className="flex flex-col gap-1">
-                    <p className="text-[10px] text-gray-400 font-medium">Bonus → Solde de recharge</p>
-                    <div className="flex gap-2 items-center">
-                      <Input
-                        type="number"
-                        placeholder="Bonus (FCFA)"
-                        className="h-8 text-sm"
-                        value={ticketBonuses[t.id] || ""}
-                        onChange={e => setTicketBonuses(p => ({ ...p, [t.id]: e.target.value }))}
-                        data-testid={`input-ticket-bonus-${t.id}`}
-                      />
-                      <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
-                        onClick={() => updateTicketMutation.mutate({ id: t.id, status: "approved", bonus: parseInt(ticketBonuses[t.id] || "0") })}
-                        data-testid={`btn-approve-ticket-${t.id}`}>
-                        <Check className="w-3 h-3 mr-1" /> Approuver
-                      </Button>
-                      <Button size="sm" variant="destructive" className="h-8 whitespace-nowrap"
-                        onClick={() => updateTicketMutation.mutate({ id: t.id, status: "rejected" })}
-                        data-testid={`btn-reject-ticket-${t.id}`}>
-                        <X className="w-3 h-3 mr-1" /> Refuser
-                      </Button>
+                  {t.status === "pending" && (
+                    <div className="flex flex-col gap-1">
+                      <p className="text-[10px] text-gray-400 font-medium">Bonus → Solde de recharge</p>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          type="number"
+                          placeholder="Bonus (FCFA)"
+                          className="h-8 text-sm"
+                          value={ticketBonuses[t.id] || ""}
+                          onChange={e => setTicketBonuses(p => ({ ...p, [t.id]: e.target.value }))}
+                          data-testid={`input-ticket-bonus-${t.id}`}
+                        />
+                        <Button size="sm" className="h-8 bg-green-600 hover:bg-green-700 text-white whitespace-nowrap"
+                          onClick={() => updateTicketMutation.mutate({ id: t.id, status: "approved", bonus: parseInt(ticketBonuses[t.id] || "0") })}
+                          data-testid={`btn-approve-ticket-${t.id}`}>
+                          <Check className="w-3 h-3 mr-1" /> Approuver
+                        </Button>
+                        <Button size="sm" variant="destructive" className="h-8 whitespace-nowrap"
+                          onClick={() => updateTicketMutation.mutate({ id: t.id, status: "rejected" })}
+                          data-testid={`btn-reject-ticket-${t.id}`}>
+                          <X className="w-3 h-3 mr-1" /> Refuser
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </Card>
               ))
             )}
@@ -1507,6 +1527,8 @@ export default function AdminPage() {
                     onChange={e => setCountryForm(f => ({ ...f, paymentProvider: e.target.value }))}
                     className="w-full mt-1 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
                   >
+                    <option value="link">Paiement par lien (manuel)</option>
+                    <option value="sendavapay">Sendavapay (Mobile Money auto)</option>
                     <option value="westpay">WestPay uniquement</option>
                     <option value="soleaspay">SoleasPay uniquement</option>
                     <option value="both">WestPay + SoleasPay</option>
@@ -1551,11 +1573,13 @@ export default function AdminPage() {
                         {c.isActive ? "Actif" : "Inactif"}
                       </Badge>
                       <Badge className={
+                        c.paymentProvider === "sendavapay" ? "bg-green-100 text-green-700" :
                         c.paymentProvider === "soleaspay" ? "bg-blue-100 text-blue-700" :
                         c.paymentProvider === "both" ? "bg-purple-100 text-purple-700" :
+                        c.paymentProvider === "westpay" ? "bg-orange-100 text-orange-700" :
                         "bg-gray-100 text-gray-600"
                       }>
-                        {c.paymentProvider === "soleaspay" ? "SoleasPay" : c.paymentProvider === "both" ? "WP+SP" : "WestPay"}
+                        {c.paymentProvider === "sendavapay" ? "Sendavapay" : c.paymentProvider === "soleaspay" ? "SoleasPay" : c.paymentProvider === "both" ? "WP+SP" : c.paymentProvider === "westpay" ? "WestPay" : "Lien"}
                       </Badge>
                       <button title="Modifier" onClick={() => { setEditingCountry(c); setCountryForm({ name: c.name, flag: c.flag || "", code: c.code || "", operators: (c.operators || []).join(", "), isActive: c.isActive, paymentProvider: c.paymentProvider || "westpay" }); setShowCountryForm(true); }}
                         data-testid={`button-edit-country-${c.id}`} className="p-1.5 rounded-lg hover:bg-gray-100 text-blue-600">
@@ -1577,7 +1601,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {activeTab === "westpay" && (() => {
+        {activeTab === "sendavapay" && (() => {
           const COUNTRY_KEYS = [
             { slug: "CAMEROUN",     label: "🇨🇲 Cameroun",       envVar: "WESTPAY_API_KEY_CAMEROUN" },
             { slug: "BENIN",        label: "🇧🇯 Bénin",           envVar: "WESTPAY_API_KEY_BENIN" },
@@ -1591,409 +1615,134 @@ export default function AdminPage() {
           ];
 
           return (
-            <div className="space-y-3">
-              {/* Statut général */}
-              <Card className="p-4">
-                <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-blue-500" /> Statut WestPay / RobotPay
+            <div className="space-y-4">
+              {/* Clé API Sendavapay */}
+              <Card className="p-4 space-y-3">
+                <h3 className="font-bold text-sm flex items-center gap-2 text-blue-600">
+                  <CreditCard className="w-4 h-4" /> Configuration Sendavapay
                 </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Intégration</span>
-                    <Badge variant={wpStatus?.enabled ? "default" : "secondary"} className={wpStatus?.enabled ? "bg-green-500" : ""}>
-                      {wpStatus?.enabled ? "✓ Activé" : "Non configuré"}
-                    </Badge>
+                <p className="text-xs text-gray-500">Renseignez votre clé API Sendavapay pour activer les dépôts Mobile Money automatiques.</p>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-gray-600">Clé API Sendavapay <span className="text-red-500">*</span></label>
+                    {spKeyFromDb && spApiKey.includes("*") && (
+                      <span className="text-[10px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">✓ Configurée</span>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Marchand (slug)</span>
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{wpStatus?.merchantSlug || "—"}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Clé secrète webhook</span>
-                    <Badge variant={wpStatus?.webhookSecretConfigured ? "default" : "secondary"} className={wpStatus?.webhookSecretConfigured ? "bg-green-500" : "bg-orange-400 text-white"}>
-                      {wpStatus?.webhookSecretConfigured ? "✓ Configurée" : "⚠ Manquante"}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between py-2">
-                    <span className="text-gray-600">URL Webhook</span>
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded max-w-[200px] truncate">{window.location.origin}/api/webhook/westpay</span>
-                  </div>
+                  <Input
+                    data-testid="input-sendavapay-apikey"
+                    className="mt-1 font-mono text-xs"
+                    placeholder="Votre clé API Sendavapay..."
+                    value={spApiKey}
+                    onChange={e => { setSpApiKey(e.target.value); setSpSaved(false); setSpKeyFromDb(false); }}
+                  />
+                  {spKeyFromDb && spApiKey.includes("*") ? (
+                    <p className="text-xs text-green-600 mt-1">Clé déjà enregistrée. Tapez une nouvelle valeur pour la remplacer.</p>
+                  ) : (
+                    <p className="text-xs text-gray-400 mt-1">Clé API disponible dans votre dashboard Sendavapay. Gardez-la confidentielle.</p>
+                  )}
                 </div>
-                {!wpStatus?.webhookSecretConfigured && (
-                  <p className="text-xs text-orange-600 bg-orange-50 rounded p-2 mt-2">
-                    Ajoutez le secret <strong>WESTPAY_WEBHOOK_SECRET</strong> dans les secrets Replit pour sécuriser les webhooks.
-                  </p>
-                )}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-gray-600">Secret Webhook (optionnel)</label>
+                    {spHashFromDb && spSecretHash.includes("*") && (
+                      <span className="text-[10px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">✓ Configuré</span>
+                    )}
+                  </div>
+                  <Input
+                    data-testid="input-sendavapay-secret"
+                    className="mt-1 font-mono text-xs"
+                    placeholder="Secret pour valider les webhooks..."
+                    value={spSecretHash}
+                    onChange={e => { setSpSecretHash(e.target.value); setSpSaved(false); setSpHashFromDb(false); }}
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Utilisé pour valider l'authenticité des notifications de paiement.</p>
+                </div>
+                <Button
+                  data-testid="button-save-sendavapay"
+                  className="w-full"
+                  disabled={updateSettingsMutation.isPending || (!spApiKey || spApiKey.includes("*"))}
+                  onClick={async () => {
+                    const patch: any = { soleaspayApiKey: spApiKey };
+                    if (spSecretHash && !spSecretHash.includes("*")) patch.soleaspaySecretHash = spSecretHash;
+                    await saveSettings(patch);
+                    setSpSaved(true);
+                    setSpKeyFromDb(true);
+                  }}
+                >
+                  {updateSettingsMutation.isPending ? "Enregistrement..." : spSaved ? "✓ Enregistré" : "Enregistrer la clé API"}
+                </Button>
               </Card>
 
-              {/* Clés API par pays */}
-              <Card className="p-4">
-                <h3 className="font-bold text-sm mb-1 flex items-center gap-2">
-                  <Key className="w-4 h-4 text-green-500" /> Clés API par pays
-                </h3>
-                <p className="text-xs text-gray-500 mb-3">
-                  Saisissez la clé API WestPay pour chaque pays directement ici, ou via les Secrets Replit (variable <code className="bg-gray-100 px-1 rounded">WESTPAY_API_KEY_PAYS</code>).
-                </p>
-                <div className="space-y-2">
-                  {COUNTRY_KEYS.map(ck => {
-                    const configured = wpStatus?.countryApiKeys?.[ck.slug];
-                    const preview = wpStatus?.countryApiKeyPreviews?.[ck.slug];
-                    const isEditing = wpApiKeyEditing === ck.slug;
-                    return (
-                      <div key={ck.slug} className={`border rounded-lg p-3 ${configured ? "border-green-100 bg-green-50/40" : "border-gray-100"}`}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium">{ck.label}</span>
-                          <div className="flex items-center gap-2">
-                            {configured ? (
-                              <span className="font-mono text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                                ✓ {preview || "Configurée"}
-                              </span>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs text-orange-600 bg-orange-50">
-                                Manquante
-                              </Badge>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-xs h-7 px-2"
-                              onClick={() => {
-                                setWpApiKeyEditing(isEditing ? null : ck.slug);
-                                setWpApiKeyInputs(prev => ({ ...prev, [ck.slug]: "" }));
-                              }}
-                              data-testid={`btn-edit-wpkey-${ck.slug}`}
-                            >
-                              {isEditing ? "Annuler" : configured ? "Modifier" : "Ajouter"}
-                            </Button>
-                          </div>
-                        </div>
-                        {isEditing && (
-                          <div className="flex gap-2 mt-2">
-                            <Input
-                              placeholder={`Clé API pour ${ck.label}...`}
-                              value={wpApiKeyInputs[ck.slug] || ""}
-                              onChange={e => setWpApiKeyInputs(prev => ({ ...prev, [ck.slug]: e.target.value }))}
-                              className="text-xs h-8 font-mono flex-1"
-                              data-testid={`input-wpkey-${ck.slug}`}
-                            />
-                            <Button
-                              size="sm"
-                              className="h-8 text-xs bg-green-600 hover:bg-green-700 text-white"
-                              disabled={saveWpApiKeyMutation.isPending}
-                              onClick={() => saveWpApiKeyMutation.mutate({ countrySlug: ck.slug, apiKey: wpApiKeyInputs[ck.slug] || "" })}
-                              data-testid={`btn-save-wpkey-${ck.slug}`}
-                            >
-                              Sauvegarder
-                            </Button>
-                            {configured && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 text-xs text-red-500 border-red-200"
-                                disabled={saveWpApiKeyMutation.isPending}
-                                onClick={() => saveWpApiKeyMutation.mutate({ countrySlug: ck.slug, apiKey: "" })}
-                                data-testid={`btn-delete-wpkey-${ck.slug}`}
-                              >
-                                Supprimer
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                        <p className="text-xs font-mono text-gray-300 mt-1">{ck.envVar}</p>
-                      </div>
-                    );
-                  })}
+              {/* URL Webhook */}
+              <Card className="p-4 space-y-3">
+                <h4 className="font-semibold text-sm text-gray-800 flex items-center gap-2">
+                  <Link2 className="w-4 h-4 text-blue-500" /> URL de Webhook à configurer
+                </h4>
+                <p className="text-xs text-gray-500">Copiez cette URL et configurez-la dans votre tableau de bord Sendavapay pour recevoir les notifications de paiement :</p>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex items-center justify-between">
+                  <code className="text-xs text-blue-700 break-all">{window.location.origin}/api/webhook/sendavapay</code>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/api/webhook/sendavapay`); toast({ title: "URL copiée !" }); }}
+                    className="ml-2 text-xs text-blue-600 font-medium whitespace-nowrap"
+                    data-testid="button-copy-sendavapay-webhook"
+                  >
+                    Copier
+                  </button>
                 </div>
-                <p className="text-xs text-gray-400 mt-3">
-                  Trouvez vos clés dans le dashboard WestPay → onglet <strong>"Clés API"</strong>.
+                <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
+                  Dans le dashboard Sendavapay, configurez cette URL comme <strong>callback_url</strong> ou webhook de paiement réussi.
                 </p>
               </Card>
 
-              {/* Activation WestPay par pays */}
+              {/* Activation par pays */}
               <Card className="p-4 space-y-3">
                 <div>
-                  <h3 className="font-bold text-sm mb-1 flex items-center gap-2">
-                    <ToggleRight className="w-4 h-4 text-green-500" /> Activation WestPay par pays
-                  </h3>
-                  <p className="text-xs text-gray-500">Choisissez sur quels pays WestPay s'affiche comme canal de recharge.</p>
+                  <h4 className="font-semibold text-sm text-gray-800 mb-1 flex items-center gap-2">
+                    <ToggleRight className="w-4 h-4 text-green-500" /> Activation Sendavapay par pays
+                  </h4>
+                  <p className="text-xs text-gray-500">Activez Sendavapay (Mobile Money automatique) ou le paiement par lien pour chaque pays.</p>
                 </div>
-
-                {(() => {
-                  const SP_OPS: Record<string, boolean> = {
-                    cameroun: true, benin: true, togo: true,
-                    cote_divoire: true, burkina_faso: true, senegal: true, congo: true, gabon: true,
-                  };
-                  return (
-                    <div className="space-y-2">
-                      {(adminCountries as any[]).length === 0 ? (
-                        <p className="text-center text-gray-400 text-sm py-4">Aucun pays configuré.</p>
-                      ) : (
-                        (adminCountries as any[]).map((c: any) => {
-                          const provider: string = c.paymentProvider || "westpay";
-                          const wpActive = provider === "westpay" || provider === "both";
-                          const spSupported = !!SP_OPS[c.slug];
-                          const canDisable = spSupported;
-
-                          return (
-                            <div key={c.id} className={`border rounded-xl p-3 ${wpActive ? "border-green-200 bg-green-50" : "border-gray-100 bg-white"}`}>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xl">{c.flag}</span>
-                                  <div>
-                                    <p className="font-semibold text-sm text-gray-900">{c.name}</p>
-                                    <p className="text-xs text-gray-400">
-                                      {wpActive ? "WestPay activé" : "WestPay désactivé"}
-                                      {!canDisable && wpActive && <span className="ml-1 text-orange-500">(seul canal disponible)</span>}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {wpActive && (
-                                    <Badge className="bg-green-100 text-green-700 text-xs hidden sm:flex">Actif</Badge>
-                                  )}
-                                  <button
-                                    data-testid={`btn-wp-toggle-${c.id}`}
-                                    disabled={updateCountryMutation.isPending || (!wpActive ? false : !canDisable)}
-                                    onClick={() => {
-                                      let newProvider: string;
-                                      if (wpActive) {
-                                        newProvider = provider === "both" ? "soleaspay" : "soleaspay";
-                                      } else {
-                                        newProvider = provider === "soleaspay" ? "both" : "westpay";
-                                      }
-                                      updateCountryMutation.mutate({ id: c.id, paymentProvider: newProvider });
-                                    }}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-40 ${wpActive ? "bg-green-500" : "bg-gray-200"}`}
-                                  >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${wpActive ? "translate-x-6" : "translate-x-1"}`} />
-                                  </button>
-                                </div>
-                              </div>
-                              {wpActive && !canDisable && (
-                                <p className="text-xs text-orange-500 mt-1.5">
-                                  Pour désactiver WestPay, activez d'abord SoleasPay sur ce pays.
+                <div className="space-y-2">
+                  {(adminCountries as any[]).length === 0 ? (
+                    <p className="text-center text-gray-400 text-sm py-4">Aucun pays configuré. Ajoutez des pays dans l'onglet "Pays".</p>
+                  ) : (
+                    (adminCountries as any[]).map((c: any) => {
+                      const provider: string = c.paymentProvider || "link";
+                      const svActive = provider === "sendavapay";
+                      return (
+                        <div key={c.id} className={`border rounded-xl p-3 ${svActive ? "border-green-200 bg-green-50" : "border-gray-100 bg-white"}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl">{c.flag}</span>
+                              <div>
+                                <p className="font-semibold text-sm text-gray-900">{c.name}</p>
+                                <p className="text-xs text-gray-400">
+                                  {svActive ? "Sendavapay (automatique)" : "Paiement par lien"}
                                 </p>
-                              )}
+                              </div>
                             </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  );
-                })()}
-              </Card>
-
-              {/* Soldes WestPay */}
-              <Card className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-sm flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-green-500" /> Soldes WestPay
-                  </h3>
-                  <Button size="sm" variant="outline" onClick={() => refetchBalances()} disabled={balFetching} data-testid="btn-refresh-balances">
-                    {balFetching ? "Chargement..." : "Actualiser"}
-                  </Button>
+                            <div className="flex items-center gap-2">
+                              {svActive && <Badge className="bg-green-100 text-green-700 text-xs hidden sm:flex">Auto</Badge>}
+                              <button
+                                data-testid={`btn-svp-toggle-${c.id}`}
+                                disabled={updateCountryMutation.isPending}
+                                onClick={() => updateCountryMutation.mutate({ id: c.id, paymentProvider: svActive ? "link" : "sendavapay" })}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${svActive ? "bg-green-500" : "bg-gray-200"}`}
+                              >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${svActive ? "translate-x-6" : "translate-x-1"}`} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
-                {!wpBalances ? (
-                  <p className="text-sm text-gray-400">Cliquez sur "Actualiser" pour charger les soldes.</p>
-                ) : wpBalances.length === 0 ? (
-                  <p className="text-sm text-gray-400">Aucun solde disponible.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {wpBalances.map((b: any, i: number) => (
-                      <div key={i} className="flex justify-between items-center py-2 border-b border-gray-50">
-                        <span className="text-sm text-gray-700">{b.country}</span>
-                        <span className="font-bold text-sm text-green-600">{(b.balance || 0).toLocaleString()} FCFA</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </Card>
             </div>
           );
         })()}
-
-        {/* ══════════ SOLEASPAY ══════════ */}
-        {activeTab === "soleaspay" && (
-          <div className="space-y-5">
-            <div>
-              <h3 className="font-bold text-gray-900 mb-1">Configuration SoleasPay</h3>
-              <p className="text-xs text-gray-500">Renseignez les identifiants de votre compte SoleasPay pour activer les dépôts Mobile Money via push.</p>
-            </div>
-
-            <Card className="p-4 space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-gray-600">Clé API SoleasPay <span className="text-red-500">*</span></label>
-                  {spKeyFromDb && spApiKey.includes("*") && (
-                    <span className="text-[10px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">✓ Configurée</span>
-                  )}
-                </div>
-                <Input
-                  data-testid="input-soleaspay-apikey"
-                  className="mt-1 font-mono text-xs"
-                  placeholder="SP_BSnx7C0..."
-                  value={spApiKey}
-                  onChange={e => { setSpApiKey(e.target.value); setSpSaved(false); setSpKeyFromDb(false); }}
-                />
-                {spKeyFromDb && spApiKey.includes("*") ? (
-                  <p className="text-xs text-green-600 mt-1">Clé déjà enregistrée. Tapez une nouvelle valeur pour la remplacer.</p>
-                ) : (
-                  <p className="text-xs text-gray-400 mt-1">Clé fournie par SoleasPay. Gardez-la confidentielle.</p>
-                )}
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-gray-600">Secret Hash (webhook)</label>
-                  {spHashFromDb && spSecretHash.includes("*") && (
-                    <span className="text-[10px] bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">✓ Configuré</span>
-                  )}
-                </div>
-                <Input
-                  data-testid="input-soleaspay-secret"
-                  className="mt-1 font-mono text-xs"
-                  placeholder="Votre secret hash pour vérifier les callbacks"
-                  value={spSecretHash}
-                  onChange={e => { setSpSecretHash(e.target.value); setSpSaved(false); setSpHashFromDb(false); }}
-                />
-                <p className="text-xs text-gray-400 mt-1">Optionnel. Utilisé pour valider l'authenticité des webhooks SoleasPay.</p>
-              </div>
-              <Button
-                data-testid="button-save-soleaspay"
-                className="w-full"
-                disabled={updateSettingsMutation.isPending || (!spApiKey || spApiKey.includes("*"))}
-                onClick={async () => {
-                  const patch: any = { soleaspayApiKey: spApiKey };
-                  if (spSecretHash && !spSecretHash.includes("*")) patch.soleaspaySecretHash = spSecretHash;
-                  await saveSettings(patch);
-                  setSpSaved(true);
-                  setSpKeyFromDb(true);
-                }}
-              >
-                {updateSettingsMutation.isPending ? "Enregistrement..." : spSaved ? "✓ Enregistré" : "Enregistrer les identifiants"}
-              </Button>
-            </Card>
-
-            <Card className="p-4 space-y-3">
-              <h4 className="font-semibold text-sm text-gray-800">URL de Webhook SoleasPay</h4>
-              <p className="text-xs text-gray-500">Configurez cette URL dans votre tableau de bord SoleasPay pour recevoir les notifications de paiement :</p>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex items-center justify-between">
-                <code className="text-xs text-blue-700 break-all">{window.location.origin}/api/webhook/soleaspay</code>
-                <button
-                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/api/webhook/soleaspay`); toast({ title: "URL copiée !" }); }}
-                  className="ml-2 text-xs text-blue-600 font-medium whitespace-nowrap"
-                  data-testid="button-copy-webhook-url"
-                >
-                  Copier
-                </button>
-              </div>
-            </Card>
-
-            <Card className="p-4 space-y-3">
-              <div>
-                <h4 className="font-semibold text-sm text-gray-800 mb-1">Activation SoleasPay par pays</h4>
-                <p className="text-xs text-gray-500">Activez SoleasPay comme canal de recharge pour chaque pays. Les utilisateurs de ce pays verront l'option SoleasPay à la recharge.</p>
-              </div>
-
-              {(() => {
-                // SoleasPay operator support per country slug
-                const SP_OPS: Record<string, string[]> = {
-                  cameroun:     ["MTN Mobile Money", "Orange Money"],
-                  benin:        ["MTN", "Moov Money"],
-                  togo:         ["T-Money", "Moov Money"],
-                  cote_divoire: ["Orange Money", "MTN Mobile Money", "Moov Money", "Wave"],
-                  burkina_faso: ["Moov Money", "Orange Money"],
-                  senegal:      ["Orange Money", "Wave", "Free Money"],
-                  congo:        ["MTN Mobile Money", "Airtel Money"],
-                  gabon:        ["Airtel Money"],
-                };
-
-                return (
-                  <div className="space-y-2">
-                    {(adminCountries as any[]).length === 0 ? (
-                      <p className="text-center text-gray-400 text-sm py-4">Aucun pays configuré. Ajoutez des pays dans l'onglet "Pays".</p>
-                    ) : (
-                      (adminCountries as any[]).map((c: any) => {
-                        const provider: string = c.paymentProvider || "westpay";
-                        const spActive = provider === "soleaspay" || provider === "both";
-                        const ops = SP_OPS[c.slug] || [];
-                        const supported = ops.length > 0;
-
-                        return (
-                          <div key={c.id} className={`border rounded-xl p-3 ${spActive ? "border-blue-200 bg-blue-50" : "border-gray-100 bg-white"}`}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <span className="text-xl flex-shrink-0">{c.flag}</span>
-                                <div className="min-w-0">
-                                  <p className="font-semibold text-sm text-gray-900">{c.name}</p>
-                                  {supported ? (
-                                    <p className="text-xs text-gray-400 truncate">{ops.join(", ")}</p>
-                                  ) : (
-                                    <p className="text-xs text-orange-500">Non supporté par SoleasPay</p>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                {spActive && (
-                                  <Badge className="bg-blue-100 text-blue-700 text-xs hidden sm:flex">Actif</Badge>
-                                )}
-                                {supported ? (
-                                  <div className="flex gap-1">
-                                    {/* Toggle SoleasPay only */}
-                                    <button
-                                      data-testid={`btn-sp-toggle-${c.id}`}
-                                      onClick={() => {
-                                        let newProvider: string;
-                                        if (!spActive) {
-                                          // Activer SoleasPay — garder WestPay si il y avait des canaux WestPay
-                                          newProvider = provider === "westpay" ? "both" : "soleaspay";
-                                        } else {
-                                          // Désactiver SoleasPay
-                                          newProvider = provider === "both" ? "westpay" : "westpay";
-                                        }
-                                        updateCountryMutation.mutate({ id: c.id, paymentProvider: newProvider });
-                                      }}
-                                      disabled={updateCountryMutation.isPending}
-                                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${spActive ? "bg-blue-500" : "bg-gray-200"}`}
-                                    >
-                                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${spActive ? "translate-x-6" : "translate-x-1"}`} />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <Badge className="bg-gray-100 text-gray-400 text-xs">Indisponible</Badge>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Mode selector — shown only when SoleasPay is active */}
-                            {spActive && supported && (
-                              <div className="mt-2 pt-2 border-t border-blue-100 flex gap-2">
-                                <button
-                                  data-testid={`btn-sp-mode-both-${c.id}`}
-                                  onClick={() => updateCountryMutation.mutate({ id: c.id, paymentProvider: "both" })}
-                                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${provider === "both" ? "bg-blue-500 text-white" : "bg-white border border-blue-200 text-blue-600"}`}
-                                >
-                                  WestPay + SoleasPay
-                                </button>
-                                <button
-                                  data-testid={`btn-sp-mode-solo-${c.id}`}
-                                  onClick={() => updateCountryMutation.mutate({ id: c.id, paymentProvider: "soleaspay" })}
-                                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-all ${provider === "soleaspay" ? "bg-blue-500 text-white" : "bg-white border border-blue-200 text-blue-600"}`}
-                                >
-                                  SoleasPay uniquement
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                );
-              })()}
-            </Card>
-          </div>
-        )}
 
         {/* ══════════ CHAT ══════════ */}
         {activeTab === "chat" && (

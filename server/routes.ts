@@ -22,6 +22,10 @@ import {
   soleasPayCollect, verifySoleasPayCallback,
   getSoleasPayServiceId, getSoleasPayOperators, getSoleasPayCurrency,
 } from "./soleaspay";
+import {
+  sendavapayCollect, verifySendavapaySignature,
+  getSendavapayOperators, getSendavapayCurrency,
+} from "./sendavapay";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -484,6 +488,102 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   app.get("/api/soleaspay/operators/:countrySlug", requireAuth, async (req: Request, res: Response) => {
     const operators = getSoleasPayOperators(req.params.countrySlug);
     res.json(operators);
+  });
+
+  // ─── Sendavapay — Get operators for a country ────────────────────────────
+  app.get("/api/sendavapay/operators/:countrySlug", requireAuth, async (req: Request, res: Response) => {
+    const operators = getSendavapayOperators(req.params.countrySlug);
+    res.json(operators);
+  });
+
+  // ─── Sendavapay — Initiate Pay-In ─────────────────────────────────────────
+  app.post("/api/user/deposit/sendavapay/init", requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = (req.session as any).userId;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
+
+      const s = await storage.getSettings();
+      const apiKey = s.soleaspayApiKey || process.env.SENDAVAPAY_API_KEY;
+      if (!apiKey) return res.status(503).json({ message: "Paiement Mobile Money non configuré. Contactez le support." });
+
+      const { amount, operator, phoneNumber, country } = req.body;
+      if (!amount || amount < 100) return res.status(400).json({ message: "Montant invalide" });
+      if (!operator) return res.status(400).json({ message: "Opérateur requis" });
+
+      const countrySlug = country || user.country || "";
+      const currency = getSendavapayCurrency(countrySlug);
+      const wallet = phoneNumber || user.phone;
+      const callbackUrl = `${process.env.APP_URL || "https://" + req.headers.host}/api/webhook/sendavapay`;
+
+      const tx = await storage.createTransaction(userId, {
+        type: "deposit",
+        amount,
+        country: countrySlug,
+        paymentMethod: operator,
+        phoneNumber: wallet,
+        status: "pending",
+        channelName: "Mobile Money",
+      });
+
+      const result = await sendavapayCollect({
+        apiKey,
+        amount,
+        currency,
+        phone: wallet,
+        operator,
+        orderId: tx.id,
+        callbackUrl,
+      });
+
+      await storage.updateTransaction(tx.id, { externalRef: result.reference } as any);
+
+      res.json({ txId: tx.id, reference: result.reference, status: result.status });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  // ─── Sendavapay — Webhook callback ───────────────────────────────────────
+  app.post("/api/webhook/sendavapay", async (req: Request, res: Response) => {
+    try {
+      const signature = req.headers["x-signature"] as string || req.headers["x-webhook-signature"] as string || "";
+      const rawBody = ((req as any).rawBody as Buffer)?.toString("utf8") || JSON.stringify(req.body);
+
+      const s = await storage.getSettings();
+      const secretKey = s.soleaspaySecretHash || process.env.SENDAVAPAY_WEBHOOK_SECRET || "";
+      if (secretKey) {
+        if (!verifySendavapaySignature(rawBody, signature, secretKey)) {
+          return res.status(401).json({ message: "Signature invalide" });
+        }
+      }
+
+      const payload = req.body as any;
+      // Support multiple callback formats
+      const status = payload.status || payload.data?.status || "";
+      const orderId = payload.order_id || payload.reference || payload.data?.order_id || payload.data?.external_reference || payload.transaction_id || "";
+      const isSuccess = status === "SUCCESS" || status === "success" || status === "SUCCESSFUL" || payload.success === true || payload.event === "payment.successful";
+
+      if (!isSuccess) {
+        return res.json({ received: true });
+      }
+      if (!orderId) return res.json({ received: true, matched: false });
+
+      const [existingTx] = await db.select().from(transactions).where(eq(transactions.id, orderId));
+      if (!existingTx) return res.json({ received: true, matched: false });
+      if (existingTx.status === "approved") return res.json({ received: true, alreadyApproved: true });
+
+      await storage.updateTransaction(orderId, { status: "approved" } as any);
+      await db.update(users)
+        .set({ depositBalance: sql`${users.depositBalance} + ${existingTx.amount}` })
+        .where(eq(users.id, existingTx.userId));
+
+      console.log(`[Sendavapay webhook] Dépôt approuvé — userId=${existingTx.userId} +${existingTx.amount} FCFA`);
+      res.json({ received: true, matched: true });
+    } catch (e: any) {
+      console.error("[Sendavapay webhook error]", e.message);
+      res.status(500).json({ message: e.message });
+    }
   });
 
   // ─── SoleasPay — Initiate Pay-In ─────────────────────────────────────────
@@ -1087,7 +1187,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   });
 
   app.get("/api/admin/tickets", requireAuth, requireAdmin, async (req: Request, res: Response) => {
-    const tix = await storage.getAllTickets("pending");
+    const tix = await storage.getAllTickets();
     res.json(tix);
   });
 
@@ -1102,6 +1202,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         }
       }
       res.json(ticket);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.delete("/api/admin/tickets/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteTicket(req.params.id);
+      res.json({ success: true });
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }

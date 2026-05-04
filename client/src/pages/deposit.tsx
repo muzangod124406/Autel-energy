@@ -31,6 +31,14 @@ export default function DepositPage() {
   const [soleasErrorMsg, setSoleasErrorMsg] = useState("");
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [svpOperator, setSvpOperator] = useState("");
+  const [svpPhone, setSvpPhone] = useState(user?.phone || "");
+  const [showSvpPending, setShowSvpPending] = useState(false);
+  const [svpPendingStatus, setSvpPendingStatus] = useState<"pending" | "success" | "error">("pending");
+  const [svpTxId, setSvpTxId] = useState<string | null>(null);
+  const [svpErrorMsg, setSvpErrorMsg] = useState("");
+  const svpPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const { data: channels = [] } = useQuery<any[]>({ queryKey: ["/api/channels"] });
   const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
   const { data: countriesRaw = [] } = useQuery({ queryKey: ["/api/countries"] });
@@ -39,7 +47,8 @@ export default function DepositPage() {
   const depositMinAmount = settings?.depositMinAmount || 1000;
 
   const userCountryInfo = countriesList.find((c: any) => c.slug === user?.country);
-  const paymentProvider: string = userCountryInfo?.paymentProvider || "westpay";
+  const paymentProvider: string = userCountryInfo?.paymentProvider || "link";
+  const showSendavapay = paymentProvider === "sendavapay";
   const showSoleasPay = paymentProvider === "soleaspay" || paymentProvider === "both";
   const showWestPay   = paymentProvider === "westpay"   || paymentProvider === "both";
 
@@ -54,6 +63,16 @@ export default function DepositPage() {
       return res.json();
     },
     enabled: !!soleasCountry && showSoleasPay,
+  });
+
+  const { data: svpOperators = [] } = useQuery<string[]>({
+    queryKey: ["/api/sendavapay/operators", user?.country],
+    queryFn: async () => {
+      if (!user?.country) return [];
+      const res = await fetch(`/api/sendavapay/operators/${user.country}`, { credentials: "include" });
+      return res.json();
+    },
+    enabled: showSendavapay,
   });
 
   const depositMutation = useMutation({
@@ -129,10 +148,62 @@ export default function DepositPage() {
     onError: (e: any) => toast({ title: e.message || "Erreur WestPay", variant: "destructive" }),
   });
 
+  const svpMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/user/deposit/sendavapay/init", data);
+      if (!res.ok) { const err = await res.json(); throw new Error(err.message || "Erreur de paiement"); }
+      return res.json();
+    },
+    onSuccess: (data: any) => setSvpTxId(data.txId),
+    onError: (e: any) => { setSvpErrorMsg(e.message || "Erreur lors du lancement du paiement"); setSvpPendingStatus("error"); },
+  });
+
+  useEffect(() => {
+    if (!svpTxId) return;
+    if (svpPollingRef.current) clearInterval(svpPollingRef.current);
+    const startedAt = Date.now();
+    const TIMEOUT_MS = 5 * 60 * 1000;
+    const poll = async () => {
+      if (Date.now() - startedAt > TIMEOUT_MS) {
+        if (svpPollingRef.current) clearInterval(svpPollingRef.current);
+        svpPollingRef.current = null;
+        setSvpTxId(null);
+        setSvpErrorMsg("Délai dépassé. Contactez le support si nécessaire.");
+        setSvpPendingStatus("error");
+        return;
+      }
+      try {
+        const res = await fetch(`/api/user/transaction/${svpTxId}`, { credentials: "include" });
+        if (!res.ok) return;
+        const tx = await res.json();
+        if (tx.status === "approved") {
+          if (svpPollingRef.current) clearInterval(svpPollingRef.current);
+          svpPollingRef.current = null;
+          setSvpTxId(null);
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+          refreshUser();
+          setSvpPhone(""); setSvpOperator("");
+          setSvpPendingStatus("success");
+        } else if (tx.status === "rejected" || tx.status === "failed") {
+          if (svpPollingRef.current) clearInterval(svpPollingRef.current);
+          svpPollingRef.current = null;
+          setSvpTxId(null);
+          setSvpErrorMsg("Paiement refusé ou échoué. Vérifiez votre solde Mobile Money.");
+          setSvpPendingStatus("error");
+        }
+      } catch { }
+    };
+    svpPollingRef.current = setInterval(poll, 3000);
+    return () => { if (svpPollingRef.current) clearInterval(svpPollingRef.current); };
+  }, [svpTxId]);
+
   const selectedChannel = (channels as any[]).find((c: any) => c.id === selectedChannelId);
 
   // All available methods for step 2
   const availableMethods: { id: string; name: string; sub: string; icon: any }[] = [];
+  if (showSendavapay) {
+    availableMethods.push({ id: "__sendavapay__", name: "Mobile Money", sub: "Paiement automatique instantané", icon: "mobilemoney" });
+  }
   if (showSoleasPay) {
     availableMethods.push({ id: "__soleaspay__", name: soleasChannelName, sub: "Mobile Money automatique", icon: "mobilemoney" });
   }
@@ -176,6 +247,15 @@ export default function DepositPage() {
       return;
     }
     const amt = parseInt(amount);
+    if (selectedChannelId === "__sendavapay__") {
+      if (!svpOperator || !svpPhone) {
+        toast({ title: "Informations incomplètes", description: "Opérateur et numéro requis", variant: "destructive" });
+        return;
+      }
+      setSvpErrorMsg(""); setSvpPendingStatus("pending"); setShowSvpPending(true);
+      svpMutation.mutate({ amount: amt, country: user?.country, operator: svpOperator, phoneNumber: svpPhone });
+      return;
+    }
     if (selectedChannelId === "__soleaspay__") {
       if (!soleasCountry || !soleasOperator || !soleasPhone) {
         toast({ title: "Informations incomplètes", description: "Pays, opérateur et numéro requis", variant: "destructive" });
@@ -211,8 +291,54 @@ export default function DepositPage() {
     if (selectedChannel?.redirectUrl) setTimeout(() => window.open(selectedChannel.redirectUrl, "_blank"), 500);
   };
 
-  const isPending = depositMutation.isPending || westpayMutation.isPending || soleasMutation.isPending || isRedirecting;
+  const isPending = depositMutation.isPending || westpayMutation.isPending || soleasMutation.isPending || svpMutation.isPending || isRedirecting;
   const amt = parseInt(amount) || 0;
+
+  // ── Sendavapay pending overlay ────────────────────────────────
+  if (showSvpPending) {
+    return (
+      <div className="fixed inset-0 bg-gray-50 flex flex-col items-center justify-center px-8 text-center z-50">
+        {svpPendingStatus === "pending" && (
+          <>
+            <div className="w-20 h-20 rounded-full bg-amber-50 border-4 border-amber-200 flex items-center justify-center mb-6">
+              <Loader2 className="w-9 h-9 text-amber-500 animate-spin" />
+            </div>
+            <p className="text-gray-800 font-bold text-xl mb-2">Paiement en cours…</p>
+            <p className="text-gray-500 text-sm leading-relaxed mb-3">
+              Vérifiez votre téléphone et confirmez la demande de paiement de <strong>{amt.toLocaleString()} FCFA</strong> sur <strong>{svpOperator}</strong>.
+            </p>
+            <p className="text-gray-400 text-xs">Ne fermez pas cette page</p>
+          </>
+        )}
+        {svpPendingStatus === "success" && (
+          <>
+            <div className="w-20 h-20 rounded-full bg-emerald-50 border-4 border-emerald-200 flex items-center justify-center mb-6">
+              <CheckCircle2 className="w-9 h-9 text-emerald-500" />
+            </div>
+            <p className="text-gray-800 font-bold text-xl mb-2">Paiement réussi !</p>
+            <p className="text-gray-500 text-sm mb-6">Votre solde a été crédité de <strong>{amt.toLocaleString()} FCFA</strong>.</p>
+            <button onClick={() => { setShowSvpPending(false); setStep(1); setAmount(""); setSelectedChannelId(""); navigate("/"); }}
+              className="px-8 py-3.5 rounded-2xl font-bold text-black text-sm" style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}>
+              Retour à l'accueil
+            </button>
+          </>
+        )}
+        {svpPendingStatus === "error" && (
+          <>
+            <div className="w-20 h-20 rounded-full bg-red-50 border-4 border-red-200 flex items-center justify-center mb-6">
+              <AlertCircle className="w-9 h-9 text-red-500" />
+            </div>
+            <p className="text-gray-800 font-bold text-xl mb-2">Paiement échoué</p>
+            <p className="text-gray-500 text-sm leading-relaxed mb-6">{svpErrorMsg}</p>
+            <button onClick={() => { setShowSvpPending(false); setSvpPendingStatus("pending"); }}
+              className="px-8 py-3.5 rounded-2xl font-bold text-black text-sm" style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}>
+              Réessayer
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
 
   // ── SoleasPay pending overlay ─────────────────────────────────
   if (showSoleasPending) {
@@ -469,6 +595,38 @@ export default function DepositPage() {
               ))}
             </div>
           </div>
+
+          {/* Sendavapay inline fields */}
+          {selectedChannelId === "__sendavapay__" && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+              <p className="text-gray-700 font-bold text-sm">Informations Mobile Money</p>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Opérateur</label>
+                {(svpOperators as string[]).length === 0
+                  ? <p className="text-xs text-gray-400">Chargement des opérateurs…</p>
+                  : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {(svpOperators as string[]).map(op => (
+                        <button key={op} type="button" onClick={() => setSvpOperator(op)}
+                          className={`py-3 rounded-xl border text-sm font-medium transition-all ${
+                            svpOperator === op ? "border-amber-500 bg-amber-50 text-amber-600" : "border-gray-200 text-gray-700 bg-white"
+                          }`}>
+                          {op}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+              </div>
+              {svpOperator && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Numéro Mobile Money</label>
+                  <input type="tel" placeholder="Ex: 0701234567" value={svpPhone}
+                    onChange={e => setSvpPhone(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none bg-white focus:border-amber-400" />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* SoleasPay inline fields */}
           {selectedChannelId === "__soleaspay__" && (

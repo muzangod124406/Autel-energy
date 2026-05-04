@@ -61,6 +61,7 @@ export interface IStorage {
   getUserTickets(userId: string): Promise<Ticket[]>;
   getAllTickets(status?: string): Promise<(Ticket & { user?: User })[]>;
   updateTicket(id: string, data: Partial<Ticket>): Promise<Ticket | undefined>;
+  deleteTicket(id: string): Promise<void>;
 
   getSettings(): Promise<Settings>;
   updateSettings(data: Partial<Settings>): Promise<Settings>;
@@ -443,7 +444,7 @@ export class DatabaseStorage implements IStorage {
     if (status) {
       tix = await db.select().from(tickets).where(eq(tickets.status, status)).orderBy(desc(tickets.createdAt));
     } else {
-      tix = await db.select().from(tickets).where(eq(tickets.status, "approved")).orderBy(desc(tickets.createdAt));
+      tix = await db.select().from(tickets).orderBy(desc(tickets.createdAt));
     }
     const result = [];
     for (const t of tix) {
@@ -456,6 +457,10 @@ export class DatabaseStorage implements IStorage {
   async updateTicket(id: string, data: Partial<Ticket>): Promise<Ticket | undefined> {
     const [ticket] = await db.update(tickets).set(data).where(eq(tickets.id, id)).returning();
     return ticket;
+  }
+
+  async deleteTicket(id: string): Promise<void> {
+    await db.delete(tickets).where(eq(tickets.id, id));
   }
 
   async getSettings(): Promise<Settings> {
