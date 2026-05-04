@@ -1,10 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, MessageCircle, Phone, Globe } from "lucide-react";
 import { useLocation } from "wouter";
-import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 import claraImg from "@assets/561c62c4e80617ebf5313bc562f02542_1774182788114.jpg";
-import { SiTelegram } from "react-icons/si";
-import EmptyState from "@/components/empty-state";
+import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 
 export default function TelegramPage() {
   const [, navigate] = useLocation();
@@ -12,83 +10,110 @@ export default function TelegramPage() {
 
   const serviceClient1 = settings?.serviceClient1 || "";
   const serviceClient2 = settings?.serviceClient2 || "";
-  const telegramGroup = settings?.telegramGroup || "";
+  const telegramGroup  = settings?.telegramGroup  || "";
 
-  const links = [
-    ...(serviceClient1 ? [{ label: "Services en ligne", url: serviceClient1 }] : []),
-    ...(serviceClient2 ? [{ label: "Service client 2", url: serviceClient2 }] : []),
-    ...(telegramGroup ? [{ label: "Groupe officiel", url: telegramGroup }] : []),
+  const externalLinks = [
+    ...(serviceClient1 ? [{ label: "Service en ligne 1",  url: serviceClient1, Icon: MessageCircle, color: "text-amber-500",  bg: "bg-amber-50" }]  : []),
+    ...(serviceClient2 ? [{ label: "Service en ligne 2",  url: serviceClient2, Icon: Phone,         color: "text-emerald-600",bg: "bg-emerald-50" }] : []),
+    ...(telegramGroup  ? [{ label: "Groupe officiel",     url: telegramGroup,  Icon: Globe,         color: "text-blue-500",   bg: "bg-blue-50" }]   : []),
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
+
       {/* Header gold */}
-      <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }} className="px-4 pt-6 pb-5">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/")} data-testid="button-back-service" className="text-white">
+      <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }} className="px-4 pt-10 pb-6">
+        <div className="flex items-center gap-3 mb-5">
+          <button onClick={() => navigate("/account")} data-testid="button-back-service" className="text-white">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-white font-bold text-lg">Service client</h1>
+          <h1 className="text-white font-bold text-xl">DEEN SINOPEC</h1>
         </div>
-      </div>
 
-      {/* Hero card */}
-      <div className="mx-4 -mt-2 bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 mt-4">
-        <div className="flex items-center justify-between px-5 py-5">
+        {/* Hero info */}
+        <div className="bg-white/15 rounded-2xl px-4 py-4 border border-white/25 flex items-center gap-4">
+          <img src={headsetIcon} alt="Support" className="w-16 h-16 object-contain" />
           <div>
-            <p className="font-extrabold text-gray-900 text-lg leading-tight">Un service en ligne</p>
-            <p className="text-gray-500 text-xs mt-1">Bonjour, comment puis-je vous aider!</p>
-            <div className="mt-3 px-3 py-1.5 rounded-full text-black text-xs font-bold inline-block" style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}>
-              Disponible 24h/7j
+            <p className="text-white font-bold text-lg">Support DEEN SINOPEC</p>
+            <p className="text-white/75 text-xs mt-0.5">Assistance disponible 24h/7j</p>
+            <div className="mt-2 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-white/80 text-xs font-medium">En ligne</span>
             </div>
           </div>
-          <img src={headsetIcon} alt="Service client" className="w-20 h-20 object-contain" />
         </div>
       </div>
 
-      {/* Service links */}
-      <div className="px-4 mt-4 space-y-3">
+      <div className="px-4 -mt-3 space-y-3">
 
-        {/* Clara card */}
-        <button
-          data-testid="button-clara-chat"
-          onClick={() => navigate("/service-client")}
-          className="w-full flex items-center justify-between bg-white rounded-2xl px-4 py-4 shadow-sm border border-gray-100 active:bg-gray-50 text-left"
-        >
-          <div className="flex items-center gap-3">
-            <div className="relative flex-shrink-0">
-              <img src={claraImg} alt="Clara" className="w-11 h-11 rounded-full object-cover" />
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900 text-sm">Clara autel service</p>
-              <p className="text-emerald-500 text-xs mt-0.5">En ligne</p>
-            </div>
+        {/* Chat direct avec Clara */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-50">
+            <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Assistance directe</p>
           </div>
-          <ExternalLink className="w-4 h-4 text-gray-300" />
-        </button>
-
-        {links.map((item, i) => (
-          <a
-            key={i}
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid={`link-service-${i}`}
-            className="flex items-center justify-between bg-white rounded-2xl px-4 py-4 shadow-sm border border-gray-100 active:bg-gray-50"
+          <button
+            data-testid="button-clara-chat"
+            onClick={() => navigate("/service-client")}
+            className="w-full flex items-center justify-between px-4 py-4 active:bg-gray-50 text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}>
-                <SiTelegram className="w-6 h-6 text-white" />
+              <div className="relative flex-shrink-0">
+                <img src={claraImg} alt="DEEN" className="w-12 h-12 rounded-full object-cover border-2 border-amber-100" />
+                <span className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
-                <p className="text-gray-400 text-xs mt-0.5 max-w-[200px] truncate">{item.url}</p>
+                <p className="font-bold text-gray-900 text-sm">Clara — DEEN SINOPEC</p>
+                <p className="text-emerald-500 text-xs mt-0.5 font-medium">En ligne · Répond rapidement</p>
               </div>
             </div>
-            <ExternalLink className="w-4 h-4 text-gray-300" />
-          </a>
-        ))}
+            <div className="flex items-center gap-2 text-black text-xs font-bold px-3 py-2 rounded-xl"
+              style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}>
+              <MessageCircle className="w-3.5 h-3.5" />
+              Chat
+            </div>
+          </button>
+        </div>
+
+        {/* Liens externes */}
+        {externalLinks.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-50">
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Autres canaux</p>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {externalLinks.map((item, i) => (
+                <a
+                  key={i}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid={`link-service-${i}`}
+                  className="flex items-center justify-between px-4 py-4 active:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${item.bg}`}>
+                      <item.Icon className={`w-5 h-5 ${item.color}`} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
+                      <p className="text-gray-400 text-xs mt-0.5 max-w-[200px] truncate">{item.url}</p>
+                    </div>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Info card */}
+        <div className="bg-amber-50 rounded-2xl px-4 py-4 border border-amber-100">
+          <p className="text-amber-800 font-bold text-sm mb-1">DEEN SINOPEC</p>
+          <p className="text-amber-700 text-xs leading-relaxed">
+            Notre équipe de support est disponible pour vous aider avec vos dépôts, retraits, commandes et toutes questions relatives à votre compte.
+          </p>
+        </div>
+
       </div>
     </div>
   );

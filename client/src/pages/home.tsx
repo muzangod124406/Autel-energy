@@ -3,8 +3,7 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDownToLine, ArrowUpFromLine, FileText, Headset, Gift, TrendingUp, Zap, ChevronRight } from "lucide-react";
-import rewardIcon from "@assets/reward_icon_1773608863536.png";
+import { ArrowDownToLine, ArrowUpFromLine, Gift, TrendingUp, Zap, ChevronRight, Receipt, Star } from "lucide-react";
 
 export default function HomePage() {
   const { user, refreshUser } = useAuth();
@@ -38,16 +37,14 @@ export default function HomePage() {
   if (!user) return null;
 
   const ACTION_BUTTONS = [
-    { label: "Recharger", icon: <ArrowDownToLine className="w-6 h-6" />, onClick: () => navigate("/deposit"), testId: "button-recharge", color: "bg-emerald-50 text-emerald-600 border border-emerald-100" },
-    { label: "Retrait", icon: <ArrowUpFromLine className="w-6 h-6" />, onClick: () => navigate("/withdraw"), testId: "button-withdraw", color: "bg-amber-50 text-amber-600 border border-amber-100" },
-    { label: "Billet", icon: <FileText className="w-6 h-6" />, onClick: () => navigate("/billet"), testId: "button-billet", color: "bg-blue-50 text-blue-600 border border-blue-100" },
-    { label: "Support", icon: <Headset className="w-6 h-6" />, onClick: () => navigate("/service-client"), testId: "button-service-client", color: "bg-purple-50 text-purple-600 border border-purple-100" },
+    { label: "Recharger", icon: <ArrowDownToLine className="w-7 h-7" />, onClick: () => navigate("/deposit"), testId: "button-recharge", color: "bg-emerald-50 text-emerald-600 border border-emerald-100" },
+    { label: "Retrait",   icon: <ArrowUpFromLine className="w-7 h-7" />, onClick: () => navigate("/withdraw"), testId: "button-withdraw", color: "bg-amber-50 text-amber-600 border border-amber-100" },
   ];
 
   return (
     <div className="min-h-screen pb-28 bg-gray-50">
 
-      {/* ── Header gold ────────────────────────── */}
+      {/* Header gold */}
       <div className="px-5 pt-7 pb-6" style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -86,15 +83,15 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Action buttons */}
+      {/* Action buttons — 2 boutons seulement */}
       <div className="px-5 -mt-4 mb-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {ACTION_BUTTONS.map(btn => (
               <button key={btn.label} data-testid={btn.testId} onClick={btn.onClick}
-                className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all active:scale-95 ${btn.color}`}>
+                className={`flex flex-col items-center gap-2.5 py-5 rounded-2xl transition-all active:scale-95 ${btn.color}`}>
                 {btn.icon}
-                <span className="text-[10px] font-semibold">{btn.label}</span>
+                <span className="text-sm font-bold">{btn.label}</span>
               </button>
             ))}
           </div>
@@ -129,43 +126,17 @@ export default function HomePage() {
           )}
         </button>
 
-        {/* Jeu promo */}
-        <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-          <div className="flex items-center p-4 gap-4">
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-amber-500" />
-                <p className="text-amber-500 text-xs font-semibold uppercase tracking-wider">Jeu de récompenses</p>
-              </div>
-              <h3 className="text-gray-900 text-lg font-bold leading-tight">Roue de la Fortune</h3>
-              <p className="text-gray-400 text-xs leading-relaxed">Invitez des amis et gagnez des tours gratuits !</p>
-              <button
-                onClick={() => navigate("/game")}
-                data-testid="button-play-game"
-                className="mt-1 inline-flex items-center gap-1 text-black text-xs font-bold px-4 py-2 rounded-full"
-                style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}
-              >
-                Jouer maintenant →
-              </button>
-            </div>
-            <div className="shrink-0">
-              <img src={rewardIcon} alt="cadeau" className="w-24 h-24 object-contain" />
-            </div>
-          </div>
-        </div>
-
         {/* Quick links */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
           {[
-            { label: "Investir maintenant", sub: "Voir les produits disponibles", route: "/invest", color: "text-amber-500", bg: "bg-amber-50" },
-            { label: "Mon équipe", sub: "Gérer mes filleuls", route: "/invite", color: "text-blue-500", bg: "bg-blue-50" },
-            { label: "Mes transactions", sub: "Historique complet", route: "/transactions", color: "text-purple-500", bg: "bg-purple-50" },
+            { label: "Mes transactions", sub: "Historique complet", route: "/transactions", color: "text-purple-500", bg: "bg-purple-50", Icon: Receipt },
+            { label: "Mes commandes",    sub: "Produits investis",  route: "/orders",       color: "text-blue-500",   bg: "bg-blue-50",   Icon: Star },
           ].map(item => (
             <button key={item.route} onClick={() => navigate(item.route)}
               className="w-full flex items-center justify-between px-4 py-3.5 active:bg-gray-50">
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center`}>
-                  <TrendingUp className={`w-4 h-4 ${item.color}`} />
+                  <item.Icon className={`w-4 h-4 ${item.color}`} />
                 </div>
                 <div className="text-left">
                   <p className="text-gray-800 font-semibold text-sm">{item.label}</p>

@@ -1,8 +1,8 @@
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import {
-  ChevronRight, TrendingUp, ShoppingBag, FileText,
-  Lock, CreditCard, Headset, Gift, Info, LogOut, Shield,
+  ChevronRight, TrendingUp, ShoppingBag, Receipt,
+  CreditCard, Headset, Gift, LogOut, Shield,
 } from "lucide-react";
 
 export default function AccountPage() {
@@ -15,15 +15,13 @@ export default function AccountPage() {
   const handleLogout = async () => { await logout(); };
 
   const menuItems = [
-    { label: "Investir",       Icon: TrendingUp,  color: "text-amber-500",  bg: "bg-amber-50",   route: "/invest",       testId: "button-investir" },
-    { label: "Commandes",      Icon: ShoppingBag, color: "text-blue-500",   bg: "bg-blue-50",    route: "/orders",       testId: "button-commandes" },
-    { label: "Facture",        Icon: FileText,    color: "text-purple-500", bg: "bg-purple-50",  route: "/transactions", testId: "button-facture" },
-    { label: "Mot de passe",   Icon: Lock,        color: "text-orange-500", bg: "bg-orange-50",  route: "/settings",     testId: "button-mot-de-passe" },
-    { label: "Compte retrait", Icon: CreditCard,  color: "text-emerald-600",bg: "bg-emerald-50", route: "/bank-card",    testId: "button-compte-retrait" },
-    { label: "Service client", Icon: Headset,     color: "text-cyan-500",   bg: "bg-cyan-50",    route: "/telegram",     testId: "button-service-client" },
-    { label: "Cadeau",         Icon: Gift,        color: "text-pink-500",   bg: "bg-pink-50",    route: "/treasure",     testId: "button-cadeau" },
-    { label: "À propos",       Icon: Info,        color: "text-sky-500",    bg: "bg-sky-50",     route: "/about",        testId: "button-apropos" },
-    { label: "Déconnecter",    Icon: LogOut,      color: "text-red-500",    bg: "bg-red-50",     route: "__logout__",    testId: "button-logout-grid" },
+    { label: "Investir",                  Icon: TrendingUp, color: "text-amber-500",  bg: "bg-amber-50",   route: "/invest",        testId: "button-investir" },
+    { label: "Commandes",                 Icon: ShoppingBag,color: "text-blue-500",   bg: "bg-blue-50",    route: "/orders",        testId: "button-commandes" },
+    { label: "Historique de transaction", Icon: Receipt,    color: "text-purple-500", bg: "bg-purple-50",  route: "/transactions",  testId: "button-transactions" },
+    { label: "Compte retrait",            Icon: CreditCard, color: "text-emerald-600",bg: "bg-emerald-50", route: "/bank-card",     testId: "button-compte-retrait" },
+    { label: "DEEN SINOPEC",              Icon: Headset,    color: "text-cyan-500",   bg: "bg-cyan-50",    route: "/telegram",      testId: "button-service-client" },
+    { label: "Cadeau",                    Icon: Gift,       color: "text-pink-500",   bg: "bg-pink-50",    route: "/treasure",      testId: "button-cadeau" },
+    { label: "Déconnecter",               Icon: LogOut,     color: "text-red-500",    bg: "bg-red-50",     route: "__logout__",     testId: "button-logout-grid" },
   ];
 
   if (user.isAdmin) {
@@ -36,7 +34,7 @@ export default function AccountPage() {
   return (
     <div className="min-h-screen pb-28 bg-gray-50">
 
-      {/* ── Header gold ─────────────────────────────────── */}
+      {/* Header gold */}
       <div className="px-5 pt-10 pb-8" style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}>
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/40 shadow-lg">
@@ -64,7 +62,7 @@ export default function AccountPage() {
 
       <div className="px-5 -mt-4 space-y-3">
 
-        {/* Solde de recharge card */}
+        {/* Solde card */}
         <div className="bg-white rounded-2xl px-5 py-4 flex items-center justify-between shadow-sm border border-gray-100">
           <div>
             <p className="text-gray-500 text-xs font-medium">Solde de recharge</p>
@@ -96,23 +94,28 @@ export default function AccountPage() {
           </button>
         </div>
 
-        {/* Menu grid */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-          <div className="grid grid-cols-3 gap-y-6">
-            {menuItems.map((item) => {
-              const { Icon } = item;
-              return (
-                <button key={item.testId} data-testid={item.testId}
-                  onClick={() => item.route === "__logout__" ? handleLogout() : navigate(item.route)}
-                  className="flex flex-col items-center gap-2 transition-all active:scale-90">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${item.bg}`}>
-                    <Icon className={`w-6 h-6 ${item.color}`} />
-                  </div>
-                  <p className="text-gray-500 text-xs font-medium text-center leading-tight">{item.label}</p>
-                </button>
-              );
-            })}
-          </div>
+        {/* Menu — liste verticale */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
+          {menuItems.map((item) => {
+            const { Icon } = item;
+            const isLogout = item.route === "__logout__";
+            return (
+              <button
+                key={item.testId}
+                data-testid={item.testId}
+                onClick={() => isLogout ? handleLogout() : navigate(item.route)}
+                className="w-full flex items-center gap-4 px-5 py-3.5 active:bg-gray-50 transition-colors"
+              >
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${item.bg}`}>
+                  <Icon className={`w-5 h-5 ${item.color}`} />
+                </div>
+                <span className={`flex-1 text-left font-semibold text-sm ${isLogout ? "text-red-500" : "text-gray-800"}`}>
+                  {item.label}
+                </span>
+                {!isLogout && <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />}
+              </button>
+            );
+          })}
         </div>
 
       </div>
