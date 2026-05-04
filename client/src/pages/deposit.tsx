@@ -65,7 +65,7 @@ export default function DepositPage() {
     enabled: !!soleasCountry && showSoleasPay,
   });
 
-  const { data: svpOperators = [] } = useQuery<string[]>({
+  const { data: svpOperators = [] } = useQuery<{ name: string; value: string }[]>({
     queryKey: ["/api/sendavapay/operators", user?.country],
     queryFn: async () => {
       if (!user?.country) return [];
@@ -602,16 +602,16 @@ export default function DepositPage() {
               <p className="text-gray-700 font-bold text-sm">Informations Mobile Money</p>
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Opérateur</label>
-                {(svpOperators as string[]).length === 0
+                {svpOperators.length === 0
                   ? <p className="text-xs text-gray-400">Chargement des opérateurs…</p>
                   : (
                     <div className="grid grid-cols-2 gap-2">
-                      {(svpOperators as string[]).map(op => (
-                        <button key={op} type="button" onClick={() => setSvpOperator(op)}
+                      {svpOperators.map(op => (
+                        <button key={op.value} type="button" onClick={() => setSvpOperator(op.value)}
                           className={`py-3 rounded-xl border text-sm font-medium transition-all ${
-                            svpOperator === op ? "border-amber-500 bg-amber-50 text-amber-600" : "border-gray-200 text-gray-700 bg-white"
+                            svpOperator === op.value ? "border-amber-500 bg-amber-50 text-amber-600" : "border-gray-200 text-gray-700 bg-white"
                           }`}>
-                          {op}
+                          {op.name}
                         </button>
                       ))}
                     </div>
@@ -620,7 +620,7 @@ export default function DepositPage() {
               {svpOperator && (
                 <div>
                   <label className="text-xs font-semibold text-gray-500 mb-1.5 block">Numéro Mobile Money</label>
-                  <input type="tel" placeholder="Ex: 0701234567" value={svpPhone}
+                  <input type="tel" placeholder="Ex: +22690123456" value={svpPhone}
                     onChange={e => setSvpPhone(e.target.value)}
                     className="w-full border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none bg-white focus:border-amber-400" />
                 </div>

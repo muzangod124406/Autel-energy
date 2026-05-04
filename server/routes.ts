@@ -24,7 +24,7 @@ import {
 } from "./soleaspay";
 import {
   sendavapayCollect, verifySendavapaySignature,
-  getSendavapayOperators, getSendavapayCurrency,
+  getSendavapayOperators, getSendavapayCurrency, getSendavapayCountryCode,
 } from "./sendavapay";
 
 const upload = multer({
@@ -503,8 +503,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
 
+      // Priorité : env var > DB
       const s = await storage.getSettings();
-      const apiKey = s.soleaspayApiKey || process.env.SENDAVAPAY_API_KEY;
+      const apiKey = process.env.SENDAVAPAY_API_KEY || s.soleaspayApiKey;
+      const apiSecret = process.env.SENDAVAPAY_WEBHOOK_SECRET || s.soleaspaySecretHash;
       if (!apiKey) return res.status(503).json({ message: "Paiement Mobile Money non configuré. Contactez le support." });
 
       const { amount, operator, phoneNumber, country } = req.body;
@@ -512,9 +514,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       if (!operator) return res.status(400).json({ message: "Opérateur requis" });
 
       const countrySlug = country || user.country || "";
+      const countryCode = getSendavapayCountryCode(countrySlug);
       const currency = getSendavapayCurrency(countrySlug);
       const wallet = phoneNumber || user.phone;
-      const callbackUrl = `${process.env.APP_URL || "https://" + req.headers.host}/api/webhook/sendavapay`;
+
+      // Build callback URL using public domain
+      const host = process.env.REPLIT_DEV_DOMAIN
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : (process.env.APP_URL || `https://${req.headers.host}`);
+      const callbackUrl = `${host}/api/webhook/sendavapay`;
 
       const tx = await storage.createTransaction(userId, {
         type: "deposit",
@@ -528,10 +536,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
       const result = await sendavapayCollect({
         apiKey,
+        apiSecret,
         amount,
         currency,
         phone: wallet,
         operator,
+        country: countryCode,
         orderId: tx.id,
         callbackUrl,
       });
@@ -547,25 +557,37 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // ─── Sendavapay — Webhook callback ───────────────────────────────────────
   app.post("/api/webhook/sendavapay", async (req: Request, res: Response) => {
     try {
-      const signature = req.headers["x-signature"] as string || req.headers["x-webhook-signature"] as string || "";
+      // Sendavapay uses X-SendavaPay-Signature header
+      const signature = (
+        req.headers["x-sendavapay-signature"] ||
+        req.headers["x-signature"] ||
+        req.headers["x-webhook-signature"] || ""
+      ) as string;
       const rawBody = ((req as any).rawBody as Buffer)?.toString("utf8") || JSON.stringify(req.body);
 
+      // Priorité : env var > DB
       const s = await storage.getSettings();
-      const secretKey = s.soleaspaySecretHash || process.env.SENDAVAPAY_WEBHOOK_SECRET || "";
-      if (secretKey) {
+      const secretKey = process.env.SENDAVAPAY_WEBHOOK_SECRET || s.soleaspaySecretHash || "";
+      if (secretKey && signature) {
         if (!verifySendavapaySignature(rawBody, signature, secretKey)) {
+          console.warn("[Sendavapay webhook] Signature invalide, rejeté");
           return res.status(401).json({ message: "Signature invalide" });
         }
       }
 
       const payload = req.body as any;
-      // Support multiple callback formats
+      // Sendavapay sends X-SendavaPay-Event: "payment.completed" or similar
+      const event = (req.headers["x-sendavapay-event"] as string) || "";
       const status = payload.status || payload.data?.status || "";
-      const orderId = payload.order_id || payload.reference || payload.data?.order_id || payload.data?.external_reference || payload.transaction_id || "";
-      const isSuccess = status === "SUCCESS" || status === "success" || status === "SUCCESSFUL" || payload.success === true || payload.event === "payment.successful";
+      const orderId = payload.order_id || payload.orderId || payload.reference || payload.data?.order_id || payload.data?.reference || "";
+      const isSuccess =
+        event === "payment.completed" || event === "payment.successful" ||
+        status === "completed" || status === "COMPLETED" ||
+        status === "SUCCESS" || status === "success" || status === "SUCCESSFUL" ||
+        payload.success === true;
 
       if (!isSuccess) {
-        return res.json({ received: true });
+        return res.json({ received: true, status: status || "not_success" });
       }
       if (!orderId) return res.json({ received: true, matched: false });
 
