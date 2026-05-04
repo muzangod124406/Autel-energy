@@ -208,7 +208,7 @@ export default function InvestPage() {
   };
 
   const availableProducts = (adminProducts as any[])
-    .filter((p: any) => p.isActive && (!p.launchDate || new Date(p.launchDate) <= new Date()))
+    .filter((p: any) => p.isActive)
     .sort((a: any, b: any) => a.price - b.price)
     .map((p: any, idx: number) => ({
       ...p,
