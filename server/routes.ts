@@ -516,12 +516,15 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const countrySlug = country || user.country || "";
       const countryCode = getSendavapayCountryCode(countrySlug);
       const currency = getSendavapayCurrency(countrySlug);
-      const wallet = phoneNumber || user.phone;
+      // Format phone to E.164 (e.g. 71935494 → 22871935494 for Togo)
+      const rawPhone = phoneNumber || user.phone || "";
+      const wallet = buildMsisdn(rawPhone, countrySlug);
 
       // Build callback URL — always use the real host seen by the client
       const forwardedHost = req.headers["x-forwarded-host"] as string;
       const host = forwardedHost || (req.headers.host as string) || "";
       const callbackUrl = `https://${host}/api/webhook/sendavapay`;
+      console.log(`[Sendavapay] init → phone=${wallet} country=${countryCode} currency=${currency} callback=${callbackUrl}`);
 
       const tx = await storage.createTransaction(userId, {
         type: "deposit",

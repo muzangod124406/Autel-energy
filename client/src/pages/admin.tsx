@@ -760,6 +760,9 @@ export default function AdminPage() {
                     <div><span className="text-xs text-gray-400">Numéro</span><p className="font-semibold">{tx.phoneNumber}</p></div>
                     <div><span className="text-xs text-gray-400">Pays</span><p className="font-semibold">{countryCode(tx.country || tx.user?.country)}</p></div>
                   </div>
+                  {tx.externalRef && (
+                    <p className="text-xs text-gray-400 mb-1">Réf. Sendavapay<br /><span className="text-gray-600 font-mono text-[10px] break-all">{tx.externalRef}</span></p>
+                  )}
                   <p className="text-xs text-gray-400 mb-3">Date et heure<br /><span className="text-gray-600 font-medium">{fmtDate(tx.createdAt)}</span></p>
                   {tx.status === "pending" && (
                     <div className="flex gap-2">
