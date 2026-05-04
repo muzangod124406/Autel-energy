@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -7,12 +7,18 @@ import { Eye, EyeOff, Lock, Phone, User, Gift } from "lucide-react";
 export default function AuthPage() {
   const { login, register } = useAuth();
   const { toast } = useToast();
-  const [tab, setTab] = useState<"login" | "register">("login");
+
+  const refFromUrl = new URLSearchParams(window.location.search).get("ref") || "";
+  const [tab, setTab] = useState<"login" | "register">(refFromUrl ? "register" : "login");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [loginData, setLoginData] = useState({ country: "", phone: "", password: "" });
-  const [regData, setRegData] = useState({ country: "", phone: "", password: "", nickname: "", referralCode: "" });
+  const [regData, setRegData] = useState({ country: "", phone: "", password: "", nickname: "", referralCode: refFromUrl });
+
+  useEffect(() => {
+    if (refFromUrl) setTab("register");
+  }, [refFromUrl]);
 
   const { data: countries = [] } = useQuery<any[]>({ queryKey: ["/api/countries"] });
   const activeCountries = (countries as any[]).filter((c: any) => c.isActive);
@@ -41,7 +47,7 @@ export default function AuthPage() {
     }
     setLoading(true);
     try {
-      await register(regData.phone, regData.password, regData.country, regData.nickname, regData.referralCode);
+      await register({ phone: regData.phone, password: regData.password, country: regData.country, nickname: regData.nickname, referralCode: regData.referralCode });
     } catch (e: any) {
       toast({ title: e.message?.replace(/^\d+:\s*/, "") || "Erreur d'inscription", variant: "destructive" });
     }
