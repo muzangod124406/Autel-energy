@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Home, TrendingUp, Users, FileText, CircleUser } from "lucide-react";
+import { House, Package2, UserPlus, Ticket, UserCircle2 } from "lucide-react";
 
 type Tab = { path: string; label: string; Icon: any; };
 
 const tabs: Tab[] = [
-  { path: "/",       label: "Accueil",  Icon: Home },
-  { path: "/invest", label: "Produits", Icon: TrendingUp },
-  { path: "/invite", label: "Invité",   Icon: Users },
-  { path: "/billet", label: "Billet",   Icon: FileText },
-  { path: "/account",label: "Compte",   Icon: CircleUser },
+  { path: "/",       label: "Accueil",  Icon: House },
+  { path: "/invest", label: "Produits", Icon: Package2 },
+  { path: "/invite", label: "Invité",   Icon: UserPlus },
+  { path: "/billet", label: "Billet",   Icon: Ticket },
+  { path: "/account",label: "Compte",   Icon: UserCircle2 },
 ];
 
 function WhatsAppIcon() {

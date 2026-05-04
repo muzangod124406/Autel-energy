@@ -3,7 +3,10 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDownToLine, ArrowUpFromLine, Gift, TrendingUp, Zap, ChevronRight, Receipt, Star } from "lucide-react";
+import {
+  Wallet, Banknote, Gift, BarChart3, Zap,
+  ChevronRight, ClipboardList, ShoppingBag,
+} from "lucide-react";
 
 export default function HomePage() {
   const { user, refreshUser } = useAuth();
@@ -38,7 +41,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen pb-28 bg-gray-50">
 
-      {/* Header gold */}
+      {/* ── Header gold ── */}
       <div className="px-5 pt-7 pb-6" style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -52,7 +55,7 @@ export default function HomePage() {
           </div>
           <button data-testid="button-balance" onClick={() => navigate("/balance")}
             className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center border border-white/30">
-            <TrendingUp className="w-4 h-4 text-white" />
+            <BarChart3 className="w-4 h-4 text-white" />
           </button>
         </div>
 
@@ -77,16 +80,32 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Action buttons */}
+      {/* ── Action buttons ── */}
       <div className="px-5 -mt-4 mb-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Recharger", icon: <ArrowDownToLine className="w-7 h-7" />, onClick: () => navigate("/deposit"), testId: "button-recharge", color: "bg-emerald-50 text-emerald-600 border border-emerald-100" },
-              { label: "Retrait",   icon: <ArrowUpFromLine className="w-7 h-7" />, onClick: () => navigate("/withdraw"), testId: "button-withdraw", color: "bg-amber-50 text-amber-600 border border-amber-100" },
+              {
+                label: "Recharger",
+                icon: <Wallet className="w-7 h-7" />,
+                onClick: () => navigate("/deposit"),
+                testId: "button-recharge",
+                color: "bg-emerald-50 text-emerald-600 border border-emerald-100",
+              },
+              {
+                label: "Retrait",
+                icon: <Banknote className="w-7 h-7" />,
+                onClick: () => navigate("/withdraw"),
+                testId: "button-withdraw",
+                color: "bg-amber-50 text-amber-600 border border-amber-100",
+              },
             ].map(btn => (
-              <button key={btn.label} data-testid={btn.testId} onClick={btn.onClick}
-                className={`flex flex-col items-center gap-2.5 py-5 rounded-2xl transition-all active:scale-95 ${btn.color}`}>
+              <button
+                key={btn.label}
+                data-testid={btn.testId}
+                onClick={btn.onClick}
+                className={`flex flex-col items-center gap-2.5 py-5 rounded-2xl transition-all active:scale-95 ${btn.color}`}
+              >
                 {btn.icon}
                 <span className="text-sm font-bold">{btn.label}</span>
               </button>
@@ -97,7 +116,7 @@ export default function HomePage() {
 
       <div className="px-5 space-y-3">
 
-        {/* Bonus connexion */}
+        {/* ── Bonus connexion ── */}
         <button
           data-testid="button-daily-bonus"
           onClick={() => !dailyBonusMutation.isPending && dailyBonusMutation.mutate()}
@@ -116,18 +135,19 @@ export default function HomePage() {
             </div>
           </div>
           {!todayClaimed && (
-            <div className="flex items-center gap-1 text-black text-xs font-bold px-3 py-1.5 rounded-full" style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}>
+            <div className="flex items-center gap-1 text-black text-xs font-bold px-3 py-1.5 rounded-full"
+              style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}>
               <Zap className="w-3 h-3" />
               Réclamer
             </div>
           )}
         </button>
 
-        {/* Quick links */}
+        {/* ── Quick links ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-50">
           {[
-            { label: "Mes transactions", sub: "Historique complet", route: "/transactions", color: "text-purple-500", bg: "bg-purple-50", Icon: Receipt },
-            { label: "Mes commandes",    sub: "Produits investis",  route: "/orders",       color: "text-blue-500",   bg: "bg-blue-50",   Icon: Star },
+            { label: "Mes transactions", sub: "Historique complet", route: "/transactions", color: "text-purple-500", bg: "bg-purple-50", Icon: ClipboardList },
+            { label: "Mes commandes",    sub: "Produits investis",  route: "/orders",       color: "text-blue-500",   bg: "bg-blue-50",   Icon: ShoppingBag },
           ].map(item => (
             <button key={item.route} onClick={() => navigate(item.route)}
               className="w-full flex items-center justify-between px-4 py-3.5 active:bg-gray-50">
