@@ -1,15 +1,23 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { ChevronLeft, Volume2, VolumeX, Ticket, Gift } from "lucide-react";
+import { ChevronLeft, Volume2, Ticket, Gift } from "lucide-react";
+
+// Volume2 used in ticker only
 
 const SEGMENTS = [
-  { value: 50,  label: "50",  color: "#F59E0B", dark: "#D97706", prob: "70%" },
-  { value: 100, label: "100", color: "#10B981", dark: "#047857", prob: "20%" },
-  { value: 200, label: "200", color: "#6366F1", dark: "#4338CA", prob: "10%" },
+  { value: 50,    label: "50",    color: "#EF4444", dark: "#B91C1C" },
+  { value: 100,   label: "100",   color: "#3B82F6", dark: "#1D4ED8" },
+  { value: 200,   label: "200",   color: "#8B5CF6", dark: "#6D28D9" },
+  { value: 400,   label: "400",   color: "#10B981", dark: "#047857" },
+  { value: 600,   label: "600",   color: "#F59E0B", dark: "#B45309" },
+  { value: 1000,  label: "1000",  color: "#EC4899", dark: "#BE185D" },
+  { value: 5000,  label: "5000",  color: "#14B8A6", dark: "#0F766E" },
+  { value: 7000,  label: "7000",  color: "#F97316", dark: "#C2410C" },
+  { value: 77000, label: "77K",   color: "#6366F1", dark: "#4338CA" },
 ];
 
 const NUM_SEGS = SEGMENTS.length;
@@ -19,7 +27,7 @@ const FAKE_PHONES = [
   "07****12","55****98","78****54","66****01","44****73",
   "81****70","33****12","70****41","98****23","62****54",
 ];
-const FAKE_AMOUNTS = [50, 100, 200];
+const FAKE_AMOUNTS = [50, 100, 200, 400, 600, 1000, 5000];
 
 function makeFakeHistory() {
   return Array.from({ length: 15 }, (_, i) => ({
@@ -88,7 +96,7 @@ function drawWheel(canvas: HTMLCanvasElement) {
     ctx.fill();
   }
 
-  // Segments (3 segments, 120° each)
+  // Segments
   SEGMENTS.forEach((seg, i) => {
     const startAngle = i * segAngle - Math.PI / 2;
     const endAngle   = startAngle + segAngle;
@@ -108,16 +116,16 @@ function drawWheel(canvas: HTMLCanvasElement) {
     ctx.closePath();
     ctx.fillStyle = segGrad;
     ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.3)";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     // Divider line
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + segR * Math.cos(startAngle), cy + segR * Math.sin(startAngle));
-    ctx.strokeStyle = "rgba(255,255,255,0.5)";
-    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = "rgba(255,255,255,0.4)";
+    ctx.lineWidth = 2;
     ctx.stroke();
 
     // Label text
@@ -126,23 +134,18 @@ function drawWheel(canvas: HTMLCanvasElement) {
     ctx.rotate(startAngle + segAngle / 2);
 
     const textR = segR * 0.58;
-    ctx.shadowColor = "rgba(0,0,0,0.7)";
-    ctx.shadowBlur = 5;
+    ctx.shadowColor = "rgba(0,0,0,0.6)";
+    ctx.shadowBlur = 4;
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 16px Arial";
+    ctx.font = "bold 11px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(seg.label, textR, -6);
+    ctx.fillText(seg.label, textR, -4);
 
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.font = "bold 10px Arial";
-    ctx.fillText("FCFA", textR, 8);
-
-    // Probability
-    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
     ctx.font = "9px Arial";
-    ctx.fillText(seg.prob, textR, 20);
+    ctx.fillText("FCFA", textR, 6);
 
     ctx.restore();
   });
@@ -178,9 +181,7 @@ export default function GamePage() {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<number | null>(null);
-  const [musicPlaying, setMusicPlaying] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { data: ticketData } = useQuery({
     queryKey: ["/api/user/spin-tickets"],
@@ -189,18 +190,6 @@ export default function GamePage() {
     refetchInterval: 30000,
   });
   const tickets = (ticketData as any)?.tickets ?? user?.spinTickets ?? 0;
-
-  useEffect(() => {
-    audioRef.current = new Audio("/game-music.m4a");
-    audioRef.current.loop = true;
-    return () => { audioRef.current?.pause(); };
-  }, []);
-
-  const toggleMusic = useCallback(() => {
-    if (!audioRef.current) return;
-    if (musicPlaying) { audioRef.current.pause(); setMusicPlaying(false); }
-    else { audioRef.current.play().catch(() => {}); setMusicPlaying(true); }
-  }, [musicPlaying]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -256,10 +245,7 @@ export default function GamePage() {
           <h1 className="text-white font-extrabold text-lg tracking-wide">Tirage Au Sort</h1>
           <p className="text-amber-400 text-xs font-semibold">SINOPEC LUCKY DRAW</p>
         </div>
-        <button data-testid="button-music" onClick={toggleMusic}
-          className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-          {musicPlaying ? <Volume2 className="w-5 h-5 text-amber-400" /> : <VolumeX className="w-5 h-5 text-white/50" />}
-        </button>
+        <div className="w-9 h-9" />
       </div>
 
       {/* Ticker */}
@@ -357,17 +343,13 @@ export default function GamePage() {
       </div>
 
       {/* Prizes legend */}
-      <div className="mx-4 mt-3 grid grid-cols-3 gap-2">
+      <div className="mx-4 mt-3 grid grid-cols-3 gap-1.5">
         {SEGMENTS.map(seg => (
-          <div key={seg.value}
-            className="flex flex-col items-center gap-1 rounded-2xl px-3 py-3 border border-white/8"
-            style={{ background: "rgba(255,255,255,0.05)" }}>
-            <div className="w-4 h-4 rounded-full mb-0.5" style={{ background: seg.color, boxShadow: `0 0 8px ${seg.color}80` }} />
-            <span className="text-white font-extrabold text-base">{seg.value.toLocaleString()}</span>
-            <span className="text-white/40 text-[10px]">FCFA</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: seg.color + "33", color: seg.color }}>
-              {seg.prob}
-            </span>
+          <div key={seg.value} className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 border border-white/5"
+            style={{ background: "rgba(255,255,255,0.04)" }}>
+            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: seg.color }} />
+            <span className="text-white/70 text-[11px] font-semibold">{seg.value.toLocaleString()}</span>
+            <span className="text-white/30 text-[9px]">FCFA</span>
           </div>
         ))}
       </div>
