@@ -345,7 +345,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       );
       const isFirstFixInvestment = planType === "fix" && previousFixInvestments.length === 0;
 
-      // Sur le premier plan fixe : ticket spin + commissions au parrain
+      // Sur le premier plan fixe : ticket spin + commissions aux 3 niveaux de parrains
       if (user.referredBy && isFirstFixInvestment) {
         await storage.addSpinTicket(user.referredBy, 1);
         const cfg = await storage.getSettings();
@@ -357,18 +357,36 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         if (level1Referrer) {
           const commission1 = Math.floor(amount * rate1);
           await storage.addToUserBalance(level1Referrer.id, commission1, commission1);
+          await storage.createTransaction(level1Referrer.id, {
+            type: "commission",
+            amount: commission1,
+            status: "approved",
+            description: `Commission niveau 1 — parrainage de ${user.phone} (${cfg.referralCommission1 ?? 20}%)`,
+          });
 
           if (level1Referrer.referredBy) {
             const level2Referrer = await storage.getUser(level1Referrer.referredBy);
             if (level2Referrer) {
               const commission2 = Math.floor(amount * rate2);
               await storage.addToUserBalance(level2Referrer.id, commission2, commission2);
+              await storage.createTransaction(level2Referrer.id, {
+                type: "commission",
+                amount: commission2,
+                status: "approved",
+                description: `Commission niveau 2 — parrainage indirect de ${user.phone} (${cfg.referralCommission2 ?? 3}%)`,
+              });
 
               if (level2Referrer.referredBy) {
                 const level3Referrer = await storage.getUser(level2Referrer.referredBy);
                 if (level3Referrer) {
                   const commission3 = Math.floor(amount * rate3);
                   await storage.addToUserBalance(level3Referrer.id, commission3, commission3);
+                  await storage.createTransaction(level3Referrer.id, {
+                    type: "commission",
+                    amount: commission3,
+                    status: "approved",
+                    description: `Commission niveau 3 — parrainage indirect de ${user.phone} (${cfg.referralCommission3 ?? 2}%)`,
+                  });
                 }
               }
             }

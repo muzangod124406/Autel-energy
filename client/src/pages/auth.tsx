@@ -47,7 +47,7 @@ export default function AuthPage() {
     }
     setLoading(true);
     try {
-      await register({ phone: regData.phone, password: regData.password, country: regData.country, nickname: regData.nickname, referralCode: regData.referralCode });
+      await register({ phone: regData.phone, password: regData.password, country: regData.country, nickname: regData.nickname, inviteCode: regData.referralCode });
     } catch (e: any) {
       toast({ title: e.message?.replace(/^\d+:\s*/, "") || "Erreur d'inscription", variant: "destructive" });
     }
