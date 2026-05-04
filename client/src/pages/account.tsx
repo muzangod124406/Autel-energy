@@ -2,7 +2,7 @@ import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import {
   ChevronRight, TrendingUp, ShoppingBag, Receipt,
-  CreditCard, Headset, Gift, LogOut, Shield,
+  CreditCard, Gift, LogOut, Shield,
 } from "lucide-react";
 
 export default function AccountPage() {
@@ -19,7 +19,6 @@ export default function AccountPage() {
     { label: "Commandes",                 Icon: ShoppingBag,color: "text-blue-500",   bg: "bg-blue-50",    route: "/orders",        testId: "button-commandes" },
     { label: "Historique de transaction", Icon: Receipt,    color: "text-purple-500", bg: "bg-purple-50",  route: "/transactions",  testId: "button-transactions" },
     { label: "Compte retrait",            Icon: CreditCard, color: "text-emerald-600",bg: "bg-emerald-50", route: "/bank-card",     testId: "button-compte-retrait" },
-    { label: "DEEN SINOPEC",              Icon: Headset,    color: "text-cyan-500",   bg: "bg-cyan-50",    route: "/telegram",      testId: "button-service-client" },
     { label: "Cadeau",                    Icon: Gift,       color: "text-pink-500",   bg: "bg-pink-50",    route: "/treasure",      testId: "button-cadeau" },
     { label: "Déconnecter",               Icon: LogOut,     color: "text-red-500",    bg: "bg-red-50",     route: "__logout__",     testId: "button-logout-grid" },
   ];

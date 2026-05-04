@@ -5,8 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import BottomNav from "@/components/bottom-nav";
-import serviceClientImg from "@assets/Img_2026_03_22_11_16_53_1774178912559.jpeg";
-import gameWheelImg from "@assets/20260322_111525_1774178920867.png";
+import agentImg from "@assets/MV5BNmNkNmUyNjYtY2VhYi00ZjE4LWI0NmMtNmJkZDc2NzEyMzgxXkEyXkFqcG_1777886048395.jpg";
 import AuthPage from "@/pages/auth";
 import TradePasswordPage from "@/pages/trade-password";
 import HomePage from "@/pages/home";
@@ -34,9 +33,33 @@ import TreasurePage from "@/pages/treasure";
 import ServiceClientPage from "@/pages/service-client";
 import NotFound from "@/pages/not-found";
 
+function WheelSVG() {
+  const colors = ["#EF4444","#3B82F6","#8B5CF6","#10B981","#F59E0B","#EC4899","#14B8A6","#F97316","#6366F1"];
+  const n = colors.length;
+  const r = 22;
+  const cx = 26, cy = 26;
+  const segments = colors.map((color, i) => {
+    const startAngle = (i / n) * 2 * Math.PI - Math.PI / 2;
+    const endAngle   = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle);
+    const y2 = cy + r * Math.sin(endAngle);
+    return `M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`;
+  });
+  return (
+    <svg width="52" height="52" viewBox="0 0 52 52">
+      <circle cx={cx} cy={cy} r={r+2} fill="#DAA520" />
+      {segments.map((d, i) => <path key={i} d={d} fill={colors[i]} stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />)}
+      <circle cx={cx} cy={cy} r={5} fill="white" stroke="#ccc" strokeWidth="1" />
+      <text x={cx} y={cy+1} textAnchor="middle" dominantBaseline="middle" fontSize="5" fontWeight="bold" fill="#555">GO</text>
+    </svg>
+  );
+}
+
 function FloatingButtons() {
   const [location, navigate] = useLocation();
-  const hideOn = ["/game", "/bank-card", "/deposit", "/withdraw", "/admin", "/service-client"];
+  const hideOn = ["/game", "/bank-card", "/deposit", "/withdraw", "/admin", "/service-client", "/telegram"];
   if (hideOn.some(p => location.startsWith(p))) return null;
 
   return (
@@ -44,18 +67,17 @@ function FloatingButtons() {
       <button
         data-testid="float-btn-game"
         onClick={() => navigate("/game")}
-        className="w-14 h-14 rounded-full overflow-hidden shadow-lg border-2 border-white animate-bounce-in"
-        style={{ animationDelay: "0.1s" }}
+        className="w-14 h-14 rounded-full overflow-hidden shadow-xl border-2 border-white"
+        style={{ background: "linear-gradient(135deg, #1A1A2E, #16213E)" }}
       >
-        <img src={gameWheelImg} alt="Jeu" className="w-full h-full object-cover" />
+        <WheelSVG />
       </button>
       <button
         data-testid="float-btn-service"
         onClick={() => navigate("/service-client")}
-        className="w-14 h-14 rounded-full overflow-hidden shadow-lg border-2 border-white animate-bounce-in"
-        style={{ animationDelay: "0.22s" }}
+        className="w-14 h-14 rounded-full overflow-hidden shadow-xl border-2 border-white"
       >
-        <img src={serviceClientImg} alt="Service client" className="w-full h-full object-cover" />
+        <img src={agentImg} alt="Service client" className="w-full h-full object-cover object-top" />
       </button>
     </div>
   );
@@ -80,16 +102,11 @@ function AppContent() {
     );
   }
 
-  if (!user) {
-    return <AuthPage />;
-  }
-
-  if (!user.transactionPassword) {
-    return <TradePasswordPage />;
-  }
+  if (!user) return <AuthPage />;
+  if (!user.transactionPassword) return <TradePasswordPage />;
 
   return (
-    <div className="min-h-screen pb-24 bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       <div key={location} className="animate-page-enter">
         <Switch>
           <Route path="/" component={HomePage} />

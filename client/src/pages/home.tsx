@@ -8,7 +8,6 @@ import { ArrowDownToLine, ArrowUpFromLine, Gift, TrendingUp, Zap, ChevronRight, 
 export default function HomePage() {
   const { user, refreshUser } = useAuth();
   const [, navigate] = useLocation();
-  const { data: settings } = useQuery<any>({ queryKey: ["/api/settings"] });
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -36,23 +35,8 @@ export default function HomePage() {
 
   if (!user) return null;
 
-  const ACTION_BUTTONS = [
-    { label: "Recharger", icon: <ArrowDownToLine className="w-7 h-7" />, onClick: () => navigate("/deposit"), testId: "button-recharge", color: "bg-emerald-50 text-emerald-600 border border-emerald-100" },
-    { label: "Retrait",   icon: <ArrowUpFromLine className="w-7 h-7" />, onClick: () => navigate("/withdraw"), testId: "button-withdraw", color: "bg-amber-50 text-amber-600 border border-amber-100" },
-  ];
-
   return (
-    <div
-      className="bg-gray-50"
-      style={{
-        position: "fixed",
-        top: 0, left: 0, right: 0, bottom: 0,
-        overflowY: "auto",
-        overscrollBehavior: "none",
-        WebkitOverflowScrolling: "touch",
-        paddingBottom: "7rem",
-      }}
-    >
+    <div className="min-h-screen pb-28 bg-gray-50">
 
       {/* Header gold */}
       <div className="px-5 pt-7 pb-6" style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}>
@@ -97,7 +81,10 @@ export default function HomePage() {
       <div className="px-5 -mt-4 mb-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="grid grid-cols-2 gap-3">
-            {ACTION_BUTTONS.map(btn => (
+            {[
+              { label: "Recharger", icon: <ArrowDownToLine className="w-7 h-7" />, onClick: () => navigate("/deposit"), testId: "button-recharge", color: "bg-emerald-50 text-emerald-600 border border-emerald-100" },
+              { label: "Retrait",   icon: <ArrowUpFromLine className="w-7 h-7" />, onClick: () => navigate("/withdraw"), testId: "button-withdraw", color: "bg-amber-50 text-amber-600 border border-amber-100" },
+            ].map(btn => (
               <button key={btn.label} data-testid={btn.testId} onClick={btn.onClick}
                 className={`flex flex-col items-center gap-2.5 py-5 rounded-2xl transition-all active:scale-95 ${btn.color}`}>
                 {btn.icon}

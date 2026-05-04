@@ -133,11 +133,6 @@ export default function BankCardPage() {
         </div>
 
         <div>
-          <label className={labelCls}>Numéro de téléphone</label>
-          <input data-testid="input-card-userphone" type="text" value={userPhone} readOnly className={`${inputCls} bg-gray-50 text-gray-400`} />
-        </div>
-
-        <div>
           <label className={labelCls}>Code OTP</label>
           <div className="flex gap-2">
             <input

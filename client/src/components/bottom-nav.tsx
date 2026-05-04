@@ -23,73 +23,62 @@ function WhatsAppIcon() {
 function NotificationPopup({ onClose }: { onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end justify-center"
-      style={{ background: "rgba(0,0,0,0.60)" }}
+      className="fixed inset-0 z-[200] flex items-center justify-center px-6"
+      style={{ background: "rgba(0,0,0,0.55)" }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-t-3xl overflow-hidden shadow-2xl bg-white"
-        style={{ animation: "slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1)" }}
+        className="w-full max-w-xs rounded-3xl overflow-hidden shadow-2xl bg-white"
+        style={{ animation: "popIn 0.3s cubic-bezier(0.34,1.56,0.64,1)" }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Pull bar */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-gray-200" />
-        </div>
-
-        {/* Logo + header */}
-        <div className="flex flex-col items-center px-6 pt-3 pb-5" style={{ background: "linear-gradient(160deg, #1A1A2E 0%, #16213E 100%)" }}>
-          <div className="w-20 h-20 rounded-2xl overflow-hidden border-4 border-amber-400/60 shadow-xl mb-3">
+        {/* Header navy */}
+        <div className="flex flex-col items-center px-5 pt-5 pb-4" style={{ background: "linear-gradient(160deg, #1A1A2E 0%, #16213E 100%)" }}>
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-amber-400/60 shadow-lg mb-2">
             <img src="/sinopec-logo.jpeg" alt="SINOPEC" className="w-full h-full object-cover" />
           </div>
-          <h2 className="text-white font-extrabold text-xl text-center tracking-wide">SINOPEC</h2>
-          <p className="text-amber-400 text-xs font-semibold uppercase tracking-widest mt-0.5">Plateforme d'Investissement</p>
+          <h2 className="text-white font-extrabold text-base text-center">SINOPEC</h2>
+          <p className="text-amber-400 text-[10px] font-semibold uppercase tracking-widest mt-0.5">Plateforme d'Investissement</p>
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-4">
-          {/* Welcome message */}
-          <div className="bg-amber-50 rounded-2xl px-4 py-3 border border-amber-100">
-            <p className="text-amber-800 font-bold text-sm mb-1">Bienvenue sur SINOPEC 👋</p>
-            <p className="text-amber-700 text-xs leading-relaxed">
-              La plateforme d'investissement mobile numéro 1 pour l'Afrique francophone. Revenus journaliers garantis et parrainage multi-niveaux.
+        <div className="px-5 py-4 space-y-3">
+          <div className="bg-amber-50 rounded-xl px-3 py-2.5 border border-amber-100">
+            <p className="text-amber-800 font-bold text-xs mb-0.5">Bienvenue sur SINOPEC 👋</p>
+            <p className="text-amber-700 text-[11px] leading-relaxed">
+              Revenus journaliers garantis · Parrainage multi-niveaux · Support 24h/7j
             </p>
           </div>
 
-          {/* Stats row */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1.5">
             {[
               { value: "20%",   label: "Commission" },
               { value: "120J",  label: "Plan fixe" },
               { value: "24h/7", label: "Support" },
             ].map((s, i) => (
-              <div key={i} className="bg-gray-50 rounded-xl py-2.5 text-center border border-gray-100">
-                <p className="text-amber-500 font-extrabold text-base">{s.value}</p>
-                <p className="text-gray-400 text-[10px] mt-0.5">{s.label}</p>
+              <div key={i} className="bg-gray-50 rounded-xl py-2 text-center border border-gray-100">
+                <p className="text-amber-500 font-extrabold text-sm">{s.value}</p>
+                <p className="text-gray-400 text-[9px] mt-0.5">{s.label}</p>
               </div>
             ))}
           </div>
-
-          <p className="text-gray-500 text-xs text-center leading-relaxed">
-            Rejoignez notre canal WhatsApp officiel pour recevoir toutes les annonces et mises à jour en temps réel.
-          </p>
         </div>
 
         {/* Buttons */}
-        <div className="px-6 pb-8 flex flex-col gap-3">
+        <div className="px-5 pb-5 flex flex-col gap-2">
           <button
             data-testid="button-join-channel"
             onClick={() => window.open("https://whatsapp.com/channel/sinopec", "_blank")}
-            className="w-full py-4 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform"
+            className="w-full py-3 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
             style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)" }}
           >
             <WhatsAppIcon />
-            Rejoindre le canal WhatsApp
+            Rejoindre WhatsApp
           </button>
           <button
             data-testid="button-close-notification"
             onClick={onClose}
-            className="w-full py-3.5 rounded-2xl font-semibold text-gray-400 text-sm border border-gray-100 bg-gray-50 active:bg-gray-100 transition-colors"
+            className="w-full py-2.5 rounded-2xl font-semibold text-gray-400 text-xs border border-gray-100 bg-gray-50"
           >
             Plus tard
           </button>
@@ -97,9 +86,9 @@ function NotificationPopup({ onClose }: { onClose: () => void }) {
       </div>
 
       <style>{`
-        @keyframes slideUp {
-          from { transform: translateY(100%); opacity: 0; }
-          to   { transform: translateY(0);    opacity: 1; }
+        @keyframes popIn {
+          from { transform: scale(0.85); opacity: 0; }
+          to   { transform: scale(1);    opacity: 1; }
         }
       `}</style>
     </div>

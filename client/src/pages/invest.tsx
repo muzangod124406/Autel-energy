@@ -4,7 +4,7 @@ import { INVESTMENT_PLANS, formatCFA } from "@/lib/constants";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Calendar, ChevronRight, X, PackageX, TrendingUp, Zap, ShieldCheck } from "lucide-react";
+import { Lock, Calendar, ChevronRight, X, PackageX, TrendingUp, ShieldCheck } from "lucide-react";
 import EmptyState from "@/components/empty-state";
 
 const fixedPlan = INVESTMENT_PLANS.fix;
@@ -101,17 +101,12 @@ export default function InvestPage() {
         <h1 className="text-white font-extrabold text-2xl leading-none">Produits</h1>
         <p className="text-white/80 text-base font-semibold mt-0.5">d'investissement</p>
 
-        {/* Quick stats */}
+        {/* Quick stat */}
         <div className="flex gap-3 mt-4">
-          {[
-            { icon: <ShieldCheck className="w-3.5 h-3.5" />, label: "Revenus garantis" },
-            { icon: <Zap className="w-3.5 h-3.5" />, label: "Crédité chaque jour" },
-          ].map((s, i) => (
-            <div key={i} className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 border border-white/20">
-              <span className="text-white/80">{s.icon}</span>
-              <span className="text-white/80 text-xs font-medium">{s.label}</span>
-            </div>
-          ))}
+          <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1 border border-white/20">
+            <ShieldCheck className="w-3.5 h-3.5 text-white/80" />
+            <span className="text-white/80 text-xs font-medium">Revenus garantis</span>
+          </div>
         </div>
       </div>
 

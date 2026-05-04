@@ -80,26 +80,18 @@ export default function TransactionsPage() {
           ))}
         </div>
 
-        {/* Info banner */}
-        <div className="bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-            <img src={atmIcon} alt="atm" className="w-7 h-7 object-contain" />
-          </div>
-          <p className="text-amber-700 font-semibold text-xs flex-1 leading-snug">
-            {isDeposit
-              ? "Téléchargez le bon de dépôt pour partager avec tout le monde"
-              : "Téléchargez le bon de retrait pour partager avec tout le monde"}
-          </p>
-          {filtered.length > 0 && (
+        {/* Download all shortcut — only visible if transactions exist */}
+        {filtered.length > 0 && (
+          <div className="flex justify-end">
             <button data-testid="button-download-all"
               onClick={() => filtered.forEach((tx: any) => downloadReceipt(tx, tab))}
-              className="text-black text-xs font-bold px-3 py-1.5 rounded-full shrink-0 flex items-center gap-1"
+              className="text-black text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1"
               style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}>
               <Download className="w-3 h-3" />
-              Tout
+              Tout télécharger
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* List */}
         {isLoading ? (
