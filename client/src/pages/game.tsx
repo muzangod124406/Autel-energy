@@ -4,18 +4,18 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { ChevronLeft, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, Volume2, VolumeX, Ticket } from "lucide-react";
 
 const SEGMENTS = [
-  { value: 50,    label: "Cash\nRewards",    color: "#e74c3c" },
-  { value: 100,   label: "Cash\nRewards",    color: "#3498db" },
-  { value: 200,   label: "Cash\nRewards",    color: "#e67e22" },
-  { value: 400,   label: "Cash\nRewards",    color: "#27ae60" },
-  { value: 600,   label: "Grand\nPrize",     color: "#9b59b6" },
-  { value: 1000,  label: "Cash\nRewards",    color: "#1abc9c" },
-  { value: 5000,  label: "Special\nBonus",   color: "#f39c12" },
-  { value: 7000,  label: "5 lucky\ndraws",   color: "#2980b9" },
-  { value: 77000, label: "2 lucky\ndraws",   color: "#16a085" },
+  { value: 50,    label: "50",    color: "#EF4444", dark: "#B91C1C" },
+  { value: 100,   label: "100",   color: "#3B82F6", dark: "#1D4ED8" },
+  { value: 200,   label: "200",   color: "#8B5CF6", dark: "#6D28D9" },
+  { value: 400,   label: "400",   color: "#10B981", dark: "#047857" },
+  { value: 600,   label: "600",   color: "#F59E0B", dark: "#B45309" },
+  { value: 1000,  label: "1000",  color: "#EC4899", dark: "#BE185D" },
+  { value: 5000,  label: "5000",  color: "#14B8A6", dark: "#0F766E" },
+  { value: 7000,  label: "7000",  color: "#F97316", dark: "#C2410C" },
+  { value: 77000, label: "77K",   color: "#6366F1", dark: "#4338CA" },
 ];
 
 const NUM_SEGS = SEGMENTS.length;
@@ -24,12 +24,11 @@ const FAKE_PHONES = [
   "22****73","77****09","90****81","65****34","96****47",
   "07****12","55****98","78****54","66****01","44****73",
   "81****70","33****12","70****41","98****23","62****54",
-  "51****90","87****63","74****02","43****95","69****10",
 ];
 const FAKE_AMOUNTS = [50, 100, 200, 400, 600, 1000, 5000];
 
 function makeFakeHistory() {
-  return Array.from({ length: 20 }, (_, i) => ({
+  return Array.from({ length: 15 }, (_, i) => ({
     phone: FAKE_PHONES[i % FAKE_PHONES.length],
     amount: FAKE_AMOUNTS[Math.floor(Math.random() * FAKE_AMOUNTS.length)],
   }));
@@ -37,13 +36,12 @@ function makeFakeHistory() {
 
 function HorizontalTicker() {
   const [items] = useState(() => makeFakeHistory());
-  const text = items.map(it => `📢 ${it.phone} a retiré avec succès ${it.amount.toLocaleString()} FCFA`).join("   ·   ");
-
+  const text = items.map(it => `🎉 ${it.phone} → ${it.amount.toLocaleString()} FCFA`).join("   ·   ");
   return (
-    <div className="overflow-hidden flex items-center gap-2 py-2 px-3 bg-black/20 rounded-xl">
-      <Volume2 className="w-4 h-4 text-white shrink-0" />
+    <div className="overflow-hidden flex items-center gap-2 py-2 px-3 rounded-xl" style={{ background: "rgba(0,0,0,0.25)" }}>
+      <Volume2 className="w-3.5 h-3.5 text-white/70 shrink-0" />
       <div className="overflow-hidden flex-1">
-        <div className="whitespace-nowrap text-white text-xs animate-marquee">
+        <div className="whitespace-nowrap text-white/90 text-xs animate-marquee font-medium">
           {text}&nbsp;&nbsp;&nbsp;&nbsp;{text}
         </div>
       </div>
@@ -57,100 +55,120 @@ function drawWheel(canvas: HTMLCanvasElement) {
   const size = canvas.width;
   const cx = size / 2, cy = size / 2;
   const outerR = size / 2 - 2;
-  const ringR = outerR - 4;
-  const segR = ringR - 22;
+  const ringR  = outerR - 6;
+  const segR   = ringR - 20;
   const segAngle = (2 * Math.PI) / NUM_SEGS;
 
   ctx.clearRect(0, 0, size, size);
 
-  // Outer gold ring
-  const grad = ctx.createRadialGradient(cx, cy, segR + 4, cx, cy, outerR);
-  grad.addColorStop(0, "#f5c842");
-  grad.addColorStop(0.5, "#d4a017");
-  grad.addColorStop(1, "#b8860b");
+  // Outer dark ring shadow
   ctx.beginPath();
   ctx.arc(cx, cy, outerR, 0, 2 * Math.PI);
+  ctx.fillStyle = "#1A1A2E";
+  ctx.fill();
+
+  // Gold ring
+  const grad = ctx.createLinearGradient(0, 0, size, size);
+  grad.addColorStop(0, "#FFD700");
+  grad.addColorStop(0.3, "#FFA500");
+  grad.addColorStop(0.6, "#FFD700");
+  grad.addColorStop(1, "#DAA520");
+  ctx.beginPath();
+  ctx.arc(cx, cy, ringR, 0, 2 * Math.PI);
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Gold studs
+  // Gold studs on ring
   const numDots = 36;
   for (let i = 0; i < numDots; i++) {
     const angle = (i / numDots) * 2 * Math.PI - Math.PI / 2;
-    const r = outerR - 10;
+    const r = ringR - 10;
     const dx = cx + r * Math.cos(angle);
     const dy = cy + r * Math.sin(angle);
     ctx.beginPath();
-    ctx.arc(dx, dy, 4.5, 0, 2 * Math.PI);
-    const dotGrad = ctx.createRadialGradient(dx - 1, dy - 1, 0.5, dx, dy, 4.5);
-    dotGrad.addColorStop(0, "#fff7d6");
-    dotGrad.addColorStop(1, "#d4a017");
-    ctx.fillStyle = dotGrad;
+    ctx.arc(dx, dy, 4, 0, 2 * Math.PI);
+    const dg = ctx.createRadialGradient(dx - 1, dy - 1, 0.5, dx, dy, 4);
+    dg.addColorStop(0, "#FFFDE7");
+    dg.addColorStop(1, "#B8860B");
+    ctx.fillStyle = dg;
     ctx.fill();
   }
 
   // Segments
   SEGMENTS.forEach((seg, i) => {
     const startAngle = i * segAngle - Math.PI / 2;
-    const endAngle = startAngle + segAngle;
+    const endAngle   = startAngle + segAngle;
+
+    // Segment fill with gradient
+    const midAngle = startAngle + segAngle / 2;
+    const gx1 = cx + (segR * 0.3) * Math.cos(midAngle);
+    const gy1 = cy + (segR * 0.3) * Math.sin(midAngle);
+    const gx2 = cx + segR * Math.cos(midAngle);
+    const gy2 = cy + segR * Math.sin(midAngle);
+    const segGrad = ctx.createLinearGradient(gx1, gy1, gx2, gy2);
+    segGrad.addColorStop(0, seg.color + "EE");
+    segGrad.addColorStop(1, seg.dark + "CC");
+
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, segR, startAngle, endAngle);
     ctx.closePath();
-    ctx.fillStyle = seg.color;
+    ctx.fillStyle = segGrad;
     ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    const coinAngle = startAngle + segAngle / 2;
-    const coinR = segR * 0.75;
-    const cx2 = cx + coinR * Math.cos(coinAngle);
-    const cy2 = cy + coinR * Math.sin(coinAngle);
-    ctx.save();
+    // Divider line
     ctx.beginPath();
-    ctx.arc(cx2, cy2, 8, 0, 2 * Math.PI);
-    const coinG = ctx.createRadialGradient(cx2 - 2, cy2 - 2, 1, cx2, cy2, 8);
-    coinG.addColorStop(0, "#fff176");
-    coinG.addColorStop(1, "#f59e0b");
-    ctx.fillStyle = coinG;
-    ctx.fill();
-    ctx.strokeStyle = "#d97706";
-    ctx.lineWidth = 1;
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + segR * Math.cos(startAngle), cy + segR * Math.sin(startAngle));
+    ctx.strokeStyle = "rgba(255,255,255,0.4)";
+    ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.fillStyle = "#7c3a0a";
-    ctx.font = "bold 7px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("$", cx2, cy2);
-    ctx.restore();
 
+    // Label text with FCFA amount
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(startAngle + segAngle / 2);
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 8px Arial";
-    ctx.shadowColor = "rgba(0,0,0,0.5)";
-    ctx.shadowBlur = 2;
-    const lines = seg.label.split("\n");
-    const textR = segR * 0.43;
-    lines.forEach((line, li) => {
-      ctx.fillText(line, textR, (li - (lines.length - 1) / 2) * 10);
-    });
+
+    const textR = segR * 0.58;
+    // White glow background
+    ctx.shadowColor = "rgba(0,0,0,0.6)";
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 11px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(seg.label, textR, -4);
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
+    ctx.font = "9px Arial";
+    ctx.fillText("FCFA", textR, 6);
     ctx.restore();
   });
 
+  // Inner shadow ring
+  const shadowGrad = ctx.createRadialGradient(cx, cy, segR - 8, cx, cy, segR);
+  shadowGrad.addColorStop(0, "transparent");
+  shadowGrad.addColorStop(1, "rgba(0,0,0,0.15)");
+  ctx.beginPath();
+  ctx.arc(cx, cy, segR, 0, 2 * Math.PI);
+  ctx.fillStyle = shadowGrad;
+  ctx.fill();
+
   // Center hub
-  const hubR = segR * 0.22;
+  const hubR = segR * 0.2;
+  const hubGrad = ctx.createRadialGradient(cx - hubR * 0.3, cy - hubR * 0.3, 2, cx, cy, hubR);
+  hubGrad.addColorStop(0, "#FFFFFF");
+  hubGrad.addColorStop(0.6, "#F3F4F6");
+  hubGrad.addColorStop(1, "#D1D5DB");
   ctx.beginPath();
   ctx.arc(cx, cy, hubR, 0, 2 * Math.PI);
-  const hubGrad = ctx.createRadialGradient(cx - hubR * 0.3, cy - hubR * 0.3, 2, cx, cy, hubR);
-  hubGrad.addColorStop(0, "#ffffff");
-  hubGrad.addColorStop(1, "#e0e0e0");
   ctx.fillStyle = hubGrad;
   ctx.fill();
-  ctx.strokeStyle = "#ccc";
+  ctx.strokeStyle = "rgba(0,0,0,0.15)";
   ctx.lineWidth = 2;
   ctx.stroke();
 }
@@ -170,7 +188,7 @@ export default function GamePage() {
     queryKey: ["/api/user/spin-tickets"],
     refetchOnMount: true,
     staleTime: 0,
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   });
   const tickets = (ticketData as any)?.tickets ?? user?.spinTickets ?? 0;
 
@@ -182,20 +200,15 @@ export default function GamePage() {
 
   const toggleMusic = useCallback(() => {
     if (!audioRef.current) return;
-    if (musicPlaying) {
-      audioRef.current.pause();
-      setMusicPlaying(false);
-    } else {
-      audioRef.current.play().catch(() => {});
-      setMusicPlaying(true);
-    }
+    if (musicPlaying) { audioRef.current.pause(); setMusicPlaying(false); }
+    else { audioRef.current.play().catch(() => {}); setMusicPlaying(true); }
   }, [musicPlaying]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.width = 300;
-    canvas.height = 300;
+    canvas.width = 320;
+    canvas.height = 320;
     drawWheel(canvas);
   }, []);
 
@@ -229,63 +242,75 @@ export default function GamePage() {
   });
 
   const handleSpin = () => {
-    if (!spinning && tickets > 0) {
-      setResult(null);
-      spinMutation.mutate();
-    }
+    if (!spinning && tickets > 0) { setResult(null); spinMutation.mutate(); }
   };
 
   return (
-    <div className="min-h-screen pb-8" style={{ background: "linear-gradient(160deg, #F59E0B 0%, #D97706 40%, #B45309 100%)" }}>
+    <div className="min-h-screen pb-8 flex flex-col" style={{ background: "linear-gradient(160deg, #0F0F1A 0%, #1A1A2E 40%, #16213E 100%)" }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-10 pb-4">
+      <div className="flex items-center justify-between px-4 pt-10 pb-3">
         <button data-testid="button-back" onClick={() => navigate("/")}
-          className="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center">
+          className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
           <ChevronLeft className="w-5 h-5 text-white" />
         </button>
-        <h1 className="text-white font-bold text-lg drop-shadow">Tirage Au Sort</h1>
+        <div className="text-center">
+          <h1 className="text-white font-extrabold text-lg tracking-wide">Tirage Au Sort</h1>
+          <p className="text-amber-400 text-xs font-semibold">SINOPEC LUCKY DRAW</p>
+        </div>
         <button data-testid="button-music" onClick={toggleMusic}
-          className="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center">
-          {musicPlaying
-            ? <Volume2 className="w-5 h-5 text-white" />
-            : <VolumeX className="w-5 h-5 text-white" />}
+          className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
+          {musicPlaying ? <Volume2 className="w-5 h-5 text-amber-400" /> : <VolumeX className="w-5 h-5 text-white/50" />}
         </button>
       </div>
 
       {/* Ticker */}
-      <div className="mx-4 mb-4">
+      <div className="mx-4 mb-3">
         <HorizontalTicker />
       </div>
 
       {/* Ticket badge */}
       <div className="flex justify-center mb-4">
-        <div className="bg-red-500 rounded-full px-5 py-1.5 shadow-lg">
-          <p className="text-white font-bold text-sm">
-            Tickets : {tickets} &nbsp;·&nbsp; Tirez votre chance !
+        <div className="flex items-center gap-2 px-5 py-2 rounded-full border border-amber-400/40"
+          style={{ background: "rgba(245,158,11,0.15)" }}>
+          <Ticket className="w-4 h-4 text-amber-400" />
+          <p className="text-amber-300 font-bold text-sm">
+            {tickets} ticket{tickets > 1 ? "s" : ""} disponible{tickets > 1 ? "s" : ""}
           </p>
         </div>
       </div>
 
-      {/* Wheel */}
-      <div className="flex justify-center relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-20">
-          <div style={{
-            width: 0, height: 0,
-            borderLeft: "12px solid transparent",
-            borderRight: "12px solid transparent",
-            borderTop: "26px solid #ef4444",
-            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))"
-          }} />
+      {/* Wheel + needle */}
+      <div className="flex justify-center relative mb-2">
+
+        {/* Outer glow ring */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[340px] h-[340px] rounded-full"
+            style={{ boxShadow: "0 0 40px rgba(245,158,11,0.35), 0 0 80px rgba(245,158,11,0.15)" }} />
         </div>
 
+        {/* Needle at top */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20 flex flex-col items-center">
+          <div style={{
+            width: 0, height: 0,
+            borderLeft: "10px solid transparent",
+            borderRight: "10px solid transparent",
+            borderTop: "28px solid #EF4444",
+            filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.5))"
+          }} />
+          <div className="w-4 h-4 rounded-full bg-red-500 -mt-1 border-2 border-white"
+            style={{ boxShadow: "0 2px 8px rgba(239,68,68,0.6)" }} />
+        </div>
+
+        {/* Rotating wheel */}
         <div style={{
           transform: `rotate(${rotation}deg)`,
           transition: spinning ? "transform 4.5s cubic-bezier(0.17,0.67,0.12,0.99)" : "none",
         }}>
-          <canvas ref={canvasRef} style={{ width: 300, height: 300 }} />
+          <canvas ref={canvasRef} style={{ width: 320, height: 320 }} />
         </div>
 
+        {/* Center GO button */}
         <button
           data-testid="button-spin"
           onClick={handleSpin}
@@ -294,49 +319,66 @@ export default function GamePage() {
           style={{ pointerEvents: spinning ? "none" : "auto" }}
         >
           <div style={{
-            width: 68, height: 68,
-            borderRadius: "50%",
+            width: 60, height: 60, borderRadius: "50%",
             background: spinning
-              ? "radial-gradient(circle at 35% 35%, #f87171, #dc2626)"
-              : "radial-gradient(circle at 35% 35%, #ff8080, #ef4444)",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.35), inset 0 -4px 8px rgba(0,0,0,0.2)",
+              ? "radial-gradient(circle at 35% 35%, #6B7280, #374151)"
+              : "radial-gradient(circle at 35% 35%, #FCD34D, #F59E0B)",
+            boxShadow: spinning
+              ? "0 2px 8px rgba(0,0,0,0.4)"
+              : "0 4px 20px rgba(245,158,11,0.6), inset 0 -3px 6px rgba(0,0,0,0.2)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            border: "3px solid #fff",
-            transition: "transform 0.15s",
-            transform: spinning ? "scale(0.95)" : "scale(1)"
+            border: "3px solid rgba(255,255,255,0.8)",
+            transition: "all 0.2s",
           }}>
-            <span className="text-white font-extrabold text-xl tracking-wide"
-              style={{ textShadow: "0 2px 4px rgba(0,0,0,0.4)" }}>
-              GO
+            <span className="font-extrabold text-base text-white"
+              style={{ textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>
+              {spinning ? "..." : "GO"}
             </span>
           </div>
         </button>
       </div>
 
       {/* Result */}
-      <div className="text-center mt-5 min-h-[48px]">
+      <div className="text-center min-h-[56px] flex items-center justify-center px-4">
         {spinning && (
-          <p className="text-white/80 text-sm animate-pulse">La roue tourne...</p>
+          <p className="text-amber-300/80 text-sm animate-pulse font-medium">La roue tourne... 🎰</p>
         )}
         {result !== null && !spinning && (
-          <div className="inline-flex flex-col items-center bg-white/25 rounded-2xl px-6 py-3">
-            <p className="text-white font-extrabold text-3xl">+ FCFA {result.toLocaleString()}</p>
-            <p className="text-white/80 text-xs mt-0.5">Ajouté à votre solde de retrait</p>
+          <div className="inline-flex flex-col items-center rounded-2xl px-8 py-3 border border-amber-400/30"
+            style={{ background: "rgba(245,158,11,0.15)" }}>
+            <p className="text-amber-300 font-extrabold text-3xl">+{result.toLocaleString()} FCFA</p>
+            <p className="text-white/60 text-xs mt-0.5">Ajouté à votre solde de retrait ✓</p>
           </div>
         )}
         {tickets <= 0 && result === null && !spinning && (
-          <p className="text-white/80 text-sm px-6">Plus de tickets — achetez un produit ou invitez des amis pour en gagner</p>
+          <div className="bg-white/5 rounded-2xl px-5 py-3 border border-white/10">
+            <p className="text-white/60 text-sm text-center">Plus de tickets disponibles</p>
+            <p className="text-amber-400 text-xs text-center mt-1">Achetez un produit ou invitez des amis</p>
+          </div>
         )}
       </div>
 
+      {/* Segments legend */}
+      <div className="mx-4 mt-3 grid grid-cols-3 gap-1.5">
+        {SEGMENTS.map(seg => (
+          <div key={seg.value} className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 border border-white/5"
+            style={{ background: "rgba(255,255,255,0.04)" }}>
+            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: seg.color }} />
+            <span className="text-white/70 text-[11px] font-semibold">{seg.value.toLocaleString()}</span>
+            <span className="text-white/30 text-[9px]">FCFA</span>
+          </div>
+        ))}
+      </div>
+
       {/* Rules */}
-      <div className="mx-4 mt-6 bg-white/20 rounded-2xl p-4">
-        <h2 className="text-white font-bold text-sm mb-2">Règles de la loterie</h2>
-        <p className="text-white/80 text-xs leading-relaxed">
-          Règle 1 : Chaque achat d'un produit donne droit à une participation au tirage au sort.
+      <div className="mx-4 mt-4 rounded-2xl px-4 py-3 border border-white/10"
+        style={{ background: "rgba(255,255,255,0.04)" }}>
+        <h2 className="text-white/80 font-bold text-xs mb-2 uppercase tracking-wider">Règles</h2>
+        <p className="text-white/50 text-xs leading-relaxed">
+          • Chaque achat de produit → 1 participation au tirage
         </p>
-        <p className="text-white/80 text-xs leading-relaxed mt-1">
-          Règle 2 : Chaque invitation d'un membre valide donne droit à une participation au tirage au sort.
+        <p className="text-white/50 text-xs leading-relaxed mt-0.5">
+          • Chaque invitation d'un membre valide → 1 participation
         </p>
       </div>
 
@@ -347,7 +389,7 @@ export default function GamePage() {
         }
         .animate-marquee {
           display: inline-block;
-          animation: marquee 28s linear infinite;
+          animation: marquee 30s linear infinite;
         }
       `}</style>
     </div>

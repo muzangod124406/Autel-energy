@@ -76,7 +76,7 @@ export default function ServiceClientPage() {
 
   const { data: messages = [], isLoading } = useQuery<ChatMsg[]>({
     queryKey: ["/api/chat/messages"],
-    refetchInterval: 4000,
+    refetchInterval: 12000,
   });
 
   useEffect(() => {

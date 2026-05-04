@@ -86,13 +86,19 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Limite globale : 300 requêtes / 15 min par IP
   const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 300,
+    max: 900,
     standardHeaders: true,
     legacyHeaders: false,
     message: { message: "Trop de requêtes. Veuillez réessayer dans quelques minutes." },
     skip: (req) => {
-      // Exclure les webhooks et les assets statiques
-      return req.path.startsWith("/assets") || req.path === "/api/westpay/webhook";
+      // Exclure les webhooks, assets statiques et endpoints de polling fréquent
+      if (req.path.startsWith("/assets")) return true;
+      if (req.path === "/api/westpay/webhook") return true;
+      if (req.path === "/api/auth/me") return true;
+      if (req.path === "/api/chat/messages") return true;
+      if (req.path === "/api/user/spin-tickets") return true;
+      if (req.path === "/api/settings") return true;
+      return false;
     },
   });
 
