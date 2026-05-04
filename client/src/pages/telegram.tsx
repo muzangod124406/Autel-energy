@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, MessageCircle, Phone, Globe } from "lucide-react";
 import { useLocation } from "wouter";
-import claraImg from "@assets/561c62c4e80617ebf5313bc562f02542_1774182788114.jpg";
+import claraImg from "@assets/MV5BNmNkNmUyNjYtY2VhYi00ZjE4LWI0NmMtNmJkZDc2NzEyMzgxXkEyXkFqcG_1777886048395.jpg";
 import headsetIcon from "@assets/icon_3-1_1774133434969.png";
 
 export default function TelegramPage() {

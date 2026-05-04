@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { ArrowLeft, Phone, MoreVertical, Smile, Paperclip, Image, Send, Check, CheckCheck } from "lucide-react";
-import claraImg from "@assets/561c62c4e80617ebf5313bc562f02542_1774182788114.jpg";
+import claraImg from "@assets/MV5BNmNkNmUyNjYtY2VhYi00ZjE4LWI0NmMtNmJkZDc2NzEyMzgxXkEyXkFqcG_1777886048395.jpg";
 
 function MessageContent({ text, isUser }: { text: string; isUser: boolean }) {
   const clean = text.replace("[[TELEGRAM]]", "").replace("[[GROUP]]", "").trim();

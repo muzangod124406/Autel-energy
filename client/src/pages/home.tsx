@@ -42,7 +42,17 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen pb-28 bg-gray-50">
+    <div
+      className="bg-gray-50"
+      style={{
+        position: "fixed",
+        top: 0, left: 0, right: 0, bottom: 0,
+        overflowY: "auto",
+        overscrollBehavior: "none",
+        WebkitOverflowScrolling: "touch",
+        paddingBottom: "7rem",
+      }}
+    >
 
       {/* Header gold */}
       <div className="px-5 pt-7 pb-6" style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }}>
@@ -83,7 +93,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Action buttons — 2 boutons seulement */}
+      {/* Action buttons */}
       <div className="px-5 -mt-4 mb-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="grid grid-cols-2 gap-3">
