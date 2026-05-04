@@ -518,11 +518,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const currency = getSendavapayCurrency(countrySlug);
       const wallet = phoneNumber || user.phone;
 
-      // Build callback URL using public domain
-      const host = process.env.REPLIT_DEV_DOMAIN
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-        : (process.env.APP_URL || `https://${req.headers.host}`);
-      const callbackUrl = `${host}/api/webhook/sendavapay`;
+      // Build callback URL — always use the real host seen by the client
+      const forwardedHost = req.headers["x-forwarded-host"] as string;
+      const host = forwardedHost || (req.headers.host as string) || "";
+      const callbackUrl = `https://${host}/api/webhook/sendavapay`;
 
       const tx = await storage.createTransaction(userId, {
         type: "deposit",
