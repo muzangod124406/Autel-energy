@@ -37,34 +37,26 @@ export default function TeamDetailsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] pb-28">
+    <div className="min-h-screen bg-gray-50 pb-28">
 
-      {/* ── Header ───────────────────────────────── */}
-      <div className="bg-white px-4 pt-10 pb-0 shadow-sm">
+      {/* Header gold */}
+      <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }} className="px-4 pt-10 pb-0">
         <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => navigate("/invite")}
-            data-testid="button-back-team-details"
-            className="text-gray-700"
-          >
+          <button onClick={() => navigate("/invite")} data-testid="button-back-team-details" className="text-white">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="flex-1 text-center text-[#22c55e] font-bold text-lg pr-8">
-            Historique d'équipe
-          </h1>
+          <h1 className="flex-1 text-center text-white font-bold text-lg pr-8">Historique d'équipe</h1>
         </div>
 
-        {/* Tabs */}
-        <div className="flex">
+        {/* Tabs dans le header */}
+        <div className="flex bg-white/20 rounded-xl p-1 mb-0">
           {TABS.map((tab, i) => (
             <button
               key={i}
               data-testid={`tab-level-${i + 1}`}
               onClick={() => setActiveTab(i)}
-              className={`flex-1 pb-3 text-sm font-semibold border-b-2 transition-colors ${
-                activeTab === i
-                  ? "border-[#22c55e] text-[#22c55e]"
-                  : "border-transparent text-gray-400"
+              className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${
+                activeTab === i ? "bg-white text-amber-600 shadow" : "text-white/80"
               }`}
             >
               {tab.label}
@@ -73,48 +65,39 @@ export default function TeamDetailsPage() {
         </div>
       </div>
 
-      {/* ── Stats ────────────────────────────────── */}
-      <div className="flex px-4 py-4 gap-4">
-        <div className="flex-1 bg-white rounded-2xl px-4 py-3 shadow-sm text-center">
-          <p className="text-gray-500 text-xs mb-1">Membres de l'équipe</p>
+      {/* Stats */}
+      <div className="flex px-4 py-4 gap-3">
+        <div className="flex-1 bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100 text-center">
+          <p className="text-gray-400 text-xs mb-1">Membres</p>
           <p className="text-gray-900 font-extrabold text-2xl">{totalMembers}</p>
         </div>
-        <div className="flex-1 bg-white rounded-2xl px-4 py-3 shadow-sm text-center">
-          <p className="text-gray-500 text-xs mb-1">Dépôts de l'équipe</p>
-          <p className="text-[#22c55e] font-extrabold text-xl">
-            FCFA {totalInvested.toLocaleString("fr-FR")}
+        <div className="flex-1 bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100 text-center">
+          <p className="text-gray-400 text-xs mb-1">Dépôts équipe</p>
+          <p className="text-amber-500 font-extrabold text-lg">
+            {totalInvested.toLocaleString("fr-FR")} FCFA
           </p>
         </div>
       </div>
 
-      {/* ── Liste des membres ─────────────────────── */}
+      {/* Members list */}
       <div className="px-4 space-y-3">
         {isLoading && (
           <div className="text-center py-10 text-gray-400 text-sm">Chargement...</div>
         )}
 
         {!isLoading && members.length === 0 && (
-          <div className="text-center py-10 text-gray-400 text-sm">
-            Aucun membre à ce niveau
-          </div>
+          <div className="text-center py-10 text-gray-400 text-sm">Aucun membre à ce niveau</div>
         )}
 
         {members.map((m: any, i: number) => (
-          <div
-            key={i}
-            className="bg-white rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3 animate-card-in"
+          <div key={i} className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100 flex items-center gap-3 animate-card-in"
             style={{ animationDelay: `${i * 0.05}s` }}
-            data-testid={`member-card-${i}`}
-          >
-            {/* Avatar */}
-            <div className="w-11 h-11 rounded-full border-2 border-[#22c55e] flex items-center justify-center shrink-0">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 text-[#22c55e]" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2C9.5 2 8 4 8 6s1.5 4 4 4 4-2 4-4-1.5-4-4-4z" />
-                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" strokeLinecap="round" />
-              </svg>
+            data-testid={`member-card-${i}`}>
+            <div className="w-11 h-11 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center shrink-0">
+              <span className="text-amber-500 font-bold text-base">
+                {(m.referred?.phone || m.phone || "U")[0].toUpperCase()}
+              </span>
             </div>
-
-            {/* Infos */}
             <div className="flex-1 min-w-0">
               <p className="text-gray-700 text-sm font-medium">
                 Compte : {formatPhone(m.referred?.phone || "")}
@@ -123,11 +106,9 @@ export default function TeamDetailsPage() {
                 Date : {formatDate(m.referred?.createdAt || m.createdAt)}
               </p>
             </div>
-
-            {/* Montant investi */}
             <div className="text-right shrink-0">
               <p className="text-gray-800 font-bold text-sm">
-                FCFA {(m.totalInvested || 0).toLocaleString("fr-FR")}
+                {(m.totalInvested || 0).toLocaleString("fr-FR")} FCFA
               </p>
             </div>
           </div>

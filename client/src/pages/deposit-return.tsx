@@ -16,15 +16,11 @@ export default function DepositReturnPage() {
     const amount = params.get("amount");
 
     if (wpStatus === "success" && txId) {
-      // Store the WestPay external reference on our transaction
-      apiRequest("POST", `/api/user/deposit/westpay/confirm/${txId}`, { externalRef: ref })
-        .catch(() => {});
+      apiRequest("POST", `/api/user/deposit/westpay/confirm/${txId}`, { externalRef: ref }).catch(() => {});
       setStatus("success");
-      setMessage(
-        amount
-          ? `Paiement de ${parseInt(amount).toLocaleString()} FCFA reçu. Votre solde sera crédité automatiquement.`
-          : "Paiement confirmé. Votre solde sera crédité automatiquement."
-      );
+      setMessage(amount
+        ? `Paiement de ${parseInt(amount).toLocaleString()} FCFA reçu. Votre solde sera crédité automatiquement.`
+        : "Paiement confirmé. Votre solde sera crédité automatiquement.");
     } else if (wpStatus === "failed" || wpStatus === "cancelled") {
       setStatus("failed");
       setMessage("Le paiement a échoué ou a été annulé. Veuillez réessayer.");
@@ -42,8 +38,9 @@ export default function DepositReturnPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <div className="bg-[#22c55e] px-4 pt-6 pb-6">
+
+      {/* Header gold */}
+      <div style={{ background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)" }} className="px-4 pt-8 pb-4">
         <div className="flex items-center gap-3">
           <button onClick={goHome} className="text-white" data-testid="button-back-return">
             <ArrowLeft className="w-6 h-6" />
@@ -52,22 +49,28 @@ export default function DepositReturnPage() {
         </div>
       </div>
 
-      {/* Body */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 text-center">
+
         {status === "loading" && (
-          <div className="w-16 h-16 border-4 border-gray-200 border-t-[#22c55e] rounded-full animate-spin mb-6" />
+          <div className="w-16 h-16 border-4 border-gray-200 border-t-amber-500 rounded-full animate-spin mb-6" />
         )}
 
         {status === "success" && (
-          <CheckCircle className="w-20 h-20 text-[#22c55e] mb-6" />
+          <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center mb-6">
+            <CheckCircle className="w-12 h-12 text-emerald-500" />
+          </div>
         )}
 
         {status === "failed" && (
-          <XCircle className="w-20 h-20 text-red-500 mb-6" />
+          <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-6">
+            <XCircle className="w-12 h-12 text-red-500" />
+          </div>
         )}
 
         {status === "pending" && (
-          <Clock className="w-20 h-20 text-yellow-500 mb-6" />
+          <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mb-6">
+            <Clock className="w-12 h-12 text-amber-500" />
+          </div>
         )}
 
         <h2 className="text-xl font-bold text-gray-900 mb-3">
@@ -85,7 +88,8 @@ export default function DepositReturnPage() {
           <div className="space-y-3 w-full max-w-xs">
             <button
               onClick={goHome}
-              className="w-full py-4 bg-[#22c55e] text-white font-bold rounded-xl text-base"
+              className="w-full py-4 text-black font-bold rounded-2xl text-base shadow-md"
+              style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
               data-testid="button-go-home"
             >
               Retour à l'accueil
@@ -93,7 +97,7 @@ export default function DepositReturnPage() {
             {status === "failed" && (
               <button
                 onClick={goDeposit}
-                className="w-full py-4 border border-gray-200 text-gray-700 font-semibold rounded-xl text-base"
+                className="w-full py-4 border border-gray-200 text-gray-600 font-semibold rounded-2xl text-base"
                 data-testid="button-retry-deposit"
               >
                 Réessayer un dépôt

@@ -29,7 +29,6 @@ const FAKE_PHONES = [
 const FAKE_AMOUNTS = [50, 100, 200, 400, 600, 1000, 5000];
 
 function makeFakeHistory() {
-  const now = Date.now();
   return Array.from({ length: 20 }, (_, i) => ({
     phone: FAKE_PHONES[i % FAKE_PHONES.length],
     amount: FAKE_AMOUNTS[Math.floor(Math.random() * FAKE_AMOUNTS.length)],
@@ -41,7 +40,7 @@ function HorizontalTicker() {
   const text = items.map(it => `📢 ${it.phone} a retiré avec succès ${it.amount.toLocaleString()} FCFA`).join("   ·   ");
 
   return (
-    <div className="overflow-hidden flex items-center gap-2 py-2 px-3" style={{ background: "rgba(0,0,0,0.25)", borderRadius: 10 }}>
+    <div className="overflow-hidden flex items-center gap-2 py-2 px-3 bg-black/20 rounded-xl">
       <Volume2 className="w-4 h-4 text-white shrink-0" />
       <div className="overflow-hidden flex-1">
         <div className="whitespace-nowrap text-white text-xs animate-marquee">
@@ -94,7 +93,6 @@ function drawWheel(canvas: HTMLCanvasElement) {
   SEGMENTS.forEach((seg, i) => {
     const startAngle = i * segAngle - Math.PI / 2;
     const endAngle = startAngle + segAngle;
-
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, segR, startAngle, endAngle);
@@ -105,7 +103,6 @@ function drawWheel(canvas: HTMLCanvasElement) {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Coin icon on segment
     const coinAngle = startAngle + segAngle / 2;
     const coinR = segR * 0.75;
     const cx2 = cx + coinR * Math.cos(coinAngle);
@@ -128,7 +125,6 @@ function drawWheel(canvas: HTMLCanvasElement) {
     ctx.fillText("$", cx2, cy2);
     ctx.restore();
 
-    // Text label
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(startAngle + segAngle / 2);
@@ -145,7 +141,7 @@ function drawWheel(canvas: HTMLCanvasElement) {
     ctx.restore();
   });
 
-  // Inner white circle (center hub)
+  // Center hub
   const hubR = segR * 0.22;
   ctx.beginPath();
   ctx.arc(cx, cy, hubR, 0, 2 * Math.PI);
@@ -215,11 +211,9 @@ export default function GamePage() {
       const segAngle = 360 / NUM_SEGS;
       const targetAngle = 360 - (segI * segAngle + segAngle / 2);
       const spins = 5 + Math.floor(Math.random() * 3);
-
       setSpinning(true);
       setResult(null);
       setRotation(prev => prev + spins * 360 + targetAngle);
-
       setTimeout(() => {
         setSpinning(false);
         setResult(winAmount);
@@ -242,40 +236,39 @@ export default function GamePage() {
   };
 
   return (
-    <div className="min-h-screen pb-8" style={{ background: "linear-gradient(160deg, #16a34a 0%, #22c55e 40%, #4ade80 100%)" }}>
+    <div className="min-h-screen pb-8" style={{ background: "linear-gradient(160deg, #F59E0B 0%, #D97706 40%, #B45309 100%)" }}>
 
-      {/* ── Header ─────────────────────────── */}
-      <div className="flex items-center justify-between px-4 pt-8 pb-4">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-10 pb-4">
         <button data-testid="button-back" onClick={() => navigate("/")}
-          className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          className="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center">
           <ChevronLeft className="w-5 h-5 text-white" />
         </button>
-        <h1 className="text-white font-bold text-lg">Tirage Au Sort</h1>
+        <h1 className="text-white font-bold text-lg drop-shadow">Tirage Au Sort</h1>
         <button data-testid="button-music" onClick={toggleMusic}
-          className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+          className="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center">
           {musicPlaying
             ? <Volume2 className="w-5 h-5 text-white" />
             : <VolumeX className="w-5 h-5 text-white" />}
         </button>
       </div>
 
-      {/* ── Ticker horizontal ─────────────── */}
+      {/* Ticker */}
       <div className="mx-4 mb-4">
         <HorizontalTicker />
       </div>
 
-      {/* ── Badge tickets ─────────────────── */}
-      <div className="flex justify-center mb-3">
+      {/* Ticket badge */}
+      <div className="flex justify-center mb-4">
         <div className="bg-red-500 rounded-full px-5 py-1.5 shadow-lg">
           <p className="text-white font-bold text-sm">
-            Loterie : {tickets} &nbsp;·&nbsp; Tirez votre chance !
+            Tickets : {tickets} &nbsp;·&nbsp; Tirez votre chance !
           </p>
         </div>
       </div>
 
-      {/* ── Roue ──────────────────────────── */}
+      {/* Wheel */}
       <div className="flex justify-center relative">
-        {/* Flèche pointeur */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-20">
           <div style={{
             width: 0, height: 0,
@@ -286,7 +279,6 @@ export default function GamePage() {
           }} />
         </div>
 
-        {/* Canvas roue */}
         <div style={{
           transform: `rotate(${rotation}deg)`,
           transition: spinning ? "transform 4.5s cubic-bezier(0.17,0.67,0.12,0.99)" : "none",
@@ -294,7 +286,6 @@ export default function GamePage() {
           <canvas ref={canvasRef} style={{ width: 300, height: 300 }} />
         </div>
 
-        {/* Bouton GO au centre */}
         <button
           data-testid="button-spin"
           onClick={handleSpin}
@@ -322,24 +313,24 @@ export default function GamePage() {
         </button>
       </div>
 
-      {/* ── Résultat ─────────────────────── */}
-      <div className="text-center mt-4 min-h-[40px]">
+      {/* Result */}
+      <div className="text-center mt-5 min-h-[48px]">
         {spinning && (
           <p className="text-white/80 text-sm animate-pulse">La roue tourne...</p>
         )}
         {result !== null && !spinning && (
-          <div className="inline-flex flex-col items-center bg-white/20 rounded-2xl px-6 py-2">
-            <p className="text-yellow-300 font-extrabold text-2xl">+ FCFA {result.toLocaleString()}</p>
-            <p className="text-white/80 text-xs mt-0.5">Ajouté à votre solde</p>
+          <div className="inline-flex flex-col items-center bg-white/25 rounded-2xl px-6 py-3">
+            <p className="text-white font-extrabold text-3xl">+ FCFA {result.toLocaleString()}</p>
+            <p className="text-white/80 text-xs mt-0.5">Ajouté à votre solde de retrait</p>
           </div>
         )}
         {tickets <= 0 && result === null && !spinning && (
-          <p className="text-white/70 text-sm">Plus de tickets — achetez un produit pour en gagner</p>
+          <p className="text-white/80 text-sm px-6">Plus de tickets — achetez un produit ou invitez des amis pour en gagner</p>
         )}
       </div>
 
-      {/* ── Règles ───────────────────────── */}
-      <div className="mx-4 mt-6 bg-white/15 rounded-2xl p-4">
+      {/* Rules */}
+      <div className="mx-4 mt-6 bg-white/20 rounded-2xl p-4">
         <h2 className="text-white font-bold text-sm mb-2">Règles de la loterie</h2>
         <p className="text-white/80 text-xs leading-relaxed">
           Règle 1 : Chaque achat d'un produit donne droit à une participation au tirage au sort.
