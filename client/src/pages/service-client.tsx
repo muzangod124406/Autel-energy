@@ -117,7 +117,7 @@ export default function ServiceClientPage() {
   }
 
   return (
-    <div className="flex flex-col" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, overscrollBehavior: "none", background: "#F5F0EB" }}>
+    <div className="flex flex-col" style={{ height: "100dvh", width: "100%", overscrollBehavior: "none", background: "#F5F0EB" }}>
 
       {/* Header */}
       <div style={{
