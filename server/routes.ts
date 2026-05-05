@@ -1720,97 +1720,34 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     res.json(result);
   });
 
-  // ─── Endpoint : collecter manuellement le gain journalier ────────────────
+  // ─── Endpoint : collecter le gain total en fin de cycle ──────────────────
   app.post("/api/user/investments/:id/collect", requireAuth, async (req: Request, res: Response) => {
     try {
       const userId = (req.session as any).userId;
       const inv = await storage.getInvestment(req.params.id);
       if (!inv || inv.userId !== userId) return res.status(404).json({ message: "Investissement introuvable" });
-      if (inv.status !== "active") return res.status(400).json({ message: "Investissement terminé" });
-      if (new Date(inv.endDate) <= new Date()) return res.status(400).json({ message: "Cycle expiré" });
-
-      const threshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      if (inv.lastGainDate && new Date(inv.lastGainDate) > threshold) {
-        const nextMs = new Date(inv.lastGainDate).getTime() + 24 * 60 * 60 * 1000 - Date.now();
-        const nextH = Math.floor(nextMs / 3600000);
-        const nextM = Math.floor((nextMs % 3600000) / 60000);
-        return res.status(400).json({ message: `Prochain gain disponible dans ${nextH}h ${nextM}min` });
+      if (inv.status !== "active") return res.status(400).json({ message: "Déjà collecté" });
+      if (new Date(inv.endDate) > new Date()) {
+        return res.status(400).json({ message: "Le cycle n'est pas encore terminé" });
       }
-
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
 
-      const newCollectedDays = (inv.collectedDays || 0) + 1;
-      await storage.updateUser(userId, { withdrawBalance: user.withdrawBalance + inv.dailyGain });
-      await storage.updateInvestmentLastGainDate(inv.id, new Date(), newCollectedDays);
+      await storage.updateUser(userId, {
+        withdrawBalance: user.withdrawBalance + inv.totalGain,
+        productRevenue: user.productRevenue + inv.totalGain,
+      });
+      await storage.completeInvestment(inv.id);
       await storage.createTransaction(userId, {
-        type: "gain", amount: inv.dailyGain, status: "approved",
-        description: `Gain journalier — Jour ${newCollectedDays}/${inv.duration}`,
+        type: "gain", amount: inv.totalGain, status: "approved",
+        description: `Gain fin de cycle — ${inv.planType === "fix" ? "Plan Fixe 90J" : "Activité"} — ${inv.duration}j`,
       });
 
-      res.json({ success: true, dailyGain: inv.dailyGain, collectedDays: newCollectedDays });
+      res.json({ success: true, totalGain: inv.totalGain });
     } catch (e: any) {
       res.status(500).json({ message: e.message });
     }
   });
-
-  // ─── Job automatique : gains journaliers + fin de cycle ──────────────────
-  async function processDailyGains() {
-    try {
-      // 1. Créditer les gains journaliers pour les investissements actifs
-      const needsGain = await storage.getInvestmentsNeedingDailyGain();
-      for (const inv of needsGain) {
-        const user = await storage.getUser(inv.userId);
-        if (!user) continue;
-        const newCollectedDays = (inv.collectedDays || 0) + 1;
-        await storage.updateUser(user.id, { withdrawBalance: user.withdrawBalance + inv.dailyGain });
-        await storage.updateInvestmentLastGainDate(inv.id, new Date(), newCollectedDays);
-        await storage.createTransaction(user.id, {
-          type: "gain", amount: inv.dailyGain, status: "approved",
-          description: `Gain journalier — Jour ${newCollectedDays}/${inv.duration}`,
-        });
-        console.log(`[Gains/Jour] inv=${inv.id} jour=${newCollectedDays}/${inv.duration} +${inv.dailyGain} FCFA → user=${user.id}`);
-      }
-    } catch (e: any) {
-      console.error("[Gains/Jour] Erreur:", e.message);
-    }
-  }
-
-  async function processCompletedInvestments() {
-    try {
-      const expired = await storage.getExpiredActiveInvestments();
-      for (const inv of expired) {
-        const user = await storage.getUser(inv.userId);
-        if (!user) continue;
-        // Ne crédite le totalGain de fin de cycle que si les gains n'ont pas déjà été versés quotidiennement
-        // Si le nombre de jours collectés < durée, on crédite les jours restants
-        const remainingDays = inv.duration - (inv.collectedDays || 0);
-        const remainingAmount = remainingDays > 0 ? remainingDays * inv.dailyGain : 0;
-        if (remainingAmount > 0) {
-          await storage.updateUser(user.id, {
-            withdrawBalance: user.withdrawBalance + remainingAmount,
-            productRevenue: user.productRevenue + inv.totalGain,
-          });
-          await storage.createTransaction(user.id, {
-            type: "gain", amount: remainingAmount, status: "approved",
-            description: `Gain fin de cycle — ${inv.planType === "fix" ? "Plan Fixe 90J" : "Activité"} — ${inv.duration}j`,
-          });
-        } else {
-          await storage.updateUser(user.id, { productRevenue: user.productRevenue + inv.totalGain });
-        }
-        await storage.completeInvestment(inv.id);
-        console.log(`[Gains/Cycle] inv=${inv.id} complété — reste=${remainingDays}j +${remainingAmount} FCFA → user=${user.id}`);
-      }
-    } catch (e: any) {
-      console.error("[Gains/Cycle] Erreur:", e.message);
-    }
-  }
-
-  // Lancer immédiatement au démarrage puis toutes les heures
-  processDailyGains();
-  processCompletedInvestments();
-  setInterval(processDailyGains, 60 * 60 * 1000);
-  setInterval(processCompletedInvestments, 60 * 60 * 1000);
 
   return httpServer;
 }
