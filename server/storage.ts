@@ -40,6 +40,8 @@ export interface IStorage {
   getActiveInvestmentCount(): Promise<number>;
   getExpiredActiveInvestments(): Promise<Investment[]>;
   completeInvestment(id: string): Promise<void>;
+  getInvestmentsNeedingDailyGain(): Promise<Investment[]>;
+  updateInvestmentLastGainDate(id: string, date: Date, collectedDays: number): Promise<void>;
 
   createTransaction(userId: string, data: any): Promise<Transaction>;
   getUserTransactions(userId: string, type?: string): Promise<Transaction[]>;
@@ -327,6 +329,26 @@ export class DatabaseStorage implements IStorage {
 
   async completeInvestment(id: string): Promise<void> {
     await db.update(investments).set({ status: "completed" }).where(eq(investments.id, id));
+  }
+
+  async getInvestmentsNeedingDailyGain(): Promise<Investment[]> {
+    const threshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return await db.select().from(investments).where(
+      and(
+        eq(investments.status, "active"),
+        sql`${investments.endDate} > NOW()`,
+        or(
+          isNull(investments.lastGainDate),
+          sql`${investments.lastGainDate} <= ${threshold}`
+        )
+      )
+    );
+  }
+
+  async updateInvestmentLastGainDate(id: string, date: Date, collectedDays: number): Promise<void> {
+    await db.update(investments)
+      .set({ lastGainDate: date, collectedDays })
+      .where(eq(investments.id, id));
   }
 
   async createTransaction(userId: string, data: any): Promise<Transaction> {

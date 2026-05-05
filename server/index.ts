@@ -79,6 +79,10 @@ app.use((req, res, next) => {
     log("Migration: settings.soleaspay_secret_hash OK");
     await pool.query("ALTER TABLE countries ADD COLUMN IF NOT EXISTS payment_provider text NOT NULL DEFAULT 'westpay'");
     log("Migration: countries.payment_provider OK");
+    await pool.query("ALTER TABLE investments ADD COLUMN IF NOT EXISTS last_gain_date timestamp");
+    log("Migration: investments.last_gain_date OK");
+    await pool.query("ALTER TABLE investments ADD COLUMN IF NOT EXISTS collected_days integer NOT NULL DEFAULT 0");
+    log("Migration: investments.collected_days OK");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS "session" (
         "sid" varchar NOT NULL COLLATE "default",
