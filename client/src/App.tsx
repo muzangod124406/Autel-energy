@@ -63,7 +63,7 @@ function FloatingButtons() {
   if (hideOn.some(p => location.startsWith(p))) return null;
 
   return (
-    <div className="fixed right-3 bottom-24 z-40 flex flex-col gap-2">
+    <div className="fixed right-3 bottom-6 z-40 flex flex-col gap-2">
       <button
         data-testid="float-btn-game"
         onClick={() => navigate("/game")}
