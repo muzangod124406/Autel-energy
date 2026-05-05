@@ -42,6 +42,7 @@ export interface IStorage {
   completeInvestment(id: string): Promise<void>;
   getInvestmentsNeedingDailyGain(): Promise<Investment[]>;
   updateInvestmentLastGainDate(id: string, date: Date, collectedDays: number): Promise<void>;
+  getActiveInvestmentsByProduct(productId: string): Promise<Investment[]>;
 
   createTransaction(userId: string, data: any): Promise<Transaction>;
   getUserTransactions(userId: string, type?: string): Promise<Transaction[]>;
@@ -349,6 +350,12 @@ export class DatabaseStorage implements IStorage {
     await db.update(investments)
       .set({ lastGainDate: date, collectedDays })
       .where(eq(investments.id, id));
+  }
+
+  async getActiveInvestmentsByProduct(productId: string): Promise<Investment[]> {
+    return await db.select().from(investments).where(
+      and(eq(investments.productId, productId), eq(investments.status, "active"))
+    );
   }
 
   async createTransaction(userId: string, data: any): Promise<Transaction> {

@@ -48,10 +48,9 @@ function InvestmentCard({ inv, productMap, now }: { inv: any; productMap: Record
   const seconds = Math.floor((remainingMs % 60000) / 1000);
 
   const planName = inv.planType === "activity"
-    ? (inv.productName || "Activité")
+    ? (inv.productName || productMap[inv.productId]?.name || "Activité")
     : `SINOPEC S${inv.vipLevel}`;
-  const productImg = inv.productId && productMap[inv.productId]?.imageUrl;
-  const imgSrc = productImg || "/sinopec-logo.jpeg";
+  const imgSrc = inv.productImage || (inv.productId && productMap[inv.productId]?.imageUrl) || "/sinopec-logo.jpeg";
 
   const collectMutation = useMutation({
     mutationFn: async () => {

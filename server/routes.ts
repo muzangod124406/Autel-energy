@@ -314,6 +314,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         }
       }
 
+      let snapshotName: string | null = null;
+      let snapshotImage: string | null = null;
+
       if (productId) {
         const product = await storage.getProduct(productId);
         if (!product) return res.status(404).json({ message: "Produit non trouvé" });
@@ -321,6 +324,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
         if (product.purchaseLimit > 0 && product.purchaseCount >= product.purchaseLimit) {
           return res.status(400).json({ message: "Limite d'achat atteinte pour ce produit" });
         }
+        snapshotName = product.name || null;
+        snapshotImage = product.imageUrl || null;
         await storage.incrementProductPurchaseCount(productId);
       }
 
@@ -328,7 +333,10 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       endDate.setDate(endDate.getDate() + duration);
 
       const investment = await storage.createInvestment({
-        userId, planType, vipLevel, amount, dailyGain, duration, totalGain, endDate, productId: productId || null
+        userId, planType, vipLevel, amount, dailyGain, duration, totalGain, endDate,
+        productId: productId || null,
+        productName: snapshotName,
+        productImage: snapshotImage,
       });
 
       // Débiter le dépôt et donner +1 ticket spin à l'investisseur (atomique)
@@ -1347,6 +1355,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   app.delete("/api/admin/products/:id", requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
+      const allActive = await storage.getActiveInvestmentsByProduct(req.params.id);
+      if (allActive.length > 0) {
+        return res.status(409).json({
+          message: `Impossible de supprimer : ${allActive.length} utilisateur(s) ont ce produit actif. Désactivez-le plutôt.`,
+        });
+      }
       await storage.deleteProduct(req.params.id);
       res.json({ success: true });
     } catch (e: any) {

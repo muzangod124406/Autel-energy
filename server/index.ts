@@ -83,6 +83,10 @@ app.use((req, res, next) => {
     log("Migration: investments.last_gain_date OK");
     await pool.query("ALTER TABLE investments ADD COLUMN IF NOT EXISTS collected_days integer NOT NULL DEFAULT 0");
     log("Migration: investments.collected_days OK");
+    await pool.query("ALTER TABLE investments ADD COLUMN IF NOT EXISTS product_name text");
+    log("Migration: investments.product_name OK");
+    await pool.query("ALTER TABLE investments ADD COLUMN IF NOT EXISTS product_image text");
+    log("Migration: investments.product_image OK");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS "session" (
         "sid" varchar NOT NULL COLLATE "default",
